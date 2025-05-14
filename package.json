@@ -1,0 +1,33 @@
+{
+  "name": "lpm-project",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev-server": "encore dev-server",
+    "dev": "encore dev",
+    "watch": "encore dev --watch",
+    "build": "encore production --progress"
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "^3.0.0",
+    "@symfony/stimulus-bridge": "^3.2.0",
+    "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
+    "@symfony/ux-turbo": "^2.24.0",
+    "bootstrap": "^5.3.6",
+    "react": "^18.0",
+    "react-dom": "^18.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.17.0",
+    "@babel/preset-env": "^7.16.0",
+    "@babel/preset-react": "^7.0.0",
+    "@symfony/webpack-encore": "^4.0.0",
+    "core-js": "^3.38",
+    "postcss-loader": "^8.1.1",
+    "sass": "^1.87.0",
+    "sass-loader": "^14.2.1",
+    "webpack": "^5.74.0",
+    "webpack-cli": "^4.10.0",
+    "webpack-notifier": "^1.15.0"
+  }
+}

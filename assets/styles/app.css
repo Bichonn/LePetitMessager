@@ -1,3 +1,28 @@
 body {
-    background-color: skyblue;
+    background-color: #DFC699 !important;
+    font-family: 'Cinzel', serif;
+}
+
+.col-md-1 {
+    max-width: 80px; /* Réduisez la largeur selon vos besoins */
+}
+
+.navbar img {
+    width: 40%; /* Réduisez la taille des icônes */
+}
+
+.icon-name-appear {
+    animation: fadeInUp 0.2s ease-out; /* Durée et type d'animation */
+    text-shadow: 0.5px 0.5px 1px #000; /* Ombre légère */
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Départ légèrement en bas */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Position finale */
+    }
 }

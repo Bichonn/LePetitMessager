@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="container-fluid px-0">
+        <div class="row g-0">
+        
+            <!-- Barre de navigation (Gauche) -->
+            <div class="col-md-1 px-0">
+                <div {{ react_component('Navbar') }}></div>
+            </div>
+
+            <!-- Contenu principal (Centre) -->
+            <div class="col-md-6">
+
+                <div {{ react_component('Header') }}></div>
+
+                <div class="card shadow border border-dark">
+                    <div class="card-header bg-primary text-white">
+                        <h1 class="mb-0">Test</h1>
+                    </div>
+                    <div class="card-body">
+                        <p class="alert alert-info">avant</p>
+
+                        <div class="alert alert-warning" {{ react_component('Hello', { fullName: 'Bichon' } ) }}></div>
+                        
+                        <div class="mb-4 p-3 border rounded bg-light" {{ react_component('Counter', { title: 'My Test Counter', initialValue: 5 }) }}></div>
+                        
+                        <p class="alert alert-success">après</p>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Widgets (Droite) -->
+            <div class="col-md-5">
+                <div class="mt-4">
+                    <!-- Contenus à venir -->
+                    <div class="card mb-3">
+                        <div class="card-body text-center text-muted">
+                            Widgets à venir
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

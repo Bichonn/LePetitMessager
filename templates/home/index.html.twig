@@ -33,15 +33,22 @@
 
             <!-- Widgets (Droite) -->
             <div class="col-md-5">
-                <div class="mt-4">
-                    <!-- Contenus à venir -->
-                    <div class="card mb-3">
-                        <div class="card-body text-center text-muted">
-                            Widgets à venir
-                        </div>
-                    </div>
+                <div class="px-3"> <!-- Conteneur avec padding horizontal -->
+                    <div class="w-100 flex-fill">
+                        
+            <div {{ react_component('SearchBar') }}></div>
+        
+                <h2 class="text-center">Widgets</h2>
+        
+            <!-- Contenus à venir -->
+            <div class="card mb-3">
+                <div class="card-body text-center text-muted">
+                    Widgets à venir
                 </div>
             </div>
+        
         </div>
+        
     </div>
+</div>
 {% endblock %}

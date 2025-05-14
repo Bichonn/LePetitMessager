@@ -8,7 +8,7 @@ export default function Navbar() {
       <div>
         <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
         <NavIcons iconPath={"/icons/message.png"} iconName={"Message"} />
-        <NavIcons iconPath={"/icons/plume.png"} iconName={"Ajouter"} />
+        <NavIcons iconPath={"/icons/write.png"} iconName={"Ajouter"} />
         <NavIcons iconPath={"/icons/top.png"} iconName={"Gros Titres"} />
       </div>
 

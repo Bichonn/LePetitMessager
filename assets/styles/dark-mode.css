@@ -1,0 +1,29 @@
+/* Variables couleurs en mode clair (par défaut) */
+:root {
+  --bg-color: #DFC699;
+  --card-bg: #fff;
+  --text-color: #212529;
+  --border-color: #343a40;
+}
+
+/* Variables couleurs en mode sombre */
+[data-bs-theme="dark"] {
+  --bg-color: #332D2D;
+  --card-bg: #212529;
+  --text-color: #f8f9fa;
+  --border-color: #6c757d;
+}
+
+body {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+}
+
+.card {
+  background-color: var(--card-bg) !important;
+}
+
+/* Animation de transition entre les modes */
+body, .card, .btn, .form-control, .alert {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}

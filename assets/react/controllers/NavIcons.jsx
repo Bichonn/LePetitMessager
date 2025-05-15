@@ -8,7 +8,7 @@ export default function NavIcons({ iconPath, iconName }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <img className="img-fluid w-75" src={iconPath} alt={iconName} />
+            <img className="img-fluid w-50" src={iconPath} alt={iconName} />
 
             {isHovered && (
                 <span className="position-absolute top-100 mt-1">

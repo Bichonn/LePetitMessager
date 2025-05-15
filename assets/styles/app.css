@@ -1,14 +1,20 @@
 body {
-    background-color: #DFC699 !important;
+    background-color: #F3DCB3 !important;
     font-family: 'Cinzel', serif;
 }
 
-.col-md-1 {
-    max-width: 80px; /* Réduisez la largeur selon vos besoins */
+.bg-color-search {
+    background-color: #DFC699 !important;
 }
 
+.large-placeholder::placeholder {
+    font-size: 2rem;
+}
+
+
+
 .navbar img {
-    width: 40%; /* Réduisez la taille des icônes */
+    width: 40%;
 }
 
 .icon-name-appear {

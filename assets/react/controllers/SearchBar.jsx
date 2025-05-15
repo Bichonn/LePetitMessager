@@ -18,23 +18,25 @@ export default function SearchBar({ onSearch }) {
   };
 
   return (
-    <div className="card shadow border border-dark mb-3">
+    <div className="border border-dark bg-color-search">
       <form onSubmit={handleSubmit}>
         <div className="input-group">
+
           <input
             type="text"
-            className="form-control"
+            className="form-control border-0 rounded-0 bg-color-search large-placeholder"
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={handleChange}
             aria-label="Rechercher"
           />
-          <button className="btn btn-primary" type="submit">
-            <img className="img-fluid w-25 bi bi-search" src="/icons/search.png"></img>
+
+          <button className="btn rounded-0" type="submit">
+            <img className="img-fluid w-25" src="/icons/search.png"></img>
           </button>
+          
         </div>
       </form>
-
     </div>
   );
 }

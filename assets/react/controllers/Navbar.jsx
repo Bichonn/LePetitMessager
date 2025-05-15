@@ -7,14 +7,14 @@ export default function Navbar() {
 
       <div>
         <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
-        <NavIcons iconPath={"/icons/message.png"} iconName={"Message"} />
+        <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
         <NavIcons iconPath={"/icons/write.png"} iconName={"Ajouter"} />
         <NavIcons iconPath={"/icons/top.png"} iconName={"Gros Titres"} />
       </div>
 
       <div className='mt-auto'>
         <NavIcons iconPath={"/icons/notif.png"} iconName={"Courrier"} />
-        <NavIcons iconPath={"/icons/profil.png"} iconName={"profil"} />
+        <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />
       </div>
 
     </div>

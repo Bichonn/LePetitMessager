@@ -1,29 +1,189 @@
 /* Variables couleurs en mode clair (par défaut) */
 :root {
-  --bg-color: #DFC699;
-  --card-bg: #fff;
+  --bg-color: #F3DCB3;
+  --card-bg: #ffffff;
   --text-color: #212529;
-  --border-color: #343a40;
+  --border-color: #A58D5E;
+  --navbar-bg: #DFC699;
+  --button-hover: #CAAF7A;
+  --icon-text-bg: rgba(165, 141, 94, 0.7);
 }
 
 /* Variables couleurs en mode sombre */
 [data-bs-theme="dark"] {
   --bg-color: #332D2D;
-  --card-bg: #212529;
+  --card-bg: #1E1A1A;
   --text-color: #f8f9fa;
-  --border-color: #6c757d;
+  --border-color: #6C5F45;
+  --navbar-bg: #221E1E;
+  --button-hover: #4A4343;
+  --icon-text-bg: rgba(74, 67, 67, 0.9);
 }
 
+/* Styles de base pour le body et les cartes */
 body {
   background-color: var(--bg-color) !important;
   color: var(--text-color) !important;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .card {
   background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Animation de transition entre les modes */
-body, .card, .btn, .form-control, .alert {
+/* Styles de la navbar */
+.navbar {
+  background-color: var(--navbar-bg) !important;
+  border-color: var(--border-color) !important;
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Style des éléments de la navbar */
+.navbar .nav-item {
+  position: relative;
+  height: 80px !important; /* Légèrement augmenté pour accommoder la police plus grande */
+  width: 70px !important;
+  margin: 0.5rem auto !important;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.navbar .nav-item:hover {
+  background-color: var(--button-hover);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Conteneur des icônes */
+.navbar .nav-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+/* Style des icônes - TAILLE RÉDUITE */
+.navbar-icon {
+  width: 42px !important;
+  height: 42px !important;    
+  min-width: 42px !important; 
+  max-width: 42px !important; 
+  object-fit: contain;
+}
+
+/* Suppression de la transformation qui cause le mouvement */
+.navbar .nav-link:hover img {
+  transform: none !important;
+}
+
+/* Style du logo */
+.navbar-logo {
+  width: 60px !important;
+  max-width: 60px !important;
+}
+
+/* Styles des noms d'icônes - POLICE AGRANDIE */
+.icon-name-appear {
+  display: none !important;
+  margin-top: 8px;
+  font-size: 14px; /* Augmenté de 12px à 14px */
+  font-weight: 600; /* Augmenté pour meilleure visibilité */
+  color: var(--text-color);
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.2;
+  height: 16px; /* Augmenté pour accommoder la police plus grande */
+}
+
+.nav-hover:hover .icon-name-appear {
+  display: block !important;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Animation pour les noms d'icônes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Style du bouton de thème */
+.theme-toggle button {
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle button:hover {
+  transform: rotate(15deg);
+}
+
+.theme-toggle {
+  margin-top: 0.5rem;
+}
+
+/* Boutons avec thème */
+.btn-theme-primary {
+  background-color: var(--navbar-bg);
+  border-color: var(--border-color);
+  color: var(--text-color);
+  transition: background-color 0.2s ease;
+}
+
+.btn-theme-primary:hover {
+  background-color: var(--button-hover);
+}
+
+/* Assurer visibilité de la navbar */
+.col-md-2 > div {
+  display: block !important;
+  visibility: visible !important;
+}
+
+/* Transitions pour divers éléments */
+.btn, .form-control, .alert {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Styles pour l'en-tête de la navbar */
+.navbar .d-flex.flex-column.align-items-center.mb-4 {
+  margin-bottom: 1rem !important;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* Textes dans la navbar */
+.navbar h5, .navbar .nav-link {
+  color: var(--text-color) !important;
+}
+
+/* Organisation des icônes dans la navbar */
+.navbar nav {
+  margin-bottom: 0.5rem;
+  padding-bottom: 2rem; /* Espacement entre les groupes d'icônes */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.navbar .mt-auto {
+  margin-top: auto !important; /* Force les icônes du bas à aller en bas */
+  /* border-top supprimé ici */
+  padding-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Ajustement titre de l'application - POLICE AGRANDIE */
+.navbar h5 {
+  font-size: 1.1rem; /* Augmenté de 0.9rem à 1.1rem */
+  margin-top: 0.5rem;
+  font-weight: 600; /* Ajouté pour plus de visibilité */
 }

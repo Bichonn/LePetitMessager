@@ -5,6 +5,9 @@ export default function RegisterForm() {
     const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '', username: '' });
     const [status, setStatus] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [error, setError] = useState(null);
 
 
     const handleChange = (e) => {
@@ -13,6 +16,10 @@ export default function RegisterForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (password !== confirmPassword) {
+            setError("Les mots de passe ne correspondent pas.");
+            return;
+        }
         const res = await fetch('/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -21,6 +28,9 @@ export default function RegisterForm() {
 
         if (res.ok) {
             setStatus('Compte créé avec succès !');
+            setTimeout(() => {
+                window.location.href = '/'; // Redirection vers la page d'accueil
+            }, 1000);
         } else {
             const errorText = await res.text();
             setStatus('Erreur : ' + errorText);
@@ -97,10 +107,26 @@ export default function RegisterForm() {
                                             id="password"
                                             name="password"
                                             className="form-control"
-                                            onChange={handleChange}
+                                            value={password}
+                                            onChange={e => {
+                                                setPassword(e.target.value);
+                                                setForm({ ...form, password: e.target.value });
+                                            }}
                                             required
                                         />
                                     </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="confirmPassword" className="form-label text-decoration-underline">Confirmer le mot de passe</label>
+                                        <input
+                                            type="password"
+                                            placeholder="Confirmez le mot de passe"
+                                            value={confirmPassword}
+                                            onChange={(e) => setConfirmPassword(e.target.value)}
+                                            required
+                                        />
+                                    </div>
+                                    {error && <div className="text-danger">{error}</div>}
+
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>
                                     {status && (
                                         <div className="status-message">

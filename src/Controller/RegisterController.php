@@ -9,11 +9,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Security\Http\Authentication\UserAuthenticatorInterface;
+use App\Security\AppAuthenticator;
 
 class RegisterController extends AbstractController
 {
     #[Route('/register', name: 'app_register', methods: ['POST'])]
-    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em): JsonResponse
+    public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserAuthenticatorInterface $userAuthenticator, AppAuthenticator $authenticator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
@@ -34,6 +36,13 @@ class RegisterController extends AbstractController
 
         $em->persist($user);
         $em->flush();
+
+        // Authentifier automatiquement l'utilisateur après l'inscription
+        $userAuthenticator->authenticateUser(
+            $user,
+            $authenticator,
+            $request
+        );
 
         return new JsonResponse(['status' => 'User created'], 201);
     }

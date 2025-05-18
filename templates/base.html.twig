@@ -12,6 +12,7 @@
             {{ encore_entry_script_tags('app') }}
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
+        <meta name="csrf-token" content="{{ csrf_token('authenticate') }}">
     </head>
     <body>
         {% block body %}{% endblock %}

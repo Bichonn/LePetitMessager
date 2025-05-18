@@ -1,0 +1,67 @@
+/* Style pour la modal */
+.modal-content {
+    border-radius: 0 !important; /* Rend les coins carrés */
+    border: 2px solid #000 !important; /* Bordure noire */
+    background-color: #ffeecf !important; /* Fond beige */
+}
+
+/* Style pour le header de la modal */
+.modal-header {
+    border-bottom: 1px solid #000;
+    padding: 1rem;
+    background-color: #d9b983 !important; /* Fond beige */
+}
+
+/* Style pour les inputs */
+.form-control {
+    border-radius: 0;
+    border: 1px solid #000;
+    background-color: #e3c693;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #000;
+    background-color: #e3c693;
+}
+
+/* Style pour le bouton submit */
+.modal-body .btn-primary {
+    border-radius: 0;
+    background-color: #F3DCB3;
+    border: 2px solid #000;
+    color: #000;
+    font-weight: bold;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+.modal-body .btn-primary:hover {
+    background-color: #E5C79B;
+    border-color: #000;
+    color: #000;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* Style pour les labels */
+.form-label {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+/* Style pour la ligne horizontale */
+.modal-body hr {
+    border: none;
+    height: 1px;
+    background-color: #000;
+    opacity: 1;
+}
+
+/* Style pour les messages de statut */
+.modal-body .status-message {
+    text-align: center;
+    padding: 10px;
+    margin-top: 1rem;
+    font-style: italic;
+    border: 1px solid #000;
+    background-color: #ffeecf;
+}

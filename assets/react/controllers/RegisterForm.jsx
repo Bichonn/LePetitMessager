@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import '../../styles/RegisterForm.css';
 
 export default function RegisterForm() {
     const [form, setForm] = useState({ email: '', password: '', firstName: '', lastName: '', username: '' });
@@ -19,7 +20,7 @@ export default function RegisterForm() {
         });
 
         if (res.ok) {
-            setStatus('Compte créé !');
+            setStatus('Compte créé avec succès !');
         } else {
             const errorText = await res.text();
             setStatus('Erreur : ' + errorText);
@@ -39,18 +40,74 @@ export default function RegisterForm() {
                 <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
-                            <div className="modal-header">
-                                <button type="button" className="btn-close" onClick={() => setShowModal(false)}></button>
+                            <div className="modal-header justify-content-center">
+                                <h3 class="text-center mb-0">Devenez un Messager !</h3>
+                                <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body">
-                                <form onSubmit={handleSubmit}>
-                                    <input type="text" name="firstName" placeholder="Prénom" onChange={handleChange} />
-                                    <input type="text" name="lastName" placeholder="Nom" onChange={handleChange} />
-                                    <input type="text" name="username" placeholder="Pseudo" onChange={handleChange} />
-                                    <input type="email" name="email" placeholder="Email" onChange={handleChange} />
-                                    <input type="password" name="password" placeholder="Mot de passe" onChange={handleChange} />
+                                <form onSubmit={handleSubmit} className="d-flex flex-column">
+                                    <div className="mb-3">
+                                        <label htmlFor="firstName" className="form-label text-decoration-underline">Prénom</label>
+                                        <input
+                                            type="text"
+                                            id="firstName"
+                                            name="firstName"
+                                            className="form-control"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="lastName" className="form-label text-decoration-underline">Nom</label>
+                                        <input
+                                            type="text"
+                                            id="lastName"
+                                            name="lastName"
+                                            className="form-control"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="username" className="form-label text-decoration-underline">Pseudo</label>
+                                        <input
+                                            type="text"
+                                            id="username"
+                                            name="username"
+                                            className="form-control"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="email" className="form-label text-decoration-underline">Email</label>
+                                        <input
+                                            type="email"
+                                            id="email"
+                                            name="email"
+                                            className="form-control"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="mb-3">
+                                        <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
+                                        <input
+                                            type="password"
+                                            id="password"
+                                            name="password"
+                                            className="form-control"
+                                            onChange={handleChange}
+                                            required
+                                        />
+                                    </div>
+                                    <hr />
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>
-                                    <p>{status}</p>
+                                    {status && (
+                                        <div className="status-message">
+                                            « {status} »
+                                        </div>
+                                    )}
                                 </form>
                             </div>
                         </div>
@@ -60,4 +117,3 @@ export default function RegisterForm() {
         </>
     );
 }
-// This code defines a React component for a registration form. It uses the useState hook to manage form data and submission status. The handleChange function updates the form state when input fields change, and handleSubmit sends the form data to the server when the form is submitted. The response status is displayed to the user.

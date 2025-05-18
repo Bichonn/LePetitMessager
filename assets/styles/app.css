@@ -11,36 +11,6 @@ body {
     font-size: 2rem;
 }
 
-/* Classes spécifiques avec une priorité plus élevée */
-.navbar-icon {
-    width: 70% !important; /* Plus grand que 65% précédent */
-    min-width: 42px !important; /* Taille minimale garantie */
-    max-width: 60px !important; /* Taille maximale augmentée */
-}
-
-.navbar-logo {
-    width: 80% !important;
-    max-width: 80px !important;
-}
-
-/* Logo de l'application (dans le haut de la navbar) */
-.navbar .d-flex.flex-column.align-items-center.mb-4 img {
-    width: 80%;
-    max-width: 80px;
-}
-
-.icon-name-appear {
-    text-shadow: 0.5px 0.5px 1px #000;
-    font-size: 14px;
-    font-weight: 600;
-}
-
-/* Améliorer l'espacement des éléments */
-.navbar .nav-item {
-    margin-bottom: 1.2rem !important;
-    padding: 0.5rem;
-}
-
 .custom-register-button {
     padding: 5px 25px;
     font-size: 1.2rem;

@@ -40,7 +40,7 @@ export default function RegisterForm() {
                 <div className="modal fade show d-block" tabIndex="-1" role="dialog" style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }}>
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
-                            <div className="modal-header justify-content-center">
+                            <div className="modal-header rounded-0 justify-content-center">
                                 <h3 class="text-center mb-0">Devenez un Messager !</h3>
                                 <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
@@ -101,7 +101,6 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
-                                    <hr />
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>
                                     {status && (
                                         <div className="status-message">

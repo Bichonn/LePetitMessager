@@ -1,0 +1,45 @@
+.navbar-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1rem 0;
+}
+
+.navbar-top {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.navbar-bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Styles pour les icônes et le texte au survol */
+.icon-name-appear {
+    white-space: nowrap;
+    position: absolute;
+    top: 45px; 
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.img-fluid.w-50 {
+    width: 40px !important;
+    height: 40px;
+    object-fit: contain;
+    transition: transform 0.2s;
+}
+
+.img-fluid.w-50:hover {
+    transform: scale(1.1);
+}
+
+.icon-name-appear {
+    text-shadow: 0.5px 0.5px 1px #000;
+    font-size: 14px;
+    font-weight: 600;
+}

@@ -16,19 +16,19 @@
 .form-control {
     border-radius: 0;
     border: 1px solid #000;
-    background-color: #e3c693;
+    background-color: #F3DCB3;
 }
 
 .form-control:focus {
     box-shadow: none;
     border-color: #000;
-    background-color: #e3c693;
+    background-color: #F3DCB3;
 }
 
 /* Style pour le bouton submit */
 .modal-body .btn-primary {
     border-radius: 0;
-    background-color: #F3DCB3;
+    background-color: #d9b983;
     border: 2px solid #000;
     color: #000;
     font-weight: bold;

@@ -11,7 +11,7 @@
 			</div>
 
 			<!-- Contenu principal (Centre) -->
-			<div class="col-md-6">
+			<div class="col-md-7">
 				<div {{ react_component('Header') }}></div>
 
 				<div {{ react_component('CreatePost') }}></div>
@@ -30,11 +30,18 @@
 			</div>
 
 			<!-- Widgets (Droite) -->
-			<div class="col-md-5 d-flex flex-column">
+			<div class="col-md-4 d-flex flex-column">
 				<div {{ react_component('SearchBar') }}></div>
-				<h2 class="text-center">Widgets</h2>
 
-				<div {{ react_component('RegisterForm') }}></div>
+				<div class="container border border-dark">
+					<div class="d-flex justify-content-center mb-1 mt-3">
+						<h5 class="text-center text-decoration-underline">Un visiteur ? devenez un messager !</h5>
+					</div>
+					<div class="d-flex justify-content-center mb-3">
+						<div {{ react_component('RegisterForm') }}></div>
+					</div>
+				</div>
+
 
 				<!-- Contenus à venir -->
 				<div class="card mb-3">
@@ -46,7 +53,7 @@
 				<div class="container mt-auto mb-0 border-top border-start border-dark">
 					<div class="text-center">
 						<h1 class="display-4 text-decoration-underline">Le Petit Messager</h1>
-                        <p class="text-muted">"La plume d'aujourd'hui érit l'actualité de demain"</p>
+						<p class="text-muted">"La plume d'aujourd'hui érit l'actualité de demain"</p>
 					</div>
 				</div>
 

@@ -1,40 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../../styles/LoginForm.css';
-import RegisterForm from './RegisterForm';
 
 export default function LoginForm() {
-    const [credentials, setCredentials] = useState({ email: '', password: '' });
-    const [status, setStatus] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [csrfToken, setCsrfToken] = useState('');
+    const [status, setStatus] = useState('');
+    const [error, setError] = useState(null);
 
-    const handleChange = (e) => {
-        setCredentials({ ...credentials, [e.target.name]: e.target.value });
-    };
+    // Récupérer le token CSRF au chargement du modal
+    useEffect(() => {
+        if (showModal) {
+            fetch('/login')
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const token = doc.querySelector('input[name="_csrf_token"]')?.value;
+                    if (token) {
+                        setCsrfToken(token);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur lors de la récupération du token CSRF:', error);
+                });
+        }
+    }, [showModal]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        
+        setError(null);
+        setStatus('Connexion en cours...');
+
+        const formData = new FormData();
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('_csrf_token', csrfToken);
+
         try {
             const response = await fetch('/login', {
                 method: 'POST',
+                body: formData,
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify(credentials)
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
             });
 
+            // Si la réponse est une redirection, suivre cette redirection
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
+
             if (response.ok) {
-                setStatus('Connexion réussie !');
+                setStatus('Connexion réussie!');
                 setTimeout(() => {
-                    window.location.href = '/';
+                    window.location.reload();
                 }, 1000);
             } else {
-                setStatus('Identifiants invalides');
+                try {
+                    const data = await response.json();
+                    setError(data.message || 'Échec de la connexion');
+                    setStatus('');
+                } catch (e) {
+                    setError('Identifiants invalides');
+                    setStatus('');
+                }
             }
         } catch (error) {
-            setStatus('Erreur de connexion');
+            setError('Erreur de connexion au serveur');
+            setStatus('');
         }
     };
 
@@ -54,14 +90,16 @@ export default function LoginForm() {
                             </div>
                             <div className="modal-body">
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
+                                    {error && <div className="alert alert-danger">{error}</div>}
+                                    
                                     <div className="mb-3">
                                         <label htmlFor="email" className="form-label text-decoration-underline">Email</label>
                                         <input
                                             type="email"
                                             id="email"
-                                            name="email"
                                             className="form-control"
-                                            onChange={handleChange}
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
                                             required
                                         />
                                     </div>
@@ -70,25 +108,21 @@ export default function LoginForm() {
                                         <input
                                             type="password"
                                             id="password"
-                                            name="password"
                                             className="form-control"
-                                            onChange={handleChange}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
                                             required
                                         />
                                     </div>
-                                    <button type="submit" className="btn btn-primary mt-3">Se connecter</button>
+                                    <input type="hidden" name="_csrf_token" value={csrfToken} />
+                                    
+                                    <button type="submit" className="btn btn-primary mt-3" disabled={!csrfToken}>
+                                        Se connecter
+                                    </button>
+                                    
                                     {status && (
-                                        <div className="status-message">
-                                            « {status} »
-                                        </div>
+                                        <div className="alert alert-info mt-3">{status}</div>
                                     )}
-
-                                    <p className="mt-4 fw-semibold text-center">
-                                        Nouveau sur Le Petit Messager ?<br />
-                                        <span className="text-muted">Créez un compte gratuitement pour rejoindre la communauté&nbsp;!</span>
-                                    </p>
-                                    <RegisterForm />
-
                                 </form>
                             </div>
                         </div>

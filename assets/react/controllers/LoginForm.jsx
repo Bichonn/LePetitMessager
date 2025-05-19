@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../../styles/LoginForm.css';
+import RegisterForm from './RegisterForm';
 
 export default function LoginForm() {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
@@ -81,6 +82,13 @@ export default function LoginForm() {
                                             « {status} »
                                         </div>
                                     )}
+
+                                    <p className="mt-4 fw-semibold text-center">
+                                        Nouveau sur Le Petit Messager ?<br />
+                                        <span className="text-muted">Créez un compte gratuitement pour rejoindre la communauté&nbsp;!</span>
+                                    </p>
+                                    <RegisterForm />
+
                                 </form>
                             </div>
                         </div>

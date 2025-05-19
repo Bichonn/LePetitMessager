@@ -119,12 +119,14 @@ export default function RegisterForm() {
                                         <label htmlFor="confirmPassword" className="form-label text-decoration-underline">Confirmer le mot de passe</label>
                                         <input
                                             type="password"
-                                            placeholder="Confirmez le mot de passe"
+                                            className='form-control'
                                             value={confirmPassword}
                                             onChange={(e) => setConfirmPassword(e.target.value)}
                                             required
                                         />
                                     </div>
+
+                                    {/* Affichage de l'erreur si les mots de passe ne correspondent pas */}
                                     {error && <div className="text-danger">{error}</div>}
 
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>

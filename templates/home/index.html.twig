@@ -1,78 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block body %}
-	<div class="container-fluid px-0">
-		<div
-			class="row g-0">
+{% block main_content %}
+	<div {{ react_component('layout/Header') }}></div>
 
-			<!-- Barre de navigation (Gauche) -->
-			<div class="col-md-1">
-				<div {{ react_component('Navbar') }}></div>
-			</div>
+	<div {{ react_component('posts/CreatePost') }}></div>
 
-			<!-- Contenu principal (Centre) -->
-			<div class="col-md-7">
-				<div {{ react_component('Header') }}></div>
-
-				<div {{ react_component('CreatePost') }}></div>
-
-				<div {{ react_component('ListPost') }}></div>
-
-				<div class="shadow border border-dark">
-					<div class="card-header bg-primary text-white">
-						<h1 class="mb-0">Test</h1>
-					</div>
-					<div class="card-body">
-						<p class="alert alert-info">avant</p>
-						<div class="alert alert-warning" {{ react_component('Hello', { fullName: 'Bichon' } ) }}></div>
-						<div class="mb-4 p-3 border rounded bg-light" {{ react_component('Counter', { title: 'My Test Counter', initialValue: 5 } ) }}></div>
-						<p class="alert alert-success">après</p>
-					</div>
-				</div>
-			</div>
-
-			<!-- Widgets (Droite) -->
-			<div class="col-md-4 d-flex flex-column">
-				<div {{ react_component('SearchBar') }}></div>
-
-				{% if app.user is null %}
-					<div class="container border border-dark">
-						<div class="d-flex justify-content-center mb-1 mt-3">
-							<h5 class="text-center text-decoration-underline">Messager ! à votre plume !</h5>
-						</div>
-						<div class="d-flex justify-content-center mb-3">
-							<div {{ react_component('LoginForm') }}></div>
-							<div {{ react_component('RegisterForm') }}></div>
-						</div>
-					</div>
-				{% else %}
-					<div class="container border border-dark">
-						<div class="d-flex justify-content-center mb-1 mt-3">
-							<h5 class="text-center text-decoration-underline">Bienvenue,
-								{{ app.user.username }}
-								!</h5>
-						</div>
-						<div class="d-flex justify-content-center mb-3">
-							<a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
-						</div>
-					</div>
-				{% endif %}
-
-
-				<!-- Contenus à venir -->
-				<div class="card mb-3">
-					<div class="card-body text-center text-muted">
-						Widgets à venir
-					</div>
-				</div>
-
-				<div class="container mt-auto mb-0 border-top border-start border-dark">
-					<div class="text-center">
-						<h1 class="display-4 text-decoration-underline">Le Petit Messager</h1>
-						<p class="text-muted">"La plume d'aujourd'hui écrit l'actualité de demain"</p>
-					</div>
-				</div>
-
-			</div>
-		</div>
-	{% endblock %}
+	<div {{ react_component('posts/ListPost') }}></div>
+{% endblock %}

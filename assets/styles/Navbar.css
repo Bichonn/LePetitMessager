@@ -4,6 +4,9 @@
     flex-direction: column;
     justify-content: space-between;
     padding: 1rem 0;
+    width: 8.35%; /* Équivalent à col-md-1 */
+    
+    z-index: 1000;
 }
 
 .navbar-top {
@@ -36,10 +39,4 @@
 
 .img-fluid.w-50:hover {
     transform: scale(1.1);
-}
-
-.icon-name-appear {
-    text-shadow: 0.5px 0.5px 1px #000;
-    font-size: 14px;
-    font-weight: 600;
 }

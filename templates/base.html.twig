@@ -1,20 +1,72 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+	<head>
+		<meta charset="UTF-8">
+		<title>
+			{% block title %}Welcome!
+			{% endblock %}
+		</title>
+		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+		{% block stylesheets %}
+			{{ encore_entry_link_tags('app') }}
+		{% endblock %}
 
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-        <meta name="csrf-token" content="{{ csrf_token('authenticate') }}">
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+		{% block javascripts %}
+			{{ encore_entry_script_tags('app') }}
+			{% block importmap %}
+				{{ importmap('app') }}
+			{% endblock %}
+		{% endblock %}
+		<meta name="csrf-token" content="{{ csrf_token('authenticate') }}">
+	</head>
+
+	<body>
+		<div class="container-fluid px-0">
+			<div
+				class="row g-0">
+
+				<!-- Barre de navigation (Gauche) -->
+				<div class="col-md-1">
+					<div {{ react_component('layout/Navbar') }}></div>
+				</div>
+
+				<!-- Contenu principal (Centre) -->
+				<div class="col-md-7"> {% block main_content %}{% endblock %}
+					</div>
+
+                <!-- Wigets (Droite) -->
+                <div class="widget-side-container col-md-4 d-flex flex-column">
+
+                    <div {{ react_component('SearchBar') }}></div>
+
+                    {% if app.user is null %}
+                        <div class="container border-bottom border-top border-dark">
+                            <div class="d-flex justify-content-center mb-1 mt-3">
+                                <h5 class="text-center text-decoration-underline">Messager ! à votre plume !</h5>
+                            </div>
+                            <div class="d-flex justify-content-center mb-3">
+                                <div {{ react_component('auth/LoginForm') }}></div>
+                                <div {{ react_component('auth/RegisterForm') }}></div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="container border border-dark">
+                            <div class="d-flex justify-content-center mb-1 mt-3">
+                                <h5 class="text-center text-decoration-underline">Bienvenue,
+                                    {{ app.user.username }}
+                                    !</h5>
+                            </div>
+                            <div class="d-flex justify-content-center mb-3">
+                                <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div {{ react_component('layout/Footer') }}></div>
+
+                </div>
+                
+            </div>
+		</div>	
+	</body>
 </html>

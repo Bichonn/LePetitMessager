@@ -1,0 +1,20 @@
+import React, { useState } from "react";
+
+export default function NavIcons({ iconPath, iconName }) {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+        <div className="position-relative d-flex flex-column align-items-center mb-4"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <img className="img-fluid w-50" src={iconPath} alt={iconName} />
+
+            {isHovered && (
+                <span className="position-absolute">
+                    <h6 className="icon-name-appear m-0"><strong>{iconName}</strong></h6>
+                </span>
+            )}
+        </div>
+    );
+}

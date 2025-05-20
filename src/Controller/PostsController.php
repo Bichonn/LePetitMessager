@@ -79,32 +79,39 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts', name: 'app_posts', methods: ['GET'])]
-public function show(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
-{
-    $posts = $entityManager->getRepository(Posts::class)->findAll();
+    public function show(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+    {
+        $posts = $entityManager->getRepository(Posts::class)->findAll();
 
-    if (!$posts) {
-        return $this->json(
-            ['message' => 'Aucun post trouvé'],
-            Response::HTTP_NOT_FOUND
-        );
+        if (!$posts) {
+            return $this->json(
+                ['message' => 'Aucun post trouvé'],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+
+        // Sérialisation personnalisée pour éviter les références circulaires
+        $data = [];
+        foreach ($posts as $post) {
+            $postData = [
+                'id' => $post->getId(),
+                'content_text' => $post->getContentText(),
+                'content_multimedia' => $post->getContentMultimedia(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => null
+            ];
+
+            // Vérifier si getFkUser() retourne un objet avant d'accéder à ses propriétés
+            if ($post->getFkUser()) {
+                $postData['user'] = [
+                    'id' => $post->getFkUser()->getId(),
+                    'username' => $post->getFkUser()->getUsername(),
+                ];
+            }
+
+            $data[] = $postData;
+        }
+
+        return $this->json($data, Response::HTTP_OK);
     }
-
-    // Sérialisation personnalisée pour éviter les références circulaires
-    $data = [];
-    foreach ($posts as $post) {
-        $data[] = [
-            'id' => $post->getId(),
-            'content_text' => $post->getContentText(),
-            'content_multimedia' => $post->getContentMultimedia(),
-            'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-            'user' => $post->getFkUser() ? [
-                'id' => $post->getFkUser()->getId(),
-                'username' => $post->getFkUser()->getUsername(),
-            ] : null,
-        ];
-    }
-
-    return $this->json($data, Response::HTTP_OK);
-}
 }

@@ -9,21 +9,28 @@ export default function LoginForm() {
     const [status, setStatus] = useState('');
     const [error, setError] = useState(null);
 
+    const [tokenError, setTokenError] = useState(false);
+
     // Récupérer le token CSRF au chargement du modal
     useEffect(() => {
         if (showModal) {
-            fetch('/login')
-                .then(response => response.text())
-                .then(html => {
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const token = doc.querySelector('input[name="_csrf_token"]')?.value;
-                    if (token) {
-                        setCsrfToken(token);
+            setTokenError(false);
+            fetch('/get-csrf-token')
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch CSRF token');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.token) {
+                        setCsrfToken(data.token);
+                    } else {
+                        setTokenError(true);
+                        console.error('CSRF token not found in response');
                     }
                 })
                 .catch(error => {
-                    console.error('Erreur lors de la récupération du token CSRF:', error);
+                    setTokenError(true);
+                    console.error('Error fetching CSRF token:', error);
                 });
         }
     }, [showModal]);
@@ -47,11 +54,7 @@ export default function LoginForm() {
                 }
             });
 
-            // Si la réponse est une redirection, suivre cette redirection
-            if (response.redirected) {
-                window.location.href = response.url;
-                return;
-            }
+            
 
             if (response.ok) {
                 setStatus('Connexion réussie!');
@@ -91,7 +94,7 @@ export default function LoginForm() {
                             <div className="modal-body">
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
                                     {error && <div className="alert alert-danger">{error}</div>}
-                                    
+
                                     <div className="mb-3">
                                         <label htmlFor="email" className="form-label text-decoration-underline">Email</label>
                                         <input
@@ -115,14 +118,21 @@ export default function LoginForm() {
                                         />
                                     </div>
                                     <input type="hidden" name="_csrf_token" value={csrfToken} />
-                                    
+
                                     <button type="submit" className="btn btn-primary mt-3" disabled={!csrfToken}>
                                         Se connecter
                                     </button>
-                                    
+
                                     {status && (
                                         <div className="alert alert-info mt-3">{status}</div>
                                     )}
+
+                                    {tokenError && (
+                                        <div className="alert alert-danger mb-3">
+                                            Impossible de récupérer le token de sécurité. Veuillez rafraîchir la page.
+                                        </div>
+                                    )}
+
                                 </form>
                             </div>
                         </div>

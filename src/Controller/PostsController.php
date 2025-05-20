@@ -10,39 +10,48 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Serializer\SerializerInterface;
 
 class PostsController extends AbstractController
 {
     #[Route('/post/create', name: 'app_post_create', methods: ['POST'])]
-    public function create(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): JsonResponse
-    {
+    public function create(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger
+    ): JsonResponse {
         $content = $request->request->get('content');
         $mediaFile = $request->files->get('media');
 
-        if (empty($content) && !$mediaFile) {
-            return $this->json(['message' => 'Le post doit contenir du texte ou une image'], Response::HTTP_BAD_REQUEST);
+        // 1. Vérification du contenu texte (obligatoire)
+        if (empty($content)) {
+            return $this->json(
+                ['message' => 'Le contenu texte est obligatoire'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        // 2. Vérification de l'utilisateur connecté (obligatoire)
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(
+                ['message' => 'Vous devez être connecté pour créer un post'],
+                Response::HTTP_UNAUTHORIZED
+            );
         }
 
         $post = new Posts();
-
-        // Si l'utilisateur est connecté, associer le post à cet utilisateur
-        // Sinon, laisser fk_user à null
-        if ($this->getUser()) {
-            $post->setFkUser($this->getUser());
-        }
-        // Aucun else - cela laissera fk_user à null par défaut
-
-        $post->setContentText($content);
+        $post->setFkUser($user); // Obligatoire
+        $post->setContentText($content); // Obligatoire
         $post->setCreatedAt(new \DateTimeImmutable());
 
-        // Handle file upload if present
+        // Gestion du média (optionnel)
         if ($mediaFile) {
             $originalFilename = pathinfo($mediaFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeFilename = $slugger->slug($originalFilename);
             $newFilename = $safeFilename . '-' . uniqid() . '.' . $mediaFile->guessExtension();
 
             try {
-                // Assurez-vous que le répertoire existe
                 if (!file_exists($this->getParameter('uploads_directory'))) {
                     mkdir($this->getParameter('uploads_directory'), 0777, true);
                 }
@@ -55,7 +64,7 @@ class PostsController extends AbstractController
                 $post->setContentMultimedia($newFilename);
             } catch (\Exception $e) {
                 return $this->json([
-                    'message' => 'Une erreur est survenue lors de l\'upload du fichier: ' . $e->getMessage()
+                    'message' => 'Erreur lors de l\'upload du fichier : ' . $e->getMessage()
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
@@ -63,6 +72,39 @@ class PostsController extends AbstractController
         $entityManager->persist($post);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Post créé avec succès'], Response::HTTP_CREATED);
+        return $this->json(
+            ['message' => 'Post créé avec succès'],
+            Response::HTTP_CREATED
+        );
     }
+
+    #[Route('/posts', name: 'app_posts', methods: ['GET'])]
+public function show(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+{
+    $posts = $entityManager->getRepository(Posts::class)->findAll();
+
+    if (!$posts) {
+        return $this->json(
+            ['message' => 'Aucun post trouvé'],
+            Response::HTTP_NOT_FOUND
+        );
+    }
+
+    // Sérialisation personnalisée pour éviter les références circulaires
+    $data = [];
+    foreach ($posts as $post) {
+        $data[] = [
+            'id' => $post->getId(),
+            'content_text' => $post->getContentText(),
+            'content_multimedia' => $post->getContentMultimedia(),
+            'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+            'user' => $post->getFkUser() ? [
+                'id' => $post->getFkUser()->getId(),
+                'username' => $post->getFkUser()->getUsername(),
+            ] : null,
+        ];
+    }
+
+    return $this->json($data, Response::HTTP_OK);
+}
 }

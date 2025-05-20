@@ -28,12 +28,6 @@ final class Version20250517164100 extends AbstractMigration
         $this->addSql(<<<'SQL'
             ALTER TABLE users ALTER bio SET NOT NULL
         SQL);
-        $this->addSql(<<<'SQL'
-            ALTER TABLE users ADD CONSTRAINT UNIQUE_EMAIL UNIQUE (email)
-        SQL);
-        $this->addSql(<<<'SQL'
-            ALTER TABLE users ADD CONSTRAINT UNIQUE_USERNAME UNIQUE (username)
-        SQL);
     }
 
     public function down(Schema $schema): void

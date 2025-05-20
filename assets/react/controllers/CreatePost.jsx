@@ -11,12 +11,24 @@ export default function CreatePost() {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      
-      // Create preview for images
+
+      // Create preview for images or videos
       if (selectedFile.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setPreview(reader.result);
+          setPreview({
+            type: 'image',
+            url: reader.result
+          });
+        };
+        reader.readAsDataURL(selectedFile);
+      } else if (selectedFile.type === 'video/mp4') {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreview({
+            type: 'video',
+            url: reader.result
+          });
         };
         reader.readAsDataURL(selectedFile);
       } else {
@@ -27,23 +39,23 @@ export default function CreatePost() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!content && !file) {
       setFeedback({ type: 'error', message: 'Veuillez ajouter du texte ou une image' });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     const formData = new FormData();
     formData.append('content', content);
     if (file) {
       formData.append('media', file);
     }
-    
+
     // Get CSRF token from meta tag
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-    
+
     try {
       const response = await fetch('/post/create', {
         method: 'POST',
@@ -52,13 +64,13 @@ export default function CreatePost() {
           'X-CSRF-TOKEN': token
         } : {},
       });
-      
+
       if (response.ok) {
         setContent('');
         setFile(null);
         setPreview(null);
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
-        
+
         // Optional: reload the page or update the post list
         window.location.reload();
       } else {
@@ -85,26 +97,35 @@ export default function CreatePost() {
             maxLength={1000}
           />
         </div>
-        
+
         {preview && (
           <div className="mb-3 text-center">
-            <img src={preview} alt="Preview" className="img-fluid mb-2" style={{ maxHeight: '200px' }} />
-            <button 
-              type="button" 
+            {preview.type === 'image' ? (
+              <img src={preview.url} alt="Preview" className="img-fluid mb-2" style={{ maxHeight: '200px' }} />
+            ) : preview.type === 'video' ? (
+              <video
+                src={preview.url}
+                className="img-fluid mb-2"
+                style={{ maxHeight: '200px' }}
+                controls
+              />
+            ) : null}
+            <button
+              type="button"
               className="btn btn-sm btn-outline-danger d-block mx-auto"
               onClick={() => { setFile(null); setPreview(null); }}
             >
-              Supprimer l'image
+              Supprimer le média
             </button>
           </div>
         )}
-        
+
         <div className="d-flex justify-content-between align-items-center">
           <div>
-            <input 
-              type="file" 
-              id="media-upload" 
-              className="d-none" 
+            <input
+              type="file"
+              id="media-upload"
+              className="d-none"
               accept="image/*,video/mp4"
               onChange={handleFileChange}
             />
@@ -112,16 +133,16 @@ export default function CreatePost() {
               <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '20px' }} />
             </label>
           </div>
-          
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             className="btn btn-primary rounded-pill px-4"
             disabled={isSubmitting || (!content && !file)}
           >
             {isSubmitting ? 'Envoi...' : 'Poster'}
           </button>
         </div>
-        
+
         {feedback.message && (
           <div className={`alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
             {feedback.message}

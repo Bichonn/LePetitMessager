@@ -1,11 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function CreatePost() {
+  const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+
+  useEffect(() => {
+    const handleOpenEvent = () => {
+      setIsVisible(prevIsVisible => {
+        const newVisibility = !prevIsVisible;
+        if (newVisibility) {
+          // Reset form only when opening
+          setContent('');
+          setFile(null);
+          setPreview(null);
+          setFeedback({ type: '', message: '' });
+          setIsSubmitting(false);
+        }
+        return newVisibility;
+      });
+    };
+    document.addEventListener('openCreatePostSection', handleOpenEvent);
+    return () => {
+      document.removeEventListener('openCreatePostSection', handleOpenEvent);
+    };
+  }, []);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -83,6 +105,10 @@ export default function CreatePost() {
       setIsSubmitting(false);
     }
   };
+
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="post-creation-card">

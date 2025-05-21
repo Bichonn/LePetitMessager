@@ -32,7 +32,8 @@
 
 				<!-- Contenu principal (Centre) -->
 				<div class="col-md-7"> {% block main_content %}{% endblock %}
-					</div>
+				    <div {{ react_component('posts/CreatePost') }}></div> {# This line is important #}
+				</div>
 
                 <!-- Wigets (Droite) -->
                 <div class="widget-side-container col-md-4 d-flex flex-column">

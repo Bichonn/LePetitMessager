@@ -8,6 +8,8 @@ export default function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
 
+  // Listen for the custom event to toggle visibility
+  // and reset the form
   useEffect(() => {
     const handleOpenEvent = () => {
       setIsVisible(prevIsVisible => {
@@ -29,6 +31,8 @@ export default function CreatePost() {
     };
   }, []);
 
+  // Handle file selection and preview
+  // This function is called when the user selects a file
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -45,20 +49,35 @@ export default function CreatePost() {
         };
         reader.readAsDataURL(selectedFile);
       } else if (selectedFile.type === 'video/mp4') {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          setPreview({
-            type: 'video',
-            url: reader.result
-          });
-        };
-        reader.readAsDataURL(selectedFile);
+        setPreview({
+          type: 'video',
+          url: URL.createObjectURL(selectedFile)
+        });
       } else {
         setPreview(null);
       }
+    } else {
+      // If no file is selected, reset the preview
+      if (preview && preview.url.startsWith('blob:')) {
+        URL.revokeObjectURL(preview.url);
+      }
+      setFile(null);
+      setPreview(null);
     }
   };
 
+  // Clean up the object URL when the component unmounts
+  // or when the preview changes
+  useEffect(() => {
+    return () => {
+      if (preview && preview.url && preview.url.startsWith('blob:')) {
+        URL.revokeObjectURL(preview.url);
+      }
+    };
+  }, [preview]);
+
+  // Handle form submission
+  // This function is called when the user submits the form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -106,6 +125,7 @@ export default function CreatePost() {
     }
   };
 
+  // Close the post creation card when the user clicks outside of it
   if (!isVisible) {
     return null;
   }

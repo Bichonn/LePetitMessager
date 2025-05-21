@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../../../styles/PostList.css';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);
@@ -41,21 +42,28 @@ export default function PostList() {
     return (
         <div>
             {posts.map(post => (
-                <div key={post.id}>
-                    <div>
-                        <h3>
-                            {post.user?.username || 'Anonyme'} |
-                            Date: {new Date(post.created_at).toLocaleString()}
-                        </h3>
-                    </div>
-                    <h5>{post.content_text}</h5>
-                    {post.content_multimedia && (
-                        <div>
-                            Média: {post.content_multimedia} (type: {post.content_multimedia.split('.').pop()})
+                <div key={post.id} className="border border-dark bg-color-search inner-shadow-post p-3">
+                   
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                            <h5 className="mb-0">
+                                {post.user?.username || 'Anonyme'}
+                            </h5>
+                            <small className="text-muted">
+                                {new Date(post.created_at).toLocaleString()}
+                            </small>
                         </div>
-                    )}
 
-                    <hr />
+                        <p className="card-text">{post.content_text}</p>
+
+                        {post.content_multimedia && (
+                            <div className="media-preview mt-2">
+                                <strong>Média :</strong> {post.content_multimedia} <br />
+                                <small className="text-muted">
+                                    Type : {post.content_multimedia.split('.').pop()}
+                                </small>
+                            </div>
+                        )}
+                    
                 </div>
             ))}
         </div>

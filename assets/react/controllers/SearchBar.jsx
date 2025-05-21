@@ -18,7 +18,7 @@ export default function SearchBar({ onSearch }) {
   };
 
   return (
-    <div className="border-bottom  border-dark bg-color-search">
+    <div className="border-bottom border-dark bg-color-search">
       <form onSubmit={handleSubmit}>
         <div className="input-group">
 

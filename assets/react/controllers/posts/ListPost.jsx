@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/PostList.css';
+import LikeBtn from './fonc_post/LikeBtn';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);
@@ -63,7 +64,10 @@ export default function PostList() {
                                 </small>
                             </div>
                         )}
-                    
+
+                        <div>
+                            <LikeBtn />
+                    </div>
                 </div>
             ))}
         </div>

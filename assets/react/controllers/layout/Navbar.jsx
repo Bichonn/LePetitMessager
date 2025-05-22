@@ -12,7 +12,9 @@ export default function Navbar() {
   return (
     <div className="navbar-container border-end border-dark position-fixed">
       <div className="navbar-top">
-        <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
+        <a href="/" className="nav-link">
+          <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
+        </a>
         <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
         <div onClick={handleWriteClick} style={{ cursor: 'pointer' }} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleWriteClick()}>
           <NavIcons iconPath={"/icons/write.png"} iconName={"Ecrire"} />
@@ -22,7 +24,9 @@ export default function Navbar() {
 
       <div className="navbar-bottom">
         <NavIcons iconPath={"/icons/notif.png"} iconName={"Courier"} />
-        <NavIcons iconPath={"/icons/profil.png"} iconName={"profil"} />
+        <a href="/profil" className="nav-link">
+          <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />
+        </a>
       </div>
     </div>
   );

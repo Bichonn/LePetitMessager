@@ -12,6 +12,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
+
 class PostsController extends AbstractController
 {
     #[Route('/post/create', name: 'app_post_create', methods: ['POST'])]
@@ -81,7 +82,7 @@ class PostsController extends AbstractController
     #[Route('/posts', name: 'app_posts', methods: ['GET'])]
     public function show(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
-        $posts = $entityManager->getRepository(Posts::class)->findAll();
+        $posts = $entityManager->getRepository(Posts::class)->findBy([], ['created_at' => 'DESC']);
 
         if (!$posts) {
             return $this->json(

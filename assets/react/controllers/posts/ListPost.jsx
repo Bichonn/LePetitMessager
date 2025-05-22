@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/PostList.css';
-import LikeBtn from './fonc_post/LikeBtn';
-import CommentBtn from './fonc_post/CommentBtn';
+import LikeBtn from './btn_post/LikeBtn';
+import CommentBtn from './btn_post/CommentBtn';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);
@@ -76,7 +76,7 @@ export default function PostList() {
                                     <img
                                         src={`/uploads/media/${post.content_multimedia}`}
                                         alt="Contenu partagé"
-                                        className="img-fluid mb-2 w-75"
+                                        className="img-fluid mb-2 w-25"
                                     />
                                 </>
                             ) : isVideoFile(post.content_multimedia) ? (
@@ -84,7 +84,7 @@ export default function PostList() {
                                     <video
                                         src={`/uploads/media/${post.content_multimedia}`}
                                         controls
-                                        className="img-fluid mb-2"
+                                        className="img-fluid mb-2 w-75"
                                     />
                                 </>
                             ) : null}

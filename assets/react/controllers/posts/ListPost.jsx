@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/PostList.css';
+import LikeBtn from './fonc_post/LikeBtn';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);
@@ -88,7 +89,10 @@ export default function PostList() {
                             ) : null}
                         </div>
                     )}
-
+                    <div className="d-flex justify-content-between align-items-center mt-2">
+                        <LikeBtn />
+                        <button className="btn btn-outline-primary">Commenter</button>
+                    </div>
                 </div>
             ))}
         </div>

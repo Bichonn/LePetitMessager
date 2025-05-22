@@ -6,6 +6,18 @@ export default function PostList() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
+
+    // Fonctions utilitaires pour détecter le type de fichier
+    const isImageFile = (filename) => {
+        const extension = filename.split('.').pop().toLowerCase();
+        return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(extension);
+    };
+
+    const isVideoFile = (filename) => {
+        const extension = filename.split('.').pop().toLowerCase();
+        return ['mp4', 'webm', 'ogg', 'mov'].includes(extension);
+    };
+
     const fetchPosts = async () => {
         try {
             const response = await fetch('/posts');
@@ -43,27 +55,40 @@ export default function PostList() {
         <div>
             {posts.map(post => (
                 <div key={post.id} className="border border-dark bg-color-search inner-shadow-post p-3">
-                   
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                            <h5 className="mb-0">
-                                {post.user?.username || 'Anonyme'}
-                            </h5>
-                            <small className="text-muted">
-                                {new Date(post.created_at).toLocaleString()}
-                            </small>
+
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                        <h5 className="mb-0">
+                            {post.user?.username || 'Anonyme'}
+                        </h5>
+                        <small className="text-muted">
+                            {new Date(post.created_at).toLocaleString()}
+                        </small>
+                    </div>
+
+                    <p className="card-text">{post.content_text}</p>
+
+                    {post.content_multimedia && (
+                        <div className="media-preview mt-2">
+                            {isImageFile(post.content_multimedia) ? (
+                                <>
+                                    <img 
+                                        src={`/uploads/media/${post.content_multimedia}`} 
+                                        alt="Contenu partagé" 
+                                        className="img-fluid mb-2 w-75" 
+                                    />
+                                </>
+                            ) : isVideoFile(post.content_multimedia) ? (
+                                <>
+                                    <video 
+                                        src={`/uploads/media/${post.content_multimedia}`} 
+                                        controls
+                                        className="img-fluid mb-2"
+                                    />
+                                </>
+                            ) : null}
                         </div>
+                    )}
 
-                        <p className="card-text">{post.content_text}</p>
-
-                        {post.content_multimedia && (
-                            <div className="media-preview mt-2">
-                                <strong>Média :</strong> {post.content_multimedia} <br />
-                                <small className="text-muted">
-                                    Type : {post.content_multimedia.split('.').pop()}
-                                </small>
-                            </div>
-                        )}
-                    
                 </div>
             ))}
         </div>

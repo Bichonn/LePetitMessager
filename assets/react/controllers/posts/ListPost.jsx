@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/PostList.css';
 import LikeBtn from './fonc_post/LikeBtn';
+import CommentBtn from './fonc_post/CommentBtn';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);
@@ -72,16 +73,16 @@ export default function PostList() {
                         <div className="media-preview mt-2">
                             {isImageFile(post.content_multimedia) ? (
                                 <>
-                                    <img 
-                                        src={`/uploads/media/${post.content_multimedia}`} 
-                                        alt="Contenu partagé" 
-                                        className="img-fluid mb-2 w-75" 
+                                    <img
+                                        src={`/uploads/media/${post.content_multimedia}`}
+                                        alt="Contenu partagé"
+                                        className="img-fluid mb-2 w-75"
                                     />
                                 </>
                             ) : isVideoFile(post.content_multimedia) ? (
                                 <>
-                                    <video 
-                                        src={`/uploads/media/${post.content_multimedia}`} 
+                                    <video
+                                        src={`/uploads/media/${post.content_multimedia}`}
                                         controls
                                         className="img-fluid mb-2"
                                     />
@@ -89,9 +90,9 @@ export default function PostList() {
                             ) : null}
                         </div>
                     )}
-                    <div className="d-flex justify-content-between align-items-center mt-2">
+                    <div className="d-flex justify-content-start align-items-center gap-3 mt-2">
                         <LikeBtn />
-                        <button className="btn btn-outline-primary">Commenter</button>
+                        <CommentBtn />
                     </div>
                 </div>
             ))}

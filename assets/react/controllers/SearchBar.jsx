@@ -18,13 +18,13 @@ export default function SearchBar({ onSearch }) {
   };
 
   return (
-    <div className="border-bottom border-dark bg-color-search">
+    <div className="bg-color-search border-bottom border-dark">
       <form onSubmit={handleSubmit}>
         <div className="input-group">
 
           <input
             type="text"
-            className="form-control border-0 rounded-0 bg-color-search large-placeholder"
+            className="border-end border-dark form-control border-0 rounded-0 bg-color-search large-placeholder inner-shadow"
             placeholder="Rechercher..."
             value={searchTerm}
             onChange={handleChange}

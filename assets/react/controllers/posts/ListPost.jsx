@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import PostItem from './PostItem';
+import PostItem from './post_tool/PostItem';
 
 export default function PostList() {
     const [posts, setPosts] = useState([]);

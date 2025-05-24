@@ -11,6 +11,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Filesystem\Filesystem;
 
 
 class PostsController extends AbstractController
@@ -77,6 +79,126 @@ class PostsController extends AbstractController
             ['message' => 'Post créé avec succès'],
             Response::HTTP_CREATED
         );
+    }
+
+    #[Route('/post/{id}/update', name: 'app_post_update', methods: ['POST'])] // Using POST for FormData
+    public function update(
+        Request $request,
+        Posts $post, // ParamConverter fetches the Post by ID
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger,
+        Filesystem $filesystem
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
+        }
+        if ($post->getFkUser() !== $user) {
+            return $this->json(['message' => 'Vous n\'êtes pas autorisé à modifier ce post.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $newContentText = $request->request->get('content_text');
+        $newMediaFile = $request->files->get('media');
+        $removeMediaFlag = $request->request->get('remove_media') === '1';
+
+        // Update content text (allow empty string to clear text)
+        if ($newContentText !== null) {
+            $post->setContentText(trim($newContentText) === '' ? null : $newContentText);
+        }
+
+        $oldMediaFilename = $post->getContentMultimedia();
+
+        // Handle media removal if flag is set and there was an old media
+        if ($removeMediaFlag && $oldMediaFilename) {
+            $oldMediaPath = $this->getParameter('uploads_directory') . '/' . $oldMediaFilename;
+            if ($filesystem->exists($oldMediaPath)) {
+                $filesystem->remove($oldMediaPath);
+            }
+            $post->setContentMultimedia(null);
+            $oldMediaFilename = null; // Media is now removed
+        }
+
+        // Handle new media upload
+        if ($newMediaFile instanceof UploadedFile) {
+            // Delete old media if it exists and a new one is uploaded
+            if ($oldMediaFilename) {
+                $oldMediaPath = $this->getParameter('uploads_directory') . '/' . $oldMediaFilename;
+                if ($filesystem->exists($oldMediaPath)) {
+                    $filesystem->remove($oldMediaPath);
+                }
+            }
+
+            $originalFilename = pathinfo($newMediaFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename . '-' . uniqid() . '.' . $newMediaFile->guessExtension();
+
+            try {
+                if (!file_exists($this->getParameter('uploads_directory'))) {
+                    mkdir($this->getParameter('uploads_directory'), 0777, true);
+                }
+                $newMediaFile->move($this->getParameter('uploads_directory'), $newFilename);
+                $post->setContentMultimedia($newFilename);
+            } catch (\Exception $e) {
+                return $this->json(['message' => 'Erreur lors de l\'upload du nouveau fichier: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+        }
+        
+        // A post must have either text content or multimedia content
+        if (empty($post->getContentText()) && empty($post->getContentMultimedia())) {
+            return $this->json(['message' => 'Le post ne peut pas être vide. Veuillez ajouter du texte ou un média.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $post->setUpdatedAt(new \DateTimeImmutable());
+        $entityManager->flush();
+
+        return $this->json(
+            ['message' => 'Post mis à jour avec succès!', 'post' => [
+                'id' => $post->getId(),
+                'content_text' => $post->getContentText(),
+                'content_multimedia' => $post->getContentMultimedia(),
+                'updated_at' => $post->getUpdatedAt()->format('Y-m-d H:i:s'),
+            ]],
+            Response::HTTP_OK
+        );
+    }
+
+    #[Route('/post/{id}/delete', name: 'app_post_delete', methods: ['DELETE'])]
+    public function delete(
+        Posts $post, // ParamConverter fetches the Post by ID
+        EntityManagerInterface $entityManager,
+        Filesystem $filesystem
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($post->getFkUser() !== $user) {
+            return $this->json(['message' => 'Vous n\'êtes pas autorisé à supprimer ce post.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Delete associated media file if it exists
+        $mediaFilename = $post->getContentMultimedia();
+        if ($mediaFilename) {
+            $mediaPath = $this->getParameter('uploads_directory') . '/' . $mediaFilename;
+            if ($filesystem->exists($mediaPath)) {
+                try {
+                    $filesystem->remove($mediaPath);
+                } catch (\Exception $e) {
+                    // Log error or handle, but proceed with DB deletion
+                    // For example: $this->logger->error('Failed to delete media file: '.$e->getMessage());
+                }
+            }
+        }
+
+        try {
+            $entityManager->remove($post);
+            $entityManager->flush();
+            return $this->json(['message' => 'Post supprimé avec succès.'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // Log error
+            return $this->json(['message' => 'Erreur lors de la suppression du post: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     #[Route('/posts', name: 'app_posts', methods: ['GET'])]

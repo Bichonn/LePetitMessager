@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/ShowProfil.css';
-import PostItem from '../posts/PostItem';
+import PostItem from '../posts/post_tool/PostItem';
 
 export default function ShowProfil() {
   const [user, setUser] = useState(null);

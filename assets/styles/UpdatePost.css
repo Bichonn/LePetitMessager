@@ -1,0 +1,7 @@
+.update-post-modal-backdrop {
+    background-color: rgba(0,0,0,0.5);
+}
+
+.media-preview-item {
+    max-height: 200px;
+}

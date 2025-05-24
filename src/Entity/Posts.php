@@ -32,6 +32,10 @@ class Posts
     #[ORM\Column]
     private ?\DateTimeImmutable $created_at = null;
 
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $updated_at = null;
+
+
     /**
      * @var Collection<int, Likes>
      */
@@ -76,6 +80,7 @@ class Posts
         $this->postsReports = new ArrayCollection();
         $this->favoris = new ArrayCollection();
         $this->notifications = new ArrayCollection();
+        $this->created_at = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -139,6 +144,18 @@ class Posts
     public function setCreatedAt(\DateTimeImmutable $created_at): static
     {
         $this->created_at = $created_at;
+
+        return $this;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeImmutable
+    {
+        return $this->updated_at;
+    }
+
+    public function setUpdatedAt(?\DateTimeImmutable $updated_at): static
+    {
+        $this->updated_at = $updated_at;
 
         return $this;
     }

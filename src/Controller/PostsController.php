@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Posts;
+use App\Entity\Users;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -201,8 +202,8 @@ class PostsController extends AbstractController
         }
     }
 
-    #[Route('/posts', name: 'app_posts', methods: ['GET'])]
-    public function show(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
+    #[Route('/posts', name: 'app_posts_list', methods: ['GET'])]
+    public function list(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
     {
         $posts = $entityManager->getRepository(Posts::class)->findBy([], ['created_at' => 'DESC']);
 
@@ -221,20 +222,60 @@ class PostsController extends AbstractController
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'user' => null
+                'user' => null // Initialisation
             ];
 
-            // Vérifier si getFkUser() retourne un objet avant d'accéder à ses propriétés
             if ($post->getFkUser()) {
                 $postData['user'] = [
                     'id' => $post->getFkUser()->getId(),
                     'username' => $post->getFkUser()->getUsername(),
+                    'avatar_url' => $post->getFkUser()->getProfilePicture() // Assurez-vous que la méthode getProfilePicture() existe et renvoie l'URL
                 ];
             }
-
             $data[] = $postData;
         }
 
-        return $this->json($data, Response::HTTP_OK);
+        return new JsonResponse($data);
+    }
+
+    #[Route('/users/{userId}/posts', name: 'app_user_posts_list', methods: ['GET'])]
+    public function listUserPosts(
+        int $userId,
+        EntityManagerInterface $entityManager,
+        SerializerInterface $serializer
+    ): JsonResponse {
+        $userRepository = $entityManager->getRepository(Users::class);
+        $user = $userRepository->find($userId);
+
+        if (!$user) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $posts = $entityManager->getRepository(Posts::class)->findBy(
+            ['fk_user' => $user],
+            ['created_at' => 'DESC']
+        );
+
+        if (empty($posts)) {
+            return $this->json([], Response::HTTP_OK);
+        }
+
+        $data = [];
+        foreach ($posts as $post) {
+            $postData = [
+                'id' => $post->getId(),
+                'content_text' => $post->getContentText(),
+                'content_multimedia' => $post->getContentMultimedia(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => [
+                    'id' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'avatar_url' => $user->getProfilePicture()
+                ]
+            ];
+            $data[] = $postData;
+        }
+
+        return new JsonResponse($data);
     }
 }

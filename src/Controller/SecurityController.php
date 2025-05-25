@@ -34,13 +34,12 @@ class SecurityController extends AbstractController
 
         // Si c'est une requête AJAX/fetch et qu'il y a une erreur
         if ($request->isXmlHttpRequest() && $error) {
-            // Récupérer l'email depuis la requête 
-            $email = $request->request->get('email');
+            // Utiliser le dernier nom d'utilisateur (email) tenté pour la logique AJAX
+            $lastAttemptedUsername = $authenticationUtils->getLastUsername();
 
-            // Vérification que l'email a bien été récupéré
-            if ($email) {
+            if ($lastAttemptedUsername) {
                 $userRepository = $entityManager->getRepository(\App\Entity\Users::class);
-                $user = $userRepository->findOneBy(['email' => $email]);
+                $user = $userRepository->findOneBy(['email' => $lastAttemptedUsername]);
 
                 if ($user) {
                     // L'utilisateur existe, c'est donc un problème de mot de passe
@@ -49,17 +48,17 @@ class SecurityController extends AbstractController
                         'message' => 'Mot de passe incorrect'
                     ], 401);
                 } else {
-                    // L'utilisateur n'existe pas
+                    // L'utilisateur correspondant au lastAttemptedUsername n'existe pas
                     return new JsonResponse([
                         'success' => false,
                         'message' => 'Utilisateur non trouvé'
                     ], 401);
                 }
             } else {
-                // Si l'email n'a pas été récupéré correctement
+                // Si getLastUsername() est vide (par exemple, champ email non soumis ou vide lors de la tentative)
                 return new JsonResponse([
                     'success' => false,
-                    'message' => 'Identifiant incorrect'
+                    'message' => 'Identifiant incorrect' // Message générique si l'email n'a pas pu être déterminé
                 ], 400);
             }
         }

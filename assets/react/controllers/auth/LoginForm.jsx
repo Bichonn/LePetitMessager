@@ -7,7 +7,11 @@ export default function LoginForm() {
     const [password, setPassword] = useState('');
     const [csrfToken, setCsrfToken] = useState('');
     const [status, setStatus] = useState('');
-    const [error, setError] = useState(null);
+    const [errors, setErrors] = useState({
+        email: null,
+        password: null,
+        general: null
+    });
 
     const [tokenError, setTokenError] = useState(false);
 
@@ -15,6 +19,7 @@ export default function LoginForm() {
     useEffect(() => {
         if (showModal) {
             setTokenError(false);
+            setErrors({ email: null, password: null, general: null });
             fetch('/get-csrf-token')
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to fetch CSRF token');
@@ -37,7 +42,7 @@ export default function LoginForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError(null);
+        setErrors({ email: null, password: null, general: null });
         setStatus('Connexion en cours...');
 
         const formData = new FormData();
@@ -54,7 +59,7 @@ export default function LoginForm() {
                 }
             });
 
-            
+
 
             if (response.ok) {
                 setStatus('Connexion réussie!');
@@ -64,16 +69,40 @@ export default function LoginForm() {
             } else {
                 try {
                     const data = await response.json();
-                    setError(data.message || 'Échec de la connexion');
                     setStatus('');
-                } catch (e) {
-                    setError('Identifiants invalides');
+                    if (data.message) {
+                        if (data.message.toLowerCase().includes('utilisateur non trouvé')) {
+                            setErrors(prevErrors => ({ ...prevErrors, email: data.message }));
+                        } else if (data.message.toLowerCase().includes('mot de passe incorrect')) {
+                            setErrors(prevErrors => ({ ...prevErrors, password: data.message }));
+                        } else {
+                            setErrors(prevErrors => ({ ...prevErrors, general: data.message }));
+                        }
+                    } else {
+                        setErrors(prevErrors => ({ ...prevErrors, general: 'Échec de la connexion' }));
+                    }
+                } catch (err) {
                     setStatus('');
+                    setErrors(prevErrors => ({ ...prevErrors, general: 'Identifiants invalides' }));
                 }
             }
         } catch (error) {
-            setError('Erreur de connexion au serveur');
             setStatus('');
+            setErrors(prevErrors => ({ ...prevErrors, general: 'Erreur de connexion au serveur' }));
+        }
+    };
+
+    const handleEmailChange = (e) => {
+        setEmail(e.target.value);
+        if (errors.email) {
+            setErrors(prevErrors => ({ ...prevErrors, email: null }));
+        }
+    };
+
+    const handlePasswordChange = (e) => {
+        setPassword(e.target.value);
+        if (errors.password) {
+            setErrors(prevErrors => ({ ...prevErrors, password: null }));
         }
     };
 
@@ -93,27 +122,29 @@ export default function LoginForm() {
                             </div>
                             <div className="modal-body">
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
-                                    {error && <div className="alert alert-danger">{error}</div>}
+                                    {errors.general && <div className="custom-alert custom-alert-danger">{errors.general}</div>}
 
                                     <div className="mb-3">
                                         <label htmlFor="email" className="form-label text-decoration-underline">Email</label>
+                                        {errors.email && <div className="text-danger small mb-1">{errors.email}</div>}
                                         <input
                                             type="email"
                                             id="email"
-                                            className="form-control"
+                                            className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                                             value={email}
-                                            onChange={(e) => setEmail(e.target.value)}
+                                            onChange={handleEmailChange}
                                             required
                                         />
                                     </div>
                                     <div className="mb-3">
                                         <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
+                                        {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
                                         <input
                                             type="password"
                                             id="password"
-                                            className="form-control"
+                                            className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                             value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
+                                            onChange={handlePasswordChange}
                                             required
                                         />
                                     </div>
@@ -124,11 +155,11 @@ export default function LoginForm() {
                                     </button>
 
                                     {status && (
-                                        <div className="alert alert-info mt-3">{status}</div>
+                                        <div className="custom-alert custom-alert-info mt-3">{status}</div>
                                     )}
 
                                     {tokenError && (
-                                        <div className="alert alert-danger mb-3">
+                                        <div className="custom-alert custom-alert-danger mb-3">
                                             Impossible de récupérer le token de sécurité. Veuillez rafraîchir la page.
                                         </div>
                                     )}

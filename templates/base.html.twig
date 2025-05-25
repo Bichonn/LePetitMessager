@@ -50,16 +50,7 @@
                             </div>
                         </div>
                     {% else %}
-                        <div class="container border-bottom border-top border-dark">
-                            <div class="d-flex justify-content-center mb-1 mt-3">
-                                <h5 class="text-center text-decoration-underline">Bienvenue,
-                                    {{ app.user.username }}
-                                    !</h5>
-                            </div>
-                            <div class="d-flex justify-content-center mb-3">
-                                <a href="{{ path('app_logout') }}" class="btn btn-danger">Se déconnecter</a>
-                            </div>
-                        </div>
+                        <div {{ react_component('auth/LogOut', { 'username': app.user.username, 'logoutPath': path('app_logout') }) }}></div>
                     {% endif %}
 
                     <div {{ react_component('layout/Footer') }}></div>

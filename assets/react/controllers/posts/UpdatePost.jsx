@@ -95,11 +95,12 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
       });
 
       if (response.ok) {
+        const responseData = await response.json(); // Expect { post: { ... } }
         setFeedback({ type: 'success', message: 'Post mis à jour avec succès!' });
         if (onUpdated) {
           setTimeout(() => {
-            onUpdated();
-            onClose(); // Close modal on success
+            onUpdated(responseData.post); // Pass the updated post data
+            onClose(); 
           }, 1500);
         }
       } else {

@@ -112,8 +112,8 @@ export default function CreatePost() {
         setPreview(null);
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
 
-        // Optional: reload the page or update the post list
-        window.location.reload();
+        document.dispatchEvent(new CustomEvent('postCreated'));
+        setTimeout(() => setIsVisible(false), 1000);
       } else {
         const error = await response.json();
         setFeedback({ type: 'error', message: error.message || 'Erreur lors de la publication' });

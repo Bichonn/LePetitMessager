@@ -8,7 +8,7 @@ import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
 import '../../../../styles/PostItem.css';
 
-export default function PostItem({ post, author }) {
+export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
 
@@ -40,10 +40,11 @@ export default function PostItem({ post, author }) {
         setIsUpdateModalOpen(false);
     };
 
-    const handlePostUpdated = () => {
+    const handlePostUpdated = (updatedPostData) => {
         setIsUpdateModalOpen(false);
-        // Optionally, trigger a refresh of the posts list or the page
-        window.location.reload(); // Simple way to see changes
+        if (onPostActuallyUpdated) {
+            onPostActuallyUpdated(updatedPostData);
+        }
     };
 
     const handleDeleteClick = async () => {
@@ -56,8 +57,9 @@ export default function PostItem({ post, author }) {
                 });
 
                 if (response.ok) {
-                    // alert('Post supprimé avec succès!');
-                    window.location.reload(); // Or update state to remove post from list
+                    if (onPostDeleted) {
+                        onPostDeleted(post.id);
+                    }
                 } else {
                     const errorData = await response.json();
                     alert(`Erreur lors de la suppression: ${errorData.message || 'Erreur inconnue'}`);

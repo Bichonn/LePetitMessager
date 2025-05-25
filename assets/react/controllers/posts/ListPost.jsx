@@ -7,6 +7,7 @@ export default function PostList() {
     const [error, setError] = useState(null);
 
     const fetchPosts = async () => {
+        setIsLoading(true); // Ensure loading state is true when fetching
         try {
             const response = await fetch('/posts');
 
@@ -33,7 +34,24 @@ export default function PostList() {
 
     useEffect(() => {
         fetchPosts();
+
+        const handlePostCreated = () => {
+            fetchPosts(); // Re-fetch posts when a new one is created
+        };
+        document.addEventListener('postCreated', handlePostCreated);
+
+        return () => {
+            document.removeEventListener('postCreated', handlePostCreated);
+        };
     }, []);
+
+    const handlePostDeleted = (postId) => {
+        setPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
+    };
+
+    const handlePostUpdated = (updatedPost) => {
+        setPosts(prevPosts => prevPosts.map(post => post.id === updatedPost.id ? { ...post, ...updatedPost } : post));
+    };
 
     if (isLoading) return <div>Chargement...</div>;
     if (error) return <div>Erreur: {error}</div>;
@@ -42,7 +60,13 @@ export default function PostList() {
     return (
         <div>
             {posts.map(post => (
-                <PostItem key={post.id} post={post} author={post.user} />
+                <PostItem
+                  key={post.id}
+                  post={post}
+                  author={post.user}
+                  onPostDeleted={handlePostDeleted}
+                  onPostActuallyUpdated={handlePostUpdated} // Renamed to avoid conflict
+                />
             ))}
         </div>
     );

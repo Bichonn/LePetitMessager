@@ -2,16 +2,16 @@
 
 namespace App\Controller;
 
+use App\Entity\Users;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-
-use App\Entity\Posts;
-use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\String\Slugger\SluggerInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Security\Csrf\CsrfToken;
+use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 final class UsersController extends AbstractController
@@ -23,31 +23,131 @@ final class UsersController extends AbstractController
     }
 
     #[Route('/user', name: 'app_user')]
-    public function profil(): Response
+    public function profil(EntityManagerInterface $entityManager): Response // Injection de EntityManagerInterface
     {
-        $user = $this->getUser();
-        if (!$user) {
+        $securityUser = $this->getUser(); // Récupère l'utilisateur authentifié
+
+        // Vérifie si l'utilisateur est bien une instance de votre entité Users
+        if (!$securityUser instanceof Users) {
             return $this->json(
-                ['message' => 'Vous devez être connecté pour voir votre profil'],
+                ['message' => 'Vous devez être connecté pour voir votre profil.'],
                 Response::HTTP_UNAUTHORIZED
             );
-        } else {// Récupérer les données de l'utilisateur
-            $data = [
-                'id' => $user->getId(),
-                'first_name' => $user->getFirstName(),
-                'last_name' => $user->getLastName(),
-                'username' => $user->getUsername(),
-                'email' => $user->getEmail(),
-                'banner' => $user->getBanner(),
-                'profile_picture' => $user->getProfilePicture(),
-                'bio' => $user->getBio(),
-                'user_premium' => $user->isUserPremium(),
-                'created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-            ];
-            return $this->json($data, Response::HTTP_OK);
-
         }
 
+        // Utiliser DQL pour sélectionner uniquement les champs nécessaires
+        // Cela peut améliorer les performances si l'entité User est volumineuse ou a des relations EAGER non nécessaires ici.
+        $userRepository = $entityManager->getRepository(Users::class);
+        $userDataArray = $userRepository->createQueryBuilder('u')
+            ->select('u.id, u.first_name, u.last_name, u.username, u.email, u.banner, u.profile_picture, u.bio, u.user_premium, u.created_at, u.private_account')
+            ->where('u.id = :userId')
+            ->setParameter('userId', $securityUser->getId())
+            ->getQuery()
+            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY); // Récupère les données sous forme de tableau
 
+        if (!$userDataArray) {
+            // Ce cas ne devrait pas se produire si $securityUser est valide
+            return $this->json(['message' => 'Données utilisateur non trouvées.'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Formater la date si elle est un objet DateTimeInterface
+        if ($userDataArray['created_at'] instanceof \DateTimeInterface) {
+            $userDataArray['created_at'] = $userDataArray['created_at']->format('Y-m-d H:i:s');
+        }
+        
+        // Mapper profile_picture vers avatar_url pour correspondre au frontend
+        $userDataArray['avatar_url'] = $userDataArray['profile_picture'];
+        // Vous pouvez optionnellement supprimer la clé 'profile_picture' si elle n'est plus nécessaire
+        // unset($userDataArray['profile_picture']);
+
+
+        return $this->json($userDataArray, Response::HTTP_OK);
+    }
+
+    #[Route('/user/update', name: 'app_user_update', methods: ['POST'])]
+    public function updateUser(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        ValidatorInterface $validator,
+        CsrfTokenManagerInterface $csrfTokenManager
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof Users) {
+            return $this->json(['error' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        if ($data === null) {
+            return $this->json(['error' => 'Données JSON invalides.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // CSRF Token Validation
+        // The frontend EditProfileModal.jsx fetches token from /get-csrf-token
+        // which in SecurityController.php uses 'authenticate' as token_id
+        $submittedToken = $data['_csrf_token'] ?? null;
+        if (!$csrfTokenManager->isTokenValid(new CsrfToken('authenticate', $submittedToken))) {
+            return $this->json(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        $formErrors = [];
+
+        // Update fields if present in the request
+        if (array_key_exists('firstName', $data)) {
+            $user->setFirstName(trim($data['firstName']));
+        }
+        if (array_key_exists('lastName', $data)) {
+            $user->setLastName(trim($data['lastName']));
+        }
+        if (array_key_exists('bio', $data)) {
+            $user->setBio(trim($data['bio']));
+        }
+
+        // Handle username update and uniqueness
+        if (array_key_exists('username', $data)) {
+            $newUsername = trim($data['username']);
+            if ($newUsername !== $user->getUsername()) {
+                // Check if the new username is already taken by another user
+                $existingUserByUsername = $entityManager->getRepository(Users::class)->findOneBy(['username' => $newUsername]);
+                if ($existingUserByUsername && $existingUserByUsername->getId() !== $user->getId()) {
+                    $formErrors['username'] = 'Ce nom d\'utilisateur est déjà utilisé.';
+                } else {
+                    $user->setUsername($newUsername);
+                }
+            }
+        }
+
+        // Validate the entity after updates
+        $violations = $validator->validate($user);
+        if (count($violations) > 0) {
+            foreach ($violations as $violation) {
+                // Add to formErrors, potentially overwriting the manual username check if validator handles it
+                $formErrors[$violation->getPropertyPath()] = $violation->getMessage();
+            }
+        }
+
+        if (!empty($formErrors)) {
+            return $this->json(['errors' => $formErrors], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $entityManager->persist($user);
+            $entityManager->flush();
+            // Return the updated user data or just a success message
+            return $this->json([
+                'message' => 'Profil mis à jour avec succès!',
+                // Optionally, return the updated user object if the frontend needs it
+                // 'user' => [ 
+                //     'id' => $user->getId(),
+                //     'first_name' => $user->getFirstName(),
+                //     'last_name' => $user->getLastName(),
+                //     'username' => $user->getUsername(),
+                //     'bio' => $user->getBio(),
+                //     // ... other fields needed by frontend
+                // ]
+            ]);
+        } catch (\Exception $e) {
+            // Log the exception: $this->logger->error('Profile update error: '.$e->getMessage());
+            return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

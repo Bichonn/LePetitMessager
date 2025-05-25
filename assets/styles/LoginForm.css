@@ -68,3 +68,22 @@
     border: 1px solid #000;
     background-color: #ffeecf;
 }
+
+/* Styles pour les messages d'alerte personnalisés */
+.custom-alert {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid #000; /* Bordure noire cohérente */
+    border-radius: 0; /* Coins carrés cohérents */
+    text-align: center;
+    font-style: italic;
+    background-color: #ffeecf; /* Fond beige cohérent */
+}
+
+.custom-alert-danger {
+    color: #721c24; /* Texte rouge foncé pour le danger */
+}
+
+.custom-alert-info {
+    color: #0c5460; /* Texte bleu/vert foncé pour l'info */
+}

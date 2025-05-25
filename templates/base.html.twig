@@ -27,8 +27,8 @@
 
 				<!-- Barre de navigation (Gauche) -->
 				<div class="col-md-1">
-					<div {{ react_component('layout/Navbar') }}></div>
-				</div>
+                    <div {{ react_component('layout/Navbar', { 'isAuthenticated': app.user is not null }) }}></div>
+                </div>
 
 				<!-- Contenu principal (Centre) -->
 				<div class="col-md-7"> {% block main_content %}{% endblock %}

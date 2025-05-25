@@ -1,7 +1,7 @@
 import React from 'react';
 import '../../../styles/ShowProfil.css';
 
-export default function UserProfileInfo({ user }) {
+export default function UserProfileInfo({ user, onEditClick }) {
   if (!user) return null;
 
   return (
@@ -26,15 +26,24 @@ export default function UserProfileInfo({ user }) {
 
       <div className="container p-4 profil-container shadow bg-color-search">
         <div className="profile-info-details">
-          <h3 className="mb-1 fw-bold fst-italic">
-            {user.username} {user.private_account && <i className="bi bi-lock-fill ms-1"></i>}
-          </h3>
-          <p className="text-muted fst-italic mb-2">
-            {user.first_name} {user.last_name} -- Membre depuis le{' '}
-            {new Date(user.created_at).toLocaleDateString()}
-          </p>
+          <div className="d-flex justify-content-between align-items-start">
+            <div>
+              <h3 className="mb-1 fw-bold fst-italic">
+                {user.username} {user.private_account && <i className="bi bi-lock-fill ms-1"></i>}
+              </h3>
+              <p className="text-muted fst-italic mb-2">
+                {user.first_name} {user.last_name} -- Membre depuis le{' '}
+                {new Date(user.created_at).toLocaleDateString()}
+              </p>
+            </div>
+            {onEditClick && (
+              <button className="btn btn-outline-primary btn-sm" onClick={onEditClick}>
+                Modifier le profil
+              </button>
+            )}
+          </div>
           {user.bio && (
-            <p className="fst-italic mb-0">
+            <p className="fst-italic mb-0 mt-2">
               {user.bio}
             </p>
           )}

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import '../../../styles/ShowProfil.css'; // Assurez-vous que le chemin est correct
+import '../../../styles/ShowProfil.css';
 import UserProfileInfo from './UserProfileInfo';
-import UserPostsList from './UserPostsList'; // UserPostsList va gérer ses propres posts
+import UserPostsList from './UserPostsList';
+import EditProfileForm from './EditProfileForm';
 
 export default function ShowProfil() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const fetchUser = async () => {
     setIsLoading(true);
@@ -21,7 +23,7 @@ export default function ShowProfil() {
       setUser(data);
     } catch (err) {
       setError(err.message);
-      setUser(null); // Réinitialiser l'utilisateur en cas d'erreur
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -29,19 +31,28 @@ export default function ShowProfil() {
 
   useEffect(() => {
     fetchUser();
-  }, []); // Récupérer l'utilisateur au montage du composant
+  }, []);
 
-  // Les gestionnaires handlePostDeletedOnProfile et handlePostUpdatedOnProfile
-  // seront maintenant dans UserPostsList s'il gère ses propres données.
+  const handleProfileUpdated = (updatedUserData) => {
+    fetchUser();
+    setShowEditModal(false);
+  };
 
   if (isLoading) return <div className="text-center mt-4">Chargement du profil...</div>;
   if (error) return <div className="text-danger mt-4">Erreur du profil: {error}</div>;
-  // UserProfileInfo gère l'affichage si user est null.
-  // UserPostsList gérera également l'affichage si user est null.
 
   return (
     <>
-      <UserProfileInfo user={user} />
+      <UserProfileInfo user={user} onEditClick={() => user && setShowEditModal(true)} />
+
+      {showEditModal && user && (
+        <EditProfileForm
+          currentUser={user}
+          onClose={() => setShowEditModal(false)}
+          onProfileUpdated={handleProfileUpdated}
+        />
+      )}
+
       {user ? (
         <UserPostsList user={user} />
       ) : (

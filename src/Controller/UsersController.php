@@ -12,7 +12,9 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
-
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
 final class UsersController extends AbstractController
 {
@@ -69,22 +71,18 @@ final class UsersController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         ValidatorInterface $validator,
-        CsrfTokenManagerInterface $csrfTokenManager
+        CsrfTokenManagerInterface $csrfTokenManager,
+        SluggerInterface $slugger,
+        ParameterBagInterface $params
     ): JsonResponse {
         $user = $this->getUser();
         if (!$user instanceof Users) {
             return $this->json(['error' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $data = json_decode($request->getContent(), true);
-        if ($data === null) {
-            return $this->json(['error' => 'Données JSON invalides.'], Response::HTTP_BAD_REQUEST);
-        }
-
-        // CSRF Token Validation
-        // The frontend EditProfileModal.jsx fetches token from /get-csrf-token
-        // which in SecurityController.php uses 'authenticate' as token_id
-        $submittedToken = $data['_csrf_token'] ?? null;
+        // For FormData, text fields are in $request->request, files in $request->files
+        // CSRF token will also be in $request->request
+        $submittedToken = $request->request->get('_csrf_token');
         if (!$csrfTokenManager->isTokenValid(new CsrfToken('authenticate', $submittedToken))) {
             return $this->json(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
@@ -92,31 +90,63 @@ final class UsersController extends AbstractController
         $formErrors = [];
 
         // Update fields if present in the request
-        if (array_key_exists('firstName', $data)) {
-            $user->setFirstName(trim($data['firstName']));
+        if ($request->request->has('firstName')) {
+            $user->setFirstName(trim($request->request->get('firstName')));
         }
-        if (array_key_exists('lastName', $data)) {
-            $user->setLastName(trim($data['lastName']));
+        if ($request->request->has('lastName')) {
+            $user->setLastName(trim($request->request->get('lastName')));
         }
-        if (array_key_exists('bio', $data)) {
-            $user->setBio(trim($data['bio']));
+        if ($request->request->has('username')) {
+            $user->setUsername(trim($request->request->get('username')));
         }
+        if ($request->request->has('bio')) {
+            $user->setBio(trim($request->request->get('bio')));
+        }
+        
+        // Handle Profile Picture Upload
+        /** @var UploadedFile $profilePictureFile */
+        $profilePictureFile = $request->files->get('profilePicture');
+        if ($profilePictureFile) {
+            $originalFilename = pathinfo($profilePictureFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$profilePictureFile->guessExtension();
+            $avatarsDirectory = $params->get('kernel.project_dir').'/public/uploads/avatars';
 
-        // Handle username update and uniqueness
-        if (array_key_exists('username', $data)) {
-            $newUsername = trim($data['username']);
-            if ($newUsername !== $user->getUsername()) {
-                // Check if the new username is already taken by another user
-                $existingUserByUsername = $entityManager->getRepository(Users::class)->findOneBy(['username' => $newUsername]);
-                if ($existingUserByUsername && $existingUserByUsername->getId() !== $user->getId()) {
-                    $formErrors['username'] = 'Ce nom d\'utilisateur est déjà utilisé.';
-                } else {
-                    $user->setUsername($newUsername);
+            try {
+                if (!file_exists($avatarsDirectory)) {
+                    mkdir($avatarsDirectory, 0777, true);
                 }
+                // TODO: Delete old profile picture if it exists
+                $profilePictureFile->move($avatarsDirectory, $newFilename);
+                $user->setProfilePicture('/uploads/avatars/'.$newFilename);
+            } catch (\Exception $e) {
+                // Log error $e->getMessage()
+                $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar.';
             }
         }
 
-        // Validate the entity after updates
+        // Handle Banner Upload
+        /** @var UploadedFile $bannerFile */
+        $bannerFile = $request->files->get('banner');
+        if ($bannerFile) {
+            $originalFilename = pathinfo($bannerFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$bannerFile->guessExtension();
+            $bannersDirectory = $params->get('kernel.project_dir').'/public/uploads/banners';
+
+            try {
+                if (!file_exists($bannersDirectory)) {
+                    mkdir($bannersDirectory, 0777, true);
+                }
+                // TODO: Delete old banner if it exists
+                $bannerFile->move($bannersDirectory, $newFilename);
+                $user->setBanner('/uploads/banners/'.$newFilename);
+            } catch (\Exception $e) {
+                // Log error $e->getMessage()
+                $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière.';
+            }
+        }
+
         $violations = $validator->validate($user);
         if (count($violations) > 0) {
             foreach ($violations as $violation) {
@@ -136,14 +166,18 @@ final class UsersController extends AbstractController
             return $this->json([
                 'message' => 'Profil mis à jour avec succès!',
                 // Optionally, return the updated user object if the frontend needs it
-                // 'user' => [ 
-                //     'id' => $user->getId(),
-                //     'first_name' => $user->getFirstName(),
-                //     'last_name' => $user->getLastName(),
-                //     'username' => $user->getUsername(),
-                //     'bio' => $user->getBio(),
-                //     // ... other fields needed by frontend
-                // ]
+                'user' => [ 
+                    'id' => $user->getId(),
+                    'first_name' => $user->getFirstName(),
+                    'last_name' => $user->getLastName(),
+                    'username' => $user->getUsername(),
+                    'bio' => $user->getBio(),
+                    'profile_picture' => $user->getProfilePicture(), // Ensure this is the path
+                    'banner' => $user->getBanner(), // Ensure this is the path
+                    'avatar_url' => $user->getProfilePicture(), // Keep mapping for consistency if used ailleurs
+                    'created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
+                    // ... other fields needed by frontend
+                ]
             ]);
         } catch (\Exception $e) {
             // Log the exception: $this->logger->error('Profile update error: '.$e->getMessage());

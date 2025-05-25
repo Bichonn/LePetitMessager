@@ -1,9 +1,9 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import NavIcons from './NavIcons';
 import '../../../styles/Navbar.css';
 
 
-export default function Navbar() {
+export default function Navbar({ isAuthenticated }) {
 
   const handleWriteClick = () => {
     document.dispatchEvent(new CustomEvent('openCreatePostSection')); // Ensure this event name matches
@@ -24,9 +24,11 @@ export default function Navbar() {
 
       <div className="navbar-bottom">
         <NavIcons iconPath={"/icons/notif.png"} iconName={"Courier"} />
-        <a href="/profil" className="nav-link">
-          <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />
-        </a>
+        {isAuthenticated && (
+          <a href="/profil" className="nav-link">
+            <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />
+          </a>
+        )}
       </div>
     </div>
   );

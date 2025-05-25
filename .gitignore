@@ -30,3 +30,6 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+# User uploaded files
+/public/uploads/

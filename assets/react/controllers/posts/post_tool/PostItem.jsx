@@ -6,19 +6,19 @@ import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
+import CommentForm from '../../comments/CommentForm'; 
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
+    const [showCommentForm, setShowCommentForm] = useState(false); 
 
     useEffect(() => {
-        // Fetch current logged-in user's ID
-        // This assumes you have an endpoint like /user that returns { id: userId }
         fetch('/user')
             .then(res => {
                 if (res.ok) return res.json();
-                return null; // Or throw error
+                return null;
             })
             .then(data => {
                 if (data && data.id) {
@@ -73,7 +73,6 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
 
-
     return (
         <>
             <div className="post-item-container border border-dark bg-color-search p-1">
@@ -98,7 +97,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     )}
                     <div className="d-flex justify-content-start">
                         <LikeBtn postId={post.id} />
-                        <CommentBtn postId={post.id} />
+                        <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
                         {canUpdate && (
                             <UpdateBtn onClick={handleUpdateClick} />
                         )}
@@ -106,6 +105,10 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             <DeleteBtn onClick={handleDeleteClick} />
                         )}
                     </div>
+                    {}
+                    {showCommentForm && (
+                        <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
+                    )}
                 </div>
             </div>
 

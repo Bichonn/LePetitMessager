@@ -131,11 +131,11 @@ export default function CreatePost() {
   }
 
   return (
-    <div className="post-creation-card">
+    <div className="post-creation-card border border-dark">
       <form onSubmit={handleSubmit}>
-        <div className="mb-3">
+        <div className="">
           <textarea
-            className="form-control"
+            className="form-control border-0 border-bottom border-dark bg-color-search"
             placeholder="Quoi de neuf ?"
             rows={3}
             value={content}
@@ -145,13 +145,13 @@ export default function CreatePost() {
         </div>
 
         {preview && (
-          <div className="mb-3 text-center">
+          <div className="text-center">
             {preview.type === 'image' ? (
               <img src={preview.url} alt="Preview" className="img-fluid mb-2" style={{ maxHeight: '200px' }} />
             ) : preview.type === 'video' ? (
               <video
                 src={preview.url}
-                className="img-fluid mb-2"
+                className="img-fluid"
                 style={{ maxHeight: '200px' }}
                 controls
               />
@@ -182,7 +182,7 @@ export default function CreatePost() {
 
           <button
             type="submit"
-            className="btn btn-primary rounded-pill px-4"
+            className="custom-publish-button"
             disabled={isSubmitting || (!content && !file)}
           >
             {isSubmitting ? 'Envoi...' : 'Poster'}

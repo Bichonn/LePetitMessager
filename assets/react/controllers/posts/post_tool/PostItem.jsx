@@ -6,13 +6,13 @@ import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
-import CommentForm from '../../comments/CommentForm'; 
+import CommentForm from '../../comments/CommentForm';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
-    const [showCommentForm, setShowCommentForm] = useState(false); 
+    const [showCommentForm, setShowCommentForm] = useState(false);
 
     useEffect(() => {
         fetch('/user')
@@ -96,7 +96,10 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                         </div>
                     )}
                     <div className="d-flex justify-content-start">
-                        <LikeBtn postId={post.id} />
+                        <LikeBtn
+                            postId={post.id}
+                            initialLiked={post.liked_by_current_user}
+                            likesCount={post.likes_count} />
                         <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
                         {canUpdate && (
                             <UpdateBtn onClick={handleUpdateClick} />
@@ -105,7 +108,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             <DeleteBtn onClick={handleDeleteClick} />
                         )}
                     </div>
-                    {}
+                    { }
                     {showCommentForm && (
                         <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
                     )}

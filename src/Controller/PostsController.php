@@ -143,7 +143,7 @@ class PostsController extends AbstractController
                 return $this->json(['message' => 'Erreur lors de l\'upload du nouveau fichier: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
-        
+
         // A post must have either text content or multimedia content
         if (empty($post->getContentText()) && empty($post->getContentMultimedia())) {
             return $this->json(['message' => 'Le post ne peut pas être vide. Veuillez ajouter du texte ou un média.'], Response::HTTP_BAD_REQUEST);
@@ -153,12 +153,15 @@ class PostsController extends AbstractController
         $entityManager->flush();
 
         return $this->json(
-            ['message' => 'Post mis à jour avec succès!', 'post' => [
-                'id' => $post->getId(),
-                'content_text' => $post->getContentText(),
-                'content_multimedia' => $post->getContentMultimedia(),
-                'updated_at' => $post->getUpdatedAt()->format('Y-m-d H:i:s'),
-            ]],
+            [
+                'message' => 'Post mis à jour avec succès!',
+                'post' => [
+                    'id' => $post->getId(),
+                    'content_text' => $post->getContentText(),
+                    'content_multimedia' => $post->getContentMultimedia(),
+                    'updated_at' => $post->getUpdatedAt()->format('Y-m-d H:i:s'),
+                ]
+            ],
             Response::HTTP_OK
         );
     }
@@ -215,21 +218,37 @@ class PostsController extends AbstractController
         }
 
         // Sérialisation personnalisée pour éviter les références circulaires
+        $currentUser = $this->getUser();
+
         $data = [];
         foreach ($posts as $post) {
+            $likes = $post->getLikes();
+            $likesCount = count($likes);
+            $likedByUser = false;
+            if ($currentUser) {
+                foreach ($likes as $like) {
+                    if ($like->getFkUser() && $like->getFkUser()->getId() === $currentUser->getId()) {
+                        $likedByUser = true;
+                        break;
+                    }
+                }
+            }
+
             $postData = [
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'user' => null // Initialisation
+                'user' => null, // Initialisation
+                'likes_count' => $likesCount,
+                'liked_by_user' => $likedByUser
             ];
 
             if ($post->getFkUser()) {
                 $postData['user'] = [
                     'id' => $post->getFkUser()->getId(),
                     'username' => $post->getFkUser()->getUsername(),
-                    'avatar_url' => $post->getFkUser()->getProfilePicture() // Assurez-vous que la méthode getProfilePicture() existe et renvoie l'URL
+                    'avatar_url' => $post->getFkUser()->getProfilePicture()
                 ];
             }
             $data[] = $postData;

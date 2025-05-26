@@ -147,7 +147,7 @@ export default function CreatePost() {
         {preview && (
           <div className="text-center">
             {preview.type === 'image' ? (
-              <img src={preview.url} alt="Preview" className="img-fluid mb-2" style={{ maxHeight: '200px' }} />
+              <img src={preview.url} alt="Preview" className="img-fluid mb-1 mt-1" style={{ maxHeight: '200px' }} />
             ) : preview.type === 'video' ? (
               <video
                 src={preview.url}
@@ -175,8 +175,8 @@ export default function CreatePost() {
               accept="image/*,video/mp4"
               onChange={handleFileChange}
             />
-            <label htmlFor="media-upload" className="btn btn-outline-secondary mb-0">
-              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '20px' }} />
+            <label htmlFor="media-upload" className="btn p-0 ml-5">
+              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '30px' }} />
             </label>
           </div>
 

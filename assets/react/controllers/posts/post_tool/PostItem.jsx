@@ -5,6 +5,7 @@ import LikeBtn from '../btn_post/LikeBtn';
 import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
+import ShareBtn from '../btn_post/ShareBtn';
 import UpdatePost from '../UpdatePost';
 import CommentForm from '../../comments/CommentForm';
 import '../../../../styles/PostItem.css';
@@ -103,24 +104,30 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             <IsVideoFile filename={post.content_multimedia} />
                         </div>
                     )}
-                    <div className="d-flex justify-content-start">
-                        <LikeBtn
-                            postId={post.id}
-                            initialLiked={post.liked_by_user}
-                            likesCount={post.likes_count} />
-                        <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
-                        {canUpdate && (
-                            <UpdateBtn onClick={handleUpdateClick} />
-                        )}
-                        {canDelete && (
-                            <DeleteBtn onClick={handleDeleteClick} />
-                        )}
+                    <div className="d-flex justify-content-between">
+                        <div className="d-flex justify-content-start">
+                            <LikeBtn
+                                postId={post.id}
+                                initialLiked={post.liked_by_user}
+                                likesCount={post.likes_count} />
+                            <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
+                            {canUpdate && (
+                                <UpdateBtn onClick={handleUpdateClick} />
+                            )}
+                            {canDelete && (
+                                <DeleteBtn onClick={handleDeleteClick} />
+                            )}
+                        </div>
+                        <div className="d-flex justify-content-end">
+                            <ShareBtn />
+                        </div>
                     </div>
-                    { }
+
                     {showCommentForm && (
                         <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
                     )}
                 </div>
+
             </div>
 
             {isUpdateModalOpen && canUpdate && (

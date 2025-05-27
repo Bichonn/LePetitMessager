@@ -42,17 +42,31 @@ final class LikesController extends AbstractController
             );
         }
 
-        $like = new Likes();
-        $like->setFkUser($user); // Obligatoire
-        $like->setFkPost($entityManager->getRepository(Posts::class)->find($request->request->get('post_id'))); // Obligatoire
+        $post = $entityManager->getRepository(Posts::class)->find($request->request->get('post_id'));
+        if (!$post) {
+            return $this->json(['message' => 'Post introuvable'], Response::HTTP_NOT_FOUND);
+        }
 
-        $entityManager->persist($like);
-        $entityManager->flush();
+        $existingLike = $entityManager->getRepository(Likes::class)->findOneBy([
+            'fk_user' => $user,
+            'fk_post' => $post
+        ]);
 
-        return $this->json(
-            ['message' => 'Liké avec succès'],
-            Response::HTTP_CREATED
-        );
+        if ($existingLike) {
+            // Si déjà liké, on unlike (supprime le like)
+            $entityManager->remove($existingLike);
+            $entityManager->flush();
+            return $this->json( Response::HTTP_OK);
+        } else {
+            // Sinon, on ajoute le like
+            $like = new Likes();
+            $like->setFkUser($user);
+            $like->setFkPost($post);
+
+            $entityManager->persist($like);
+            $entityManager->flush();
+
+            return $this->json( Response::HTTP_CREATED);
+        }
     }
-    
 }

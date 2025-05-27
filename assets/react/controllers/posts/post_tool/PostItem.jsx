@@ -98,7 +98,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     <div className="d-flex justify-content-start">
                         <LikeBtn
                             postId={post.id}
-                            initialLiked={post.liked_by_current_user}
+                            initialLiked={post.liked_by_user}
                             likesCount={post.likes_count} />
                         <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
                         {canUpdate && (

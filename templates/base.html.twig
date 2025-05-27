@@ -37,23 +37,15 @@
                 <!-- Wigets (Droite) -->
                 <div class="widget-side-container col-md-4 d-flex flex-column">
 
-                    <div {{ react_component('SearchBar') }}></div>
-
-                    {% if app.user is null %}
-                        <div class="container border-bottom border-top border-dark">
-                            <div class="d-flex justify-content-center mb-1 mt-3">
-                                <h5 class="text-center text-decoration-underline">Messager ! à votre plume !</h5>
-                            </div>
-                            <div class="d-flex justify-content-center mb-3">
-                                <div {{ react_component('auth/LoginForm') }}></div>
-                                <div {{ react_component('auth/RegisterForm') }}></div>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div {{ react_component('auth/LogOut', { 'username': app.user.username, 'logoutPath': path('app_logout') }) }}></div>
-                    {% endif %}
-
-                    <div {{ react_component('layout/Footer') }}></div>
+                    {# Remplacer le contenu statique de la sidebar par un composant React dynamique #}
+                    {# Ce composant (par exemple, 'layout/RightSidebarArea') gérera l'affichage #}
+                    {# soit de la sidebar par défaut (recherche, authentification, footer) #}
+                    {# soit des commentaires pour un post spécifique. #}
+                    <div {{ react_component('layout/RightSidebarArea', {
+                        'isAuthenticated': app.user is not null,
+                        'username': app.user ? app.user.username : null,
+                        'logoutPath': app.user ? path('app_logout') : null
+                    }) }}></div>
 
                 </div>
                 

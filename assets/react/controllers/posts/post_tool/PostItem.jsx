@@ -7,15 +7,15 @@ import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
 import ShareBtn from '../btn_post/ShareBtn';
-import SaveBtn from '../btn_post/SaveBtn';
 import CommentForm from '../../comments/CommentForm';
 import CommentsList from '../../comments/CommentsList';
+import ShareBtn from '../btn_post/ShareBtn';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
-    const [showCommentForm, setShowCommentForm] = useState(false);
+    // const [showCommentForm, setShowCommentForm] = useState(false); // Supprimé - géré par RightSidebarArea
 
     useEffect(() => {
         fetch('/user')
@@ -73,6 +73,11 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
         }
     };
 
+    const handleCommentButtonClick = (postId) => {
+        const event = new CustomEvent('showPostCommentsInSidebar', { detail: { postId: postId } });
+        document.dispatchEvent(event);
+    };
+
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
     const userProfileUrl = `/profil/view/${author.username}`;
@@ -112,7 +117,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                                 postId={post.id}
                                 initialLiked={post.liked_by_user}
                                 likesCount={post.likes_count} />
-                            <CommentBtn postId={post.id} onClick={() => setShowCommentForm(v => !v)} />
+                            <CommentBtn postId={post.id} onClick={() => handleCommentButtonClick(post.id)} />
                             {canUpdate && (
                                 <UpdateBtn onClick={handleUpdateClick} />
                             )}
@@ -121,22 +126,20 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             )}
                         </div>
                         <div className="d-flex justify-content-end">
-                            <SaveBtn 
-                            postId={post.id}
-                                initialFavoris={post.favoris_by_user}
-                                />
+                            <SaveBtn />
                             <div style={{ marginLeft: '8px' }}>
                                 <ShareBtn />
                             </div>
                         </div>
                     </div>
 
-                    {showCommentForm && (
+                    {/* Supprimé: Le formulaire de commentaire et la liste sont maintenant dans RightSidebarArea */}
+                    {/* {showCommentForm && (
                         <div>
                             <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
                         </div>
                     )}
-                    <CommentsList postId={post.id} />
+                    <CommentsList postId={post.id} /> */}
                 </div>
             </div>
 

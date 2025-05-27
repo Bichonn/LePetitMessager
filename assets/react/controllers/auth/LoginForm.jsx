@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../../../styles/formStyle.css';
+import '../../../styles/app.css';
 
 export default function LoginForm() {
     const [showModal, setShowModal] = useState(false);

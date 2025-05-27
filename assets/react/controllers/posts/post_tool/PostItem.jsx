@@ -72,6 +72,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
 
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
+    const userProfileUrl = `/profil/view/${author.username}`; 
 
     return (
         <>
@@ -79,13 +80,20 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                 <div className="d-flex align-items-center ms-7">
                     <img
                         src={author.avatar_url || '/default-avatar.png'}
-                        alt="avatar"
-                        className="avatar rounded-circle me-2"
+                        alt={`${author.username}'s avatar`}
+                        className="rounded-circle me-2"
+                        style={{ width: '40px', height: '40px', objectFit: 'cover' }}
                     />
-                    <span className="fw-semibold">{author.username}</span>
-                    <span className="text-muted ms-2">
-                        {new Date(post.created_at).toLocaleDateString()} à {new Date(post.created_at).toLocaleTimeString()}
-                    </span>
+                    <div>
+                        <h5 className="mb-0">
+                            <a href={userProfileUrl} className="text-decoration-none text-dark fw-bold">
+                                {author.username}
+                            </a>
+                        </h5>
+                        <small className="text-muted">
+                            {new Date(post.created_at).toLocaleString()}
+                        </small>
+                    </div>
                 </div>
                 <div className="ms-6">
                     <p>{post.content_text}</p>

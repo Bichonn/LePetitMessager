@@ -15,17 +15,29 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use App\Repository\UsersRepository; // Ensure this use statement is present
 
 final class UsersController extends AbstractController
 {
     #[Route('/profil', name: 'app_profil')]
     public function index(): Response
     {
+        // This renders the current logged-in user's profile page
         return $this->render('users/index.html.twig');
     }
 
-    #[Route('/user', name: 'app_user')]
-    public function profil(EntityManagerInterface $entityManager): Response // Injection de EntityManagerInterface
+    #[Route('/profil/view/{username}', name: 'app_view_user_profile', methods: ['GET'])]
+    public function viewUserProfilePage(string $username): Response
+    {
+        // This action renders the Twig template for viewing a specific user's profile.
+        // The ShowProfil React component will handle fetching the user data via an API call.
+        return $this->render('users/view_profile.html.twig', [
+            'username' => $username,
+        ]);
+    }
+
+    #[Route('/user', name: 'app_user', methods: ['GET'])] // Existing endpoint for current user
+    public function profil(EntityManagerInterface $entityManager): Response 
     {
         $securityUser = $this->getUser(); // Récupère l'utilisateur authentifié
 
@@ -62,6 +74,49 @@ final class UsersController extends AbstractController
         // Vous pouvez optionnellement supprimer la clé 'profile_picture' si elle n'est plus nécessaire
         // unset($userDataArray['profile_picture']);
 
+
+        return $this->json($userDataArray, Response::HTTP_OK);
+    }
+
+    #[Route('/user/username/{username}', name: 'app_get_user_by_username', methods: ['GET'])]
+    public function getUserByUsername(string $username, UsersRepository $usersRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $userToView = $usersRepository->findOneBy(['username' => $username]);
+
+        if (!$userToView) {
+            return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $currentUser = $this->getUser();
+        $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
+
+        if ($userToView->isPrivateAccount() && !$isOwnProfile) {
+            // For private profiles, you might return limited data or a specific message.
+            // Here, we'll return an error if not the owner.
+            return $this->json([
+                'message' => 'Ce profil est privé.',
+                'username' => $userToView->getUsername(), // Optionally send minimal data
+                'avatar_url' => $userToView->getProfilePicture(),
+                'is_private' => true,
+                'is_own_profile' => false
+            ], Response::HTTP_FORBIDDEN); // Or HTTP_OK if sending minimal data
+        }
+
+        $userDataArray = [
+            'id' => $userToView->getId(),
+            'first_name' => $userToView->getFirstName(),
+            'last_name' => $userToView->getLastName(),
+            'username' => $userToView->getUsername(),
+            // 'email' => $userToView->getEmail(), // Be cautious about exposing email
+            'banner' => $userToView->getBanner(),
+            'profile_picture' => $userToView->getProfilePicture(),
+            'avatar_url' => $userToView->getProfilePicture(),
+            'bio' => $userToView->getBio(),
+            'user_premium' => $userToView->isUserPremium(),
+            'created_at' => $userToView->getCreatedAt() ? $userToView->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            'private_account' => $userToView->isPrivateAccount(),
+            'is_own_profile' => $isOwnProfile,
+        ];
 
         return $this->json($userDataArray, Response::HTTP_OK);
     }

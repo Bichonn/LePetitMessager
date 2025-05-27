@@ -1,0 +1,9 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{% if username %}{{ username }}'s Profile{% else %}User Profile{% endif %}{% endblock %}
+
+{% block main_content %}
+    {# Pass the username to the ShowProfil component #}
+    {# The ShowProfil component will then fetch the specific user's data #}
+    <div {{ react_component('userProfil/ShowProfil', { 'targetUsername': username }) }}></div>
+{% endblock %}

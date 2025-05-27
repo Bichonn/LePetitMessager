@@ -84,10 +84,10 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
 
   return (
     <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-      <div className="modal-dialog modal-lg">
+      <div className="modal-dialog">
         <div className="modal-content">
-          <div className="modal-header">
-            <h5 className="modal-title btn">Modifier le profil</h5>
+          <div className="modal-header rounded-0 justify-content-center">
+            <h5 className="modal-title">Modifier le profil</h5>
             <button type="button" className="btn-close" onClick={onClose} disabled={isSubmitting}></button>
           </div>
           <form onSubmit={handleSubmit}>

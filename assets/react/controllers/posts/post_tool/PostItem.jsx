@@ -5,9 +5,9 @@ import LikeBtn from '../btn_post/LikeBtn';
 import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
-import ShareBtn from '../btn_post/ShareBtn';
 import UpdatePost from '../UpdatePost';
 import CommentForm from '../../comments/CommentForm';
+import CommentsList from '../../comments/CommentsList';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -125,9 +125,9 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
 
                     {showCommentForm && (
                         <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
+                        <CommentsList postId={post.id} />
                     )}
                 </div>
-
             </div>
 
             {isUpdateModalOpen && canUpdate && (

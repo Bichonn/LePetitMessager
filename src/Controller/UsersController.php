@@ -51,29 +51,26 @@ final class UsersController extends AbstractController
 
         // Utiliser DQL pour sélectionner uniquement les champs nécessaires
         // Cela peut améliorer les performances si l'entité User est volumineuse ou a des relations EAGER non nécessaires ici.
-        $userRepository = $entityManager->getRepository(Users::class);
-        $userDataArray = $userRepository->createQueryBuilder('u')
-            ->select('u.id, u.first_name, u.last_name, u.username, u.email, u.banner, u.profile_picture, u.bio, u.user_premium, u.created_at, u.private_account')
-            ->where('u.id = :userId')
-            ->setParameter('userId', $securityUser->getId())
-            ->getQuery()
-            ->getOneOrNullResult(\Doctrine\ORM\Query::HYDRATE_ARRAY); // Récupère les données sous forme de tableau
+        $query = $entityManager->createQuery(
+            'SELECT u.id, u.email, u.username, u.first_name, u.last_name, u.bio, u.profile_picture, u.banner, u.created_at, u.private_account
+             FROM App\Entity\Users u
+             WHERE u.id = :userId'
+        )->setParameter('userId', $securityUser->getId());
+
+        $userDataArray = $query->getOneOrNullResult();
 
         if (!$userDataArray) {
-            // Ce cas ne devrait pas se produire si $securityUser est valide
-            return $this->json(['message' => 'Données utilisateur non trouvées.'], Response::HTTP_NOT_FOUND);
+            // Should not happen if user is authenticated and exists
+            return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Formater la date si elle est un objet DateTimeInterface
-        if ($userDataArray['created_at'] instanceof \DateTimeInterface) {
-            $userDataArray['created_at'] = $userDataArray['created_at']->format('Y-m-d H:i:s');
-        }
-        
         // Mapper profile_picture vers avatar_url pour correspondre au frontend
         $userDataArray['avatar_url'] = $userDataArray['profile_picture'];
         // Vous pouvez optionnellement supprimer la clé 'profile_picture' si elle n'est plus nécessaire
         // unset($userDataArray['profile_picture']);
 
+        // Ajouter explicitement is_own_profile car c'est le profil de l'utilisateur connecté
+        $userDataArray['is_own_profile'] = true;
 
         return $this->json($userDataArray, Response::HTTP_OK);
     }

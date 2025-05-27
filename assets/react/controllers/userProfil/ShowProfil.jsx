@@ -4,30 +4,41 @@ import UserProfileInfo from './UserProfileInfo';
 import UserPostsList from './UserPostsList';
 import EditProfileForm from './EditProfileForm';
 
-export default function ShowProfil({ targetUsername }) { // Accept targetUsername prop
+export default function ShowProfil({ targetUsername }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  // const [isOwnProfile, setIsOwnProfile] = useState(false); // Backend will send this
 
   const fetchUser = async () => {
     setIsLoading(true);
     setError(null);
+    setUser(null); // Clear previous user state
+
     const endpoint = targetUsername ? `/user/username/${targetUsername}` : `/user`;
 
     try {
       const response = await fetch(endpoint);
-      const data = await response.json(); // Try to parse JSON regardless of status for error messages
+      const data = await response.json(); // Try to parse JSON for all responses
 
       if (!response.ok) {
-        throw new Error(data.message || `Erreur HTTP ${response.status}`);
+        // Even if not ok, data might contain useful info (e.g., for private profiles)
+        // Store partial data if available (like username, avatar_url, is_private, is_own_profile)
+        setUser(data); 
+        setError(data.message || `Erreur: ${response.status}`);
+        // For private profiles, we still want to render UserProfileInfo with the message
+        // So, we don't throw an error here if data.is_private is true.
+        if (!(data && data.is_private)) {
+             // For other errors, ensure it's treated as a full error if not private profile specific
+             // This path might not be hit if setUser(data) and setError() are sufficient
+        }
+      } else {
+        setUser(data); // Full user data, including is_own_profile
       }
-      setUser(data);
-      // setIsOwnProfile(data.is_own_profile !== undefined ? data.is_own_profile : !targetUsername);
     } catch (err) {
-      setError(err.message);
-      setUser(null); // Clear user data on error
+      // This catch is for network errors or if response.json() fails
+      setError(err.message || 'Une erreur de communication est survenue.');
+      setUser(null); // Ensure user is null on critical fetch errors
     } finally {
       setIsLoading(false);
     }
@@ -39,49 +50,44 @@ export default function ShowProfil({ targetUsername }) { // Accept targetUsernam
 
   const handleProfileUpdated = (updatedUserData) => {
     // setUser(updatedUserData); // Optimistically update or refetch
-    fetchUser(); // Refetch to ensure all data is current
+    fetchUser(); // Refetch to ensure all data is current, respecting targetUsername
     setShowEditModal(false);
   };
 
   if (isLoading) return <div className="text-center mt-4">Chargement du profil...</div>;
-  
-  // If there's an error message, display it.
-  // If user is null after loading and no error (e.g. private profile message from backend but HTTP 200), handle accordingly.
-  if (error) {
-    // If user data exists (e.g. for private profile minimal data), still show UserProfileInfo
-    if (user && user.is_private) {
-         return (
-            <>
-                <UserProfileInfo user={user} onEditClick={null} /> {/* No edit for others */}
-                <div className="alert alert-info m-3">{error}</div>
-                {/* Optionally, don't show UserPostsList or show a specific message */}
-            </>
-         );
-    }
+
+  // If there's an error message, and it's not a "private profile" scenario where user data is partially available for UserProfileInfo
+  if (error && (!user || !user.is_private || (user.is_private && !user.is_own_profile && !user.username))) {
     return <div className="alert alert-danger m-3">Erreur du profil: {error}</div>;
   }
   
-  if (!user) return <div className="alert alert-warning m-3">Utilisateur non trouvé ou profil inaccessible.</div>;
-
+  // If user is null after loading and no specific error handled above (e.g. 404 not found and data was not parsable)
+  if (!user && !isLoading) {
+    return <div className="alert alert-warning m-3">{error || "Utilisateur non trouvé ou profil inaccessible."}</div>;
+  }
+  
+  // At this point, 'user' should be populated, either fully or partially (e.g. for private profiles).
   return (
     <>
       <UserProfileInfo 
         user={user} 
-        onEditClick={user.is_own_profile ? () => setShowEditModal(true) : null} 
+        onEditClick={user && user.is_own_profile ? () => setShowEditModal(true) : null} 
       />
 
-      {showEditModal && user.is_own_profile && (
+      {showEditModal && user && user.is_own_profile && (
         <EditProfileForm
           currentUser={user}
           onClose={() => setShowEditModal(false)}
           onProfileUpdated={handleProfileUpdated}
         />
       )}
-      
-      {/* Only show posts if the profile is not private or if it's the owner's profile */}
-      {(!user.private_account || user.is_own_profile) && <UserPostsList user={user} />}
-      {user.private_account && !user.is_own_profile && !error && (
-        <div className="alert alert-info m-3">Les posts de ce profil privé ne sont pas visibles.</div>
+
+      {user && (!user.is_private || user.is_own_profile) && (
+        <UserPostsList user={user} />
+      )}
+
+      {user && user.is_private && !user.is_own_profile && (
+        <div className="alert alert-info m-3">{error || "Les posts de ce profil privé ne sont pas visibles."}</div>
       )}
     </>
   );

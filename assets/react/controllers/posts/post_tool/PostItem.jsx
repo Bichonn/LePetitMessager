@@ -9,7 +9,7 @@ import UpdatePost from '../UpdatePost';
 import ShareBtn from '../btn_post/ShareBtn';
 import CommentForm from '../../comments/CommentForm';
 import CommentsList from '../../comments/CommentsList';
-
+import ShareBtn from '../btn_post/ShareBtn';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -75,7 +75,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
 
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
-    const userProfileUrl = `/profil/view/${author.username}`; 
+    const userProfileUrl = `/profil/view/${author.username}`;
 
     return (
         <>
@@ -129,11 +129,11 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     </div>
 
                     {showCommentForm && (
-                        <>
-                        <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
-                        <CommentsList postId={post.id} />
-                        </>
+                        <div>
+                            <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
+                        </div>
                     )}
+                    <CommentsList postId={post.id} />
                 </div>
             </div>
 

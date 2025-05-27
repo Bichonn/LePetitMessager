@@ -6,8 +6,10 @@ import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
+import ShareBtn from '../btn_post/ShareBtn';
 import CommentForm from '../../comments/CommentForm';
 import CommentsList from '../../comments/CommentsList';
+
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -119,13 +121,18 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             )}
                         </div>
                         <div className="d-flex justify-content-end">
-                            <ShareBtn />
+                            <SaveBtn />
+                            <div style={{ marginLeft: '8px' }}>
+                                <ShareBtn />
+                            </div>
                         </div>
                     </div>
 
                     {showCommentForm && (
+                        <>
                         <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
                         <CommentsList postId={post.id} />
+                        </>
                     )}
                 </div>
             </div>

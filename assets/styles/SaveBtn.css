@@ -1,0 +1,97 @@
+.save-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.save-wrapper .container {
+  --color: var(--text-color, #212529);
+  --size: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  cursor: pointer;
+  font-size: var(--size);
+  user-select: none;
+  fill: var(--color);
+  border-radius: 10px;
+  border: none;
+  background-color: transparent;
+  padding: 5px;
+  transition: all 0.2s ease;
+}
+
+.save-wrapper .container:hover {
+  transform: scale(1.1);
+  cursor: pointer;
+}
+
+.save-wrapper .save-regular {
+  position: absolute;
+  animation: keyframes-fill 0.3s;
+  transform-origin: top;
+  width: 30px;
+  height: 30px;
+  fill: var(--text-color, #212529);
+}
+
+.save-wrapper .save-solid {
+  position: absolute;
+  animation: keyframes-fill 0.3s;
+  display: none;
+  transform-origin: top;
+  width: 30px;
+  height: 30px;
+  fill: var(--border-color, #A58D5E);
+}
+
+/* ------ On check event ------ */
+.save-wrapper .container input:checked ~ .save-regular {
+  display: none;
+}
+
+.save-wrapper .container input:checked ~ .save-solid {
+  display: block;
+}
+
+/* ------ Hide the default checkbox ------ */
+.save-wrapper .container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Animation lorsqu'on clique */
+.save-wrapper .container:active > svg {
+  animation: pulse 0.15s linear;
+}
+
+/* ------ Animation ------ */
+@keyframes keyframes-fill {
+  0% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

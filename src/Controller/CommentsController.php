@@ -98,4 +98,35 @@ final class CommentsController extends AbstractController
         );
     }
 
+    #[Route('/comments/post/{postId}', name: 'app_comments_by_post', methods: ['GET'])]
+    public function getCommentsByPost(int $postId, PostsRepository $postsRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $post = $postsRepository->find($postId);
+        if (!$post) {
+            return $this->json(['message' => 'Post introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $comments = $entityManager->getRepository(Comments::class)->findBy(
+            ['fk_post' => $post],
+            ['created_at' => 'ASC']
+        );
+
+        $data = [];
+        foreach ($comments as $comment) {
+            $data[] = [
+                'id' => $comment->getId(),
+                'content_text' => $comment->getContentText(),
+                'content_multimedia' => $comment->getContentMultimedia(),
+                'created_at' => $comment->getCreatedAt()?->format('Y-m-d H:i:s'),
+                'user' => [
+                    'id' => $comment->getFkUser()?->getId(),
+                    'username' => $comment->getFkUser()?->getUsername(),
+                    'avatar_url' => $comment->getFkUser()?->getProfilePicture(),
+                ]
+            ];
+        }
+
+        return $this->json($data, Response::HTTP_OK);
+    }
+
 }

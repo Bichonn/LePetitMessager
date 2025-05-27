@@ -10,7 +10,7 @@ export default function LogOut({ username, logoutPath }) {
         </h5>
       </div>
       <div className="d-flex justify-content-center mb-3">
-        <a href={logoutPath} className="custom-login-button text-decoration-none">
+        <a href={logoutPath} className="btn btn-primary">
           Se déconnecter
         </a>
       </div>

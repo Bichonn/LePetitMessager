@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Posts;
 use App\Entity\Users;
 use App\Entity\Comments;
+use App\Repository\PostsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -28,21 +29,21 @@ final class CommentsController extends AbstractController
     }
 
     #[Route('/comments/add', name: 'app_comments_add', methods: ['POST'])]
-    public function create(
-        Request $request,
-        EntityManagerInterface $entityManager,
-        SluggerInterface $slugger
-    ): JsonResponse {
-        $content = $request->request->get('content');
+    public function add(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, PostsRepository $postsRepository): JsonResponse
+    {
+        $content = trim((string) $request->request->get('content'));
         $mediaFile = $request->files->get('media');
+        $postId = $request->request->get('post_id');
 
-        if (empty($content)) {
+        // 1. Validate that either content or media is present
+        if (empty($content) && !$mediaFile) {
             return $this->json(
-                ['message' => 'Le contenu texte est obligatoire'],
+                ['message' => 'Un commentaire doit contenir du texte ou un média.'],
                 Response::HTTP_BAD_REQUEST
             );
         }
 
+        // 2. Check for authenticated user
         $user = $this->getUser();
         if (!$user) {
             return $this->json(
@@ -51,32 +52,39 @@ final class CommentsController extends AbstractController
             );
         }
 
+        // 3. Check if the post exists
+        $post = $postsRepository->find($postId);
+        if (!$post) {
+            return $this->json(['message' => 'Post introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        // 4. Create and persist the comment if all checks pass
         $comment = new Comments();
-        $comment->setFkUser($user); // Obligatoire
-        $comment->setFkPost($entityManager->getRepository(Posts::class)->find($request->request->get('post_id'))); // Obligatoire
-        $comment->setContentText($content); // Obligatoire
+        $comment->setFkUser($user); // $user is guaranteed to be non-null here
+        $comment->setFkPost($post);
+
+        if (!empty($content)) {
+            $comment->setContentText($content);
+        }
         $comment->setCreatedAt(new \DateTimeImmutable());
 
-        // Gestion du média (optionnel)
         if ($mediaFile) {
             $originalFilename = pathinfo($mediaFile->getClientOriginalName(), PATHINFO_FILENAME);
             $safeFilename = $slugger->slug($originalFilename);
             $newFilename = $safeFilename . '-' . uniqid() . '.' . $mediaFile->guessExtension();
 
             try {
-                if (!file_exists($this->getParameter('uploads_directory'))) {
-                    mkdir($this->getParameter('uploads_directory'), 0777, true);
+                $uploadsDirectory = $this->getParameter('uploads_directory'); // Ensure 'uploads_directory' is defined in services.yaml
+                if (!file_exists($uploadsDirectory)) {
+                    mkdir($uploadsDirectory, 0777, true);
                 }
-
-                $mediaFile->move(
-                    $this->getParameter('uploads_directory'),
-                    $newFilename
-                );
-
+                $mediaFile->move($uploadsDirectory, $newFilename);
                 $comment->setContentMultimedia($newFilename);
             } catch (\Exception $e) {
+                // It's good practice to log the actual error server-side
+                // error_log('Comment media upload error: ' . $e->getMessage());
                 return $this->json([
-                    'message' => 'Erreur lors de l\'upload du fichier : ' . $e->getMessage()
+                    'message' => 'Erreur lors de l\'upload du fichier média.'
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
@@ -85,7 +93,7 @@ final class CommentsController extends AbstractController
         $entityManager->flush();
 
         return $this->json(
-            ['message' => 'Commentaire posté avec succès'],
+            ['message' => 'Commentaire posté avec succès!'], // Consider returning the created comment data
             Response::HTTP_CREATED
         );
     }

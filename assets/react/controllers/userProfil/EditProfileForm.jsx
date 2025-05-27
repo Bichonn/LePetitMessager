@@ -87,7 +87,7 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
       <div className="modal-dialog modal-lg">
         <div className="modal-content">
           <div className="modal-header">
-            <h5 className="modal-title">Modifier le profil</h5>
+            <h5 className="modal-title btn">Modifier le profil</h5>
             <button type="button" className="btn-close" onClick={onClose} disabled={isSubmitting}></button>
           </div>
           <form onSubmit={handleSubmit}>
@@ -174,7 +174,7 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
 
             </div>
             <div className="modal-footer">
-              <button type="button" className="btn btn-secondary" onClick={onClose} disabled={isSubmitting}>
+              <button type="button" className="btn custom-cancel-button me-2" onClick={onClose} disabled={isSubmitting}>
                 Annuler
               </button>
               <button type="submit" className="btn btn-primary" disabled={isSubmitting || !csrfToken}>

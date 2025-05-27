@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../../../styles/LoginForm.css';
+import '../../../styles/formStyle.css';
 
 export default function LoginForm() {
     const [showModal, setShowModal] = useState(false);
@@ -108,7 +108,7 @@ export default function LoginForm() {
 
     return (
         <>
-            <button className="custom-login-button" onClick={() => setShowModal(true)}>
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                 Se connecter
             </button>
 

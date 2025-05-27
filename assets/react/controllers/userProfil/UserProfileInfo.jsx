@@ -1,5 +1,6 @@
 import React from 'react';
 import '../../../styles/ShowProfil.css';
+import '../../../styles/app.css';
 
 export default function UserProfileInfo({ user, onEditClick }) {
   if (!user) return null;
@@ -15,12 +16,12 @@ export default function UserProfileInfo({ user, onEditClick }) {
           />
         )}
       </div>
-      
+
       <div className="profile-avatar-wrapper">
         <img
           src={user.avatar_url || '/default-avatar.png'}
           alt="avatar"
-          className="rounded-circle profil-avatar" 
+          className="rounded-circle profil-avatar"
         />
       </div>
 
@@ -37,17 +38,17 @@ export default function UserProfileInfo({ user, onEditClick }) {
               </p>
             </div>
             {onEditClick && (
-              <button className="btn btn-outline-primary btn-sm" onClick={onEditClick}>
+              <button className="btn btn-primary" onClick={onEditClick}>
                 Modifier le profil
               </button>
             )}
           </div>
-          {user.bio && (
-            <p className="fst-italic mb-0 mt-2">
-              {user.bio}
-            </p>
-          )}
         </div>
+        {user.bio && (
+          <p className="fst-italic mb-0 mt-2">
+            {user.bio}
+          </p>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import '../../../styles/RegisterForm.css';
+import '../../../styles/formStyle.css';
+import '../../../styles/app.css';
 
 export default function RegisterForm() {
     const [form, setForm] = useState({
@@ -83,7 +84,7 @@ export default function RegisterForm() {
 
     return (
         <>
-            <button className="custom-register-button" onClick={() => setShowModal(true)}>
+            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                 S'inscrire
             </button>
 

@@ -7,9 +7,9 @@ import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
 import ShareBtn from '../btn_post/ShareBtn';
+import SaveBtn from '../btn_post/SaveBtn';
 import CommentForm from '../../comments/CommentForm';
 import CommentsList from '../../comments/CommentsList';
-import ShareBtn from '../btn_post/ShareBtn';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -121,7 +121,10 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             )}
                         </div>
                         <div className="d-flex justify-content-end">
-                            <SaveBtn />
+                            <SaveBtn 
+                            postId={post.id}
+                                initialFavoris={post.favoris_by_user}
+                                />
                             <div style={{ marginLeft: '8px' }}>
                                 <ShareBtn />
                             </div>

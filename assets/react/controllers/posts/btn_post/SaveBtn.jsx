@@ -20,7 +20,7 @@ const SaveBtn = ({ postId, initialFavoris = false }) => {
 
       const data = await response.json();
       if (response.ok) {
-        if (liked) {
+        if (favoris) {
           setFavoris(false);
         } else {
           setFavoris(true);

@@ -50,6 +50,9 @@ final class FollowsController extends AbstractController
             return $this->json(['message' => 'Messager à suivre introuvable'], Response::HTTP_NOT_FOUND);
         }
 
+        if ($user === $following) {
+            return $this->json(['message' => 'Vous ne pouvez pas vous suivre vous-même'], Response::HTTP_BAD_REQUEST);
+        }
 
         $existingFollow = $entityManager->getRepository(Follows::class)->findOneBy([
             'fk_follower' => $user,
@@ -57,22 +60,23 @@ final class FollowsController extends AbstractController
         ]);
 
         if ($existingFollow) {
-            // Si déjà liké, on unlike (supprime le like)
             $entityManager->remove($existingFollow);
             $entityManager->flush();
-            return $this->json(Response::HTTP_OK);
+            return $this->json([
+                'followed' => false
+            ], Response::HTTP_OK);
         } else {
-            // Sinon, on ajoute le like
             $follow = new Follows();
             $follow->setFkFollower($user);
             $follow->setFkFollowing($following);
             $follow->setCreatedAt(new \DateTimeImmutable());
 
-
             $entityManager->persist($follow);
             $entityManager->flush();
 
-            return $this->json(Response::HTTP_CREATED);
+            return $this->json([
+                'followed' => true
+            ], Response::HTTP_CREATED);
         }
     }
 }

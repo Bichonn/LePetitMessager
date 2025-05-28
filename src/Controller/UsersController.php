@@ -116,6 +116,17 @@ final class UsersController extends AbstractController
             'is_own_profile' => $isOwnProfile,
         ];
 
+        // Ajout du champ followed_by_user
+        $followedByUser = false;
+        if ($currentUser && !$isOwnProfile) {
+            $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
+                'fk_follower' => $currentUser,
+                'fk_following' => $userToView
+            ]);
+            $followedByUser = $existingFollow !== null;
+        }
+        $userDataArray['followed_by_user'] = $followedByUser;
+
         return $this->json($userDataArray, Response::HTTP_OK);
     }
 

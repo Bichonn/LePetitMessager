@@ -27,9 +27,9 @@ const FollowBtn = ({ userId, initialFollowed = false }) => {
     };
 
     return (
-        <div className="follow-btn-wrapper d-flex align-items-center">
+        <div>
             <button
-                className={`btn ${followed ? 'btn-secondary' : 'btn-outline-primary'}`}
+                className={`btn btn-primary${followed ? 'active' : ''}`}
                 onClick={handleFollowClick}
                 title={followed ? "Se désabonner" : "Suivre"}
             >

@@ -58,53 +58,46 @@ export default function SearchBar({ onSearch }) {
     if (onSearch) {
       onSearch(searchTerm);
     }
-    // Optionnellement, si onSearch n'est pas défini, vous pourriez naviguer vers une page de résultats de recherche
-    // ou vers le profil du premier utilisateur suggéré si pertinent.
   };
 
   const handleSuggestionClick = (username) => {
-    setSearchTerm(''); // Effacer le terme de recherche
-    setSuggestions([]); // Effacer les suggestions
-    // Naviguer vers le profil de l'utilisateur.
-    // Si vous utilisez React Router, utilisez ses méthodes de navigation (useNavigate).
+    setSearchTerm('');
+    setSuggestions([]);
     window.location.href = `/profil/view/${username}`;
   };
 
   return (
     <div className="bg-color-search border-bottom border-dark position-relative">
       <form onSubmit={handleSubmit}>
+        
         <div className="input-group">
           <input
             type="text"
-            className="border-end border-dark form-control border-0 rounded-0 bg-color-search large-placeholder inner-shadow"
+            className="border-end border-dark form-control border-0 rounded-0 bg-color-search large-placeholder inner-shadow search-input-field"
             placeholder="Rechercher des utilisateurs..."
             value={searchTerm}
             onChange={handleChange}
             aria-label="Rechercher des utilisateurs"
-            autoComplete="off" // Empêcher l'autocomplétion du navigateur d'interférer
+            autoComplete="off"
           />
-          <button className="btn rounded-0" type="submit">
-            <img className="img-fluid w-25" src="/icons/search.png" alt="Rechercher"></img>
-          </button>
+          
         </div>
       </form>
       {loadingSuggestions && <div className="text-muted p-2">Chargement...</div>}
       {suggestions.length > 0 && (
         <ul 
-          className="list-group position-absolute w-100" 
-          style={{ zIndex: 1050, top: '100%', maxHeight: '300px', overflowY: 'auto' }} // Style pour le dropdown
+          className="list-group position-absolute w-100 search-suggestions-list rounded-0" 
         >
           {suggestions.map(user => (
             <li
               key={user.id}
-              className="list-group-item list-group-item-action d-flex align-items-center"
+              className="list-group-item d-flex align-items-center border-dark search-suggestion-item rounded-0 bg-color-search"
               onClick={() => handleSuggestionClick(user.username)}
-              style={{ cursor: 'pointer' }}
             >
               <img
-                src={user.avatar_url || '/default-avatar.png'} // Utiliser un avatar par défaut si non fourni
+                src={user.avatar_url || '/default-avatar.png'}
                 alt={`${user.username}'s avatar`}
-                style={{ width: '30px', height: '30px', marginRight: '10px', borderRadius: '50%', objectFit: 'cover' }}
+                className="search-suggestion-avatar"
               />
               {user.username}
             </li>

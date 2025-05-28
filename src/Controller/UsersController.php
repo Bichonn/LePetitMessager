@@ -90,15 +90,14 @@ final class UsersController extends AbstractController
         $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
 
         if ($userToView->isPrivateAccount() && !$isOwnProfile) {
-            // For private profiles, you might return limited data or a specific message.
-            // Here, we'll return an error if not the owner.
             return $this->json([
-                'message' => 'Ce profil est privé.',
-                'username' => $userToView->getUsername(), // Optionally send minimal data
-                'avatar_url' => $userToView->getProfilePicture(),
+                // 'message' => 'Ce profil est privé.', // Supprimez ou commentez cette ligne
+                'username' => $userToView->getUsername(),
+                'avatar_url' => $userToView->getProfilePicture(), // Assurez-vous que cela correspond à profile_picture
                 'is_private' => true,
-                'is_own_profile' => false
-            ], Response::HTTP_FORBIDDEN); // Or HTTP_OK if sending minimal data
+                'is_own_profile' => false,
+                'private_account' => true, // Assurez la cohérence avec UserProfileInfo
+            ], Response::HTTP_FORBIDDEN);
         }
 
         $userDataArray = [
@@ -106,7 +105,6 @@ final class UsersController extends AbstractController
             'first_name' => $userToView->getFirstName(),
             'last_name' => $userToView->getLastName(),
             'username' => $userToView->getUsername(),
-            // 'email' => $userToView->getEmail(), // Be cautious about exposing email
             'banner' => $userToView->getBanner(),
             'profile_picture' => $userToView->getProfilePicture(),
             'avatar_url' => $userToView->getProfilePicture(),
@@ -135,55 +133,54 @@ final class UsersController extends AbstractController
     public function update(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher, // Keep if password update is handled here
+        UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
-        SluggerInterface $slugger, // No longer needed if not using local filesystem for new files
-        CsrfTokenManagerInterface $csrfTokenManager, // Keep for CSRF
-        // ParameterBagInterface $params, // No longer needed for upload directories
-        CloudinaryService $cloudinaryService // Inject CloudinaryService
-    ): Response {
+        CloudinaryService $cloudinaryService,
+        ParameterBagInterface $params // Assuming this was intended to be used or is part of a broader context
+    ): JsonResponse {
         $user = $this->getUser();
-        if (!$user instanceof Users) {
-            return $this->json(['error' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
+        if (!$user instanceof \App\Entity\Users) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // For FormData, text fields are in $request->request, files in $request->files
-        // CSRF token will also be in $request->request
-        // $submittedToken = $request->request->get('_csrf_token'); // Assuming CSRF is handled by EditProfileForm.jsx or a Symfony form
-        // if (!$csrfTokenManager->isTokenValid(new CsrfToken('authenticate', $submittedToken))) { // Adjust token ID if necessary
-        //     return $this->json(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
-        // }
+        // Initialize Cloudinary if needed for other operations, or remove if not used in this specific method block
+        // $cloudinary = $cloudinaryService->getCloudinary(); 
 
         $formErrors = [];
-        $cloudinary = $cloudinaryService->getCloudinary();
 
-        // Update fields if present in the request
+        // Handle text fields update
         if ($request->request->has('firstName')) {
             $user->setFirstName(trim($request->request->get('firstName')));
         }
         if ($request->request->has('lastName')) {
             $user->setLastName(trim($request->request->get('lastName')));
         }
-        if ($request->request->has('username')) {
-            $newUsername = trim($request->request->get('username'));
-            if ($newUsername !== $user->getUsername()) {
-                $existingUser = $entityManager->getRepository(\App\Entity\Users::class)->findOneBy(['username' => $newUsername]);
-                if ($existingUser) {
-                    $formErrors['username'] = 'Ce nom d\'utilisateur est déjà pris.';
-                } else {
-                    $user->setUsername($newUsername);
-                }
-            }
-        }
         if ($request->request->has('bio')) {
             $user->setBio(trim($request->request->get('bio')));
         }
-        
+
+        // Handle username update and uniqueness check
+        $newUsername = $request->request->get('username');
+        if ($newUsername && $newUsername !== $user->getUsername()) {
+            $existingUser = $entityManager->getRepository(\App\Entity\Users::class)->findOneBy(['username' => $newUsername]);
+            if ($existingUser) {
+                $formErrors['username'] = 'Ce nom d\'utilisateur est déjà pris.';
+            } else {
+                $user->setUsername($newUsername);
+            }
+        }
+
+        // Handle private account status
+        // Use getBoolean to correctly interpret 'true', '1', 'on', 'yes' as true, and others as false.
+        // Provide current user's setting as default if not present, though form should always send it.
+        $user->setPrivateAccount($request->request->getBoolean('privateAccount', $user->isPrivateAccount()));
+
         // Handle Profile Picture Upload
         /** @var UploadedFile $profilePictureFile */
         $profilePictureFile = $request->files->get('profilePicture');
         if ($profilePictureFile) {
             try {
+                $cloudinary = $cloudinaryService->getCloudinary(); // Initialize Cloudinary client
                 // TODO: Delete old profile picture from Cloudinary if it exists and you want to replace it
                 $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [
                     'folder' => 'user_avatars',
@@ -239,10 +236,13 @@ final class UsersController extends AbstractController
                     'last_name' => $user->getLastName(),
                     'username' => $user->getUsername(),
                     'bio' => $user->getBio(),
-                    'profile_picture' => $user->getProfilePicture(),
-                    'banner' => $user->getBanner(),
-                    'avatar_url' => $user->getProfilePicture(),
+                    'profile_picture' => $user->getProfilePicture(), // This is likely the Cloudinary URL
+                    'banner' => $user->getBanner(), // This is likely the Cloudinary URL
+                    'avatar_url' => $user->getProfilePicture(), // Ensure consistency for frontend
+                    'private_account' => $user->isPrivateAccount(), // Ensure this is returned
+                    'is_own_profile' => true, // Since this is the user updating leur own profile
                     'created_at' => $user->getCreatedAt() ? $user->getCreatedAt()->format('Y-m-d H:i:s') : null,
+                    // Add other fields the frontend might need after update
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {

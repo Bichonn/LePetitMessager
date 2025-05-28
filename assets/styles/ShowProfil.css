@@ -16,9 +16,7 @@
 
 .banner-container {
   height: 100px;
-  /* Adjusted banner height */
   background-color: #6c757d;
-  /* Placeholder color if no banner image */
   overflow: hidden;
 }
 
@@ -36,19 +34,21 @@
 }
 
 .profil-avatar {
-  /* Styles for the avatar image itself */
   width: 110px;
   height: 110px;
   object-fit: cover;
   border: 1px solid #000;
-  /* White border for separation */
   background-color: #fff;
-  /* Fallback for transparent images or loading */
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  /* Subtle shadow for depth */
 }
 
 .profil-container {
   margin-top: 0;
   padding-left: 150px !important;
+}
+
+.lock-icon-img {
+  width: 20px;
+  height: 20px;
+  vertical-align: middle;
 }

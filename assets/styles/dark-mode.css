@@ -45,11 +45,3 @@ body {
 .theme-toggle {
   margin-top: 0.5rem;
 }
-
-/* Boutons avec thème */
-.btn-theme-primary {
-  background-color: var(--navbar-bg);
-  border-color: var(--border-color);
-  color: var(--text-color);
-  transition: background-color 0.2s ease;
-}

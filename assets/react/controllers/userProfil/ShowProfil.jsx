@@ -13,32 +13,30 @@ export default function ShowProfil({ targetUsername }) {
   const fetchUser = async () => {
     setIsLoading(true);
     setError(null);
-    setUser(null); // Clear previous user state
+    setUser(null);
 
     const endpoint = targetUsername ? `/user/username/${targetUsername}` : `/user`;
 
     try {
       const response = await fetch(endpoint);
-      const data = await response.json(); // Try to parse JSON for all responses
+      const data = await response.json();
 
       if (!response.ok) {
-        // Even if not ok, data might contain useful info (e.g., for private profiles)
-        // Store partial data if available (like username, avatar_url, is_private, is_own_profile)
-        setUser(data); 
-        setError(data.message || `Erreur: ${response.status}`);
-        // For private profiles, we still want to render UserProfileInfo with the message
-        // So, we don't throw an error here if data.is_private is true.
-        if (!(data && data.is_private)) {
-             // For other errors, ensure it's treated as a full error if not private profile specific
-             // This path might not be hit if setUser(data) and setError() are sufficient
+        setUser(data); // Important: data contient is_private, username, avatar_url
+        // Si c'est un profil privé consulté par un autre, ne pas définir d'erreur générique ici.
+        // UserProfileInfo et la section des posts afficheront leurs propres messages.
+        if (!(data && data.is_private && !data.is_own_profile)) {
+          setError(data.message || `Erreur: ${response.status}`);
+        } else {
+          setError(null); // Assurez-vous qu'aucune erreur générique n'est définie pour ce cas
         }
       } else {
-        setUser(data); // Full user data, including is_own_profile
+        setUser(data);
+        setError(null); // Effacer toute erreur précédente en cas de succès
       }
     } catch (err) {
-      // This catch is for network errors or if response.json() fails
       setError(err.message || 'Une erreur de communication est survenue.');
-      setUser(null); // Ensure user is null on critical fetch errors
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -84,10 +82,6 @@ export default function ShowProfil({ targetUsername }) {
 
       {user && (!user.is_private || user.is_own_profile) && (
         <UserPostsList user={user} />
-      )}
-
-      {user && user.is_private && !user.is_own_profile && (
-        <div className="alert alert-info m-3">{error || "Les posts de ce profil privé ne sont pas visibles."}</div>
       )}
     </>
   );

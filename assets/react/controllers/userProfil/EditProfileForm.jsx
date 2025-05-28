@@ -7,6 +7,7 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
   const [bio, setBio] = useState(currentUser.bio || '');
   const [profilePictureFile, setProfilePictureFile] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
+  const [privateAccount, setPrivateAccount] = useState(currentUser.private_account || false); // Added
   const [csrfToken, setCsrfToken] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
@@ -40,6 +41,7 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
     formData.append('username', username);
     formData.append('bio', bio);
     formData.append('_csrf_token', csrfToken); // Add CSRF token
+    formData.append('privateAccount', privateAccount); // Added
 
     if (profilePictureFile) {
       formData.append('profilePicture', profilePictureFile);
@@ -148,6 +150,20 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
                   onChange={(e) => setBio(e.target.value)}
                 ></textarea>
                 {formErrors.bio && <div className="invalid-feedback">{formErrors.bio}</div>}
+              </div>
+
+              <div className="mb-3 form-check"> {/* Added private account toggle */}
+                <input
+                  type="checkbox"
+                  className="form-check-input"
+                  id="privateAccount"
+                  name="privateAccount"
+                  checked={privateAccount}
+                  onChange={(e) => setPrivateAccount(e.target.checked)}
+                />
+                <label className="form-check-label" htmlFor="privateAccount">
+                  Compte privé (masquer les informations personnelles et les posts aux autres utilisateurs)
+                </label>
               </div>
 
               <div className="mb-3">

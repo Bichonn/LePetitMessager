@@ -154,22 +154,24 @@ export default function EditProfileForm({ currentUser, onClose, onProfileUpdated
                 <label htmlFor="profilePicture" className="form-label">Photo de profil</label>
                 <input
                   type="file"
-                  className="form-control"
+                  className={`form-control ${formErrors.profilePicture ? 'is-invalid' : ''}`}
                   id="profilePicture"
                   onChange={handleFileChange(setProfilePictureFile)}
                   accept="image/*"
                 />
+                {formErrors.profilePicture && <div className="invalid-feedback d-block">{formErrors.profilePicture}</div>}
               </div>
 
               <div className="mb-3">
                 <label htmlFor="banner" className="form-label">Bannière</label>
                 <input
                   type="file"
-                  className="form-control"
+                  className={`form-control ${formErrors.banner ? 'is-invalid' : ''}`}
                   id="banner"
                   onChange={handleFileChange(setBannerFile)}
                   accept="image/*"
                 />
+                {formErrors.banner && <div className="invalid-feedback d-block">{formErrors.banner}</div>}
               </div>
 
             </div>

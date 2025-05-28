@@ -12,14 +12,27 @@ use App\Repository\PostsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\Filesystem\Filesystem;
+use App\Service\CloudinaryService;
 
 
 final class CommentsController extends AbstractController
 {
+    // Helper function to extract public_id and resource_type from Cloudinary URL
+    // (Consider moving to a Trait or common service if used in many controllers)
+    private function extractPublicIdAndResourceTypeFromUrl(string $url): ?array
+    {
+        $pattern = '#^https://res\.cloudinary\.com/([^/]+)/([a-z]+)/(upload|fetch|private|authenticated|sprite|facebook|twitter|youtube|vimeo)/?(?:[^/]+/)?v\d+/(.+)\.(?:[a-zA-Z0-9]+)$#';
+        if (preg_match($pattern, $url, $matches)) {
+            return [
+                'public_id' => $matches[4],
+                'resource_type' => $matches[2]
+            ];
+        }
+        return null;
+    }
+
     #[Route('/comments', name: 'app_comments')]
     public function index(): Response
     {
@@ -29,13 +42,17 @@ final class CommentsController extends AbstractController
     }
 
     #[Route('/comments/add', name: 'app_comments_add', methods: ['POST'])]
-    public function add(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger, PostsRepository $postsRepository): JsonResponse
-    {
+    public function add(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        PostsRepository $postsRepository,
+        CloudinaryService $cloudinaryService // Add this
+    ): JsonResponse {
         $content = trim((string) $request->request->get('content'));
+        /** @var UploadedFile|null $mediaFile */
         $mediaFile = $request->files->get('media');
         $postId = $request->request->get('post_id');
 
-        // 1. Validate that either content or media is present
         if (empty($content) && !$mediaFile) {
             return $this->json(
                 ['message' => 'Un commentaire doit contenir du texte ou un média.'],
@@ -43,24 +60,21 @@ final class CommentsController extends AbstractController
             );
         }
 
-        // 2. Check for authenticated user
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof Users) {
             return $this->json(
                 ['message' => 'Vous devez être connecté pour poster un commentaire'],
                 Response::HTTP_UNAUTHORIZED
             );
         }
 
-        // 3. Check if the post exists
         $post = $postsRepository->find($postId);
         if (!$post) {
             return $this->json(['message' => 'Post introuvable.'], Response::HTTP_NOT_FOUND);
         }
 
-        // 4. Create and persist the comment if all checks pass
         $comment = new Comments();
-        $comment->setFkUser($user); // $user is guaranteed to be non-null here
+        $comment->setFkUser($user);
         $comment->setFkPost($post);
 
         if (!empty($content)) {
@@ -69,22 +83,17 @@ final class CommentsController extends AbstractController
         $comment->setCreatedAt(new \DateTimeImmutable());
 
         if ($mediaFile) {
-            $originalFilename = pathinfo($mediaFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $mediaFile->guessExtension();
-
+            $cloudinary = $cloudinaryService->getCloudinary();
             try {
-                $uploadsDirectory = $this->getParameter('uploads_directory'); // Ensure 'uploads_directory' is defined in services.yaml
-                if (!file_exists($uploadsDirectory)) {
-                    mkdir($uploadsDirectory, 0777, true);
-                }
-                $mediaFile->move($uploadsDirectory, $newFilename);
-                $comment->setContentMultimedia($newFilename);
+                $uploadResult = $cloudinary->uploadApi()->upload($mediaFile->getRealPath(), [
+                    'folder' => 'comment_media', // Optional: specify a folder
+                    'resource_type' => 'auto'
+                ]);
+                $comment->setContentMultimedia($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                // It's good practice to log the actual error server-side
-                // error_log('Comment media upload error: ' . $e->getMessage());
+                // Log error $e->getMessage()
                 return $this->json([
-                    'message' => 'Erreur lors de l\'upload du fichier média.'
+                    'message' => 'Erreur lors de l\'upload du fichier média pour le commentaire: ' . $e->getMessage()
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
@@ -92,8 +101,21 @@ final class CommentsController extends AbstractController
         $entityManager->persist($comment);
         $entityManager->flush();
 
+        // Return the created comment data, including the Cloudinary URL
+        $commentData = [
+            'id' => $comment->getId(),
+            'content_text' => $comment->getContentText(),
+            'content_multimedia' => $comment->getContentMultimedia(), // Cloudinary URL
+            'created_at' => $comment->getCreatedAt()?->format('Y-m-d H:i:s'),
+            'user' => [
+                'id' => $comment->getFkUser()?->getId(),
+                'username' => $comment->getFkUser()?->getUsername(),
+                'avatar_url' => $comment->getFkUser()?->getProfilePicture(), // Assuming this is already a Cloudinary URL
+            ]
+        ];
+
         return $this->json(
-            ['message' => 'Commentaire posté avec succès!'], // Consider returning the created comment data
+            ['message' => 'Commentaire posté avec succès!', 'comment' => $commentData],
             Response::HTTP_CREATED
         );
     }

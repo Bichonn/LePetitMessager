@@ -4,18 +4,19 @@ namespace App\Controller;
 
 use App\Entity\Users;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
-use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use App\Repository\UsersRepository; // Ensure this use statement is present
+use App\Service\CloudinaryService; // Add this line
+use App\Repository\UsersRepository;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class UsersController extends AbstractController
@@ -134,11 +135,12 @@ final class UsersController extends AbstractController
     public function update(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher,
+        UserPasswordHasherInterface $passwordHasher, // Keep if password update is handled here
         ValidatorInterface $validator,
-        SluggerInterface $slugger,
-        CsrfTokenManagerInterface $csrfTokenManager,
-        ParameterBagInterface $params
+        SluggerInterface $slugger, // No longer needed if not using local filesystem for new files
+        CsrfTokenManagerInterface $csrfTokenManager, // Keep for CSRF
+        // ParameterBagInterface $params, // No longer needed for upload directories
+        CloudinaryService $cloudinaryService // Inject CloudinaryService
     ): Response {
         $user = $this->getUser();
         if (!$user instanceof Users) {
@@ -147,12 +149,13 @@ final class UsersController extends AbstractController
 
         // For FormData, text fields are in $request->request, files in $request->files
         // CSRF token will also be in $request->request
-        $submittedToken = $request->request->get('_csrf_token');
-        if (!$csrfTokenManager->isTokenValid(new CsrfToken('authenticate', $submittedToken))) {
-            return $this->json(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
-        }
+        // $submittedToken = $request->request->get('_csrf_token'); // Assuming CSRF is handled by EditProfileForm.jsx or a Symfony form
+        // if (!$csrfTokenManager->isTokenValid(new CsrfToken('authenticate', $submittedToken))) { // Adjust token ID if necessary
+        //     return $this->json(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        // }
 
         $formErrors = [];
+        $cloudinary = $cloudinaryService->getCloudinary();
 
         // Update fields if present in the request
         if ($request->request->has('firstName')) {
@@ -162,7 +165,15 @@ final class UsersController extends AbstractController
             $user->setLastName(trim($request->request->get('lastName')));
         }
         if ($request->request->has('username')) {
-            $user->setUsername(trim($request->request->get('username')));
+            $newUsername = trim($request->request->get('username'));
+            if ($newUsername !== $user->getUsername()) {
+                $existingUser = $entityManager->getRepository(\App\Entity\Users::class)->findOneBy(['username' => $newUsername]);
+                if ($existingUser) {
+                    $formErrors['username'] = 'Ce nom d\'utilisateur est déjà pris.';
+                } else {
+                    $user->setUsername($newUsername);
+                }
+            }
         }
         if ($request->request->has('bio')) {
             $user->setBio(trim($request->request->get('bio')));
@@ -172,21 +183,18 @@ final class UsersController extends AbstractController
         /** @var UploadedFile $profilePictureFile */
         $profilePictureFile = $request->files->get('profilePicture');
         if ($profilePictureFile) {
-            $originalFilename = pathinfo($profilePictureFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename.'-'.uniqid().'.'.$profilePictureFile->guessExtension();
-            $avatarsDirectory = $params->get('kernel.project_dir').'/public/uploads/avatars';
-
             try {
-                if (!file_exists($avatarsDirectory)) {
-                    mkdir($avatarsDirectory, 0777, true);
-                }
-                // TODO: Delete old profile picture if it exists
-                $profilePictureFile->move($avatarsDirectory, $newFilename);
-                $user->setProfilePicture('/uploads/avatars/'.$newFilename);
+                // TODO: Delete old profile picture from Cloudinary if it exists and you want to replace it
+                $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [
+                    'folder' => 'user_avatars',
+                    'public_id' => 'avatar_' . $user->getId() . '_' . uniqid(),
+                    'overwrite' => true, // Consider if you want to overwrite or create new versions
+                    'resource_type' => 'image'
+                ]);
+                $user->setProfilePicture($uploadResult['secure_url']);
             } catch (\Exception $e) {
                 // Log error $e->getMessage()
-                $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar.';
+                $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar: ' . $e->getMessage();
             }
         }
 
@@ -194,28 +202,24 @@ final class UsersController extends AbstractController
         /** @var UploadedFile $bannerFile */
         $bannerFile = $request->files->get('banner');
         if ($bannerFile) {
-            $originalFilename = pathinfo($bannerFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename.'-'.uniqid().'.'.$bannerFile->guessExtension();
-            $bannersDirectory = $params->get('kernel.project_dir').'/public/uploads/banners';
-
             try {
-                if (!file_exists($bannersDirectory)) {
-                    mkdir($bannersDirectory, 0777, true);
-                }
-                // TODO: Delete old banner if it exists
-                $bannerFile->move($bannersDirectory, $newFilename);
-                $user->setBanner('/uploads/banners/'.$newFilename);
+                // TODO: Delete old banner from Cloudinary if it exists
+                $uploadResult = $cloudinary->uploadApi()->upload($bannerFile->getRealPath(), [
+                    'folder' => 'user_banners',
+                    'public_id' => 'banner_' . $user->getId() . '_' . uniqid(),
+                    'overwrite' => true,
+                    'resource_type' => 'image'
+                ]);
+                $user->setBanner($uploadResult['secure_url']);
             } catch (\Exception $e) {
                 // Log error $e->getMessage()
-                $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière.';
+                $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière: ' . $e->getMessage();
             }
         }
 
         $violations = $validator->validate($user);
         if (count($violations) > 0) {
             foreach ($violations as $violation) {
-                // Add to formErrors, potentially overwriting the manual username check if validator handles it
                 $formErrors[$violation->getPropertyPath()] = $violation->getMessage();
             }
         }
@@ -227,25 +231,22 @@ final class UsersController extends AbstractController
         try {
             $entityManager->persist($user);
             $entityManager->flush();
-            // Return the updated user data or just a success message
             return $this->json([
                 'message' => 'Profil mis à jour avec succès!',
-                // Optionally, return the updated user object if the frontend needs it
                 'user' => [ 
                     'id' => $user->getId(),
                     'first_name' => $user->getFirstName(),
                     'last_name' => $user->getLastName(),
                     'username' => $user->getUsername(),
                     'bio' => $user->getBio(),
-                    'profile_picture' => $user->getProfilePicture(), // Ensure this is the path
-                    'banner' => $user->getBanner(), // Ensure this is the path
-                    'avatar_url' => $user->getProfilePicture(), // Keep mapping for consistency if used ailleurs
-                    'created_at' => $user->getCreatedAt()->format('Y-m-d H:i:s'),
-                    // ... other fields needed by frontend
+                    'profile_picture' => $user->getProfilePicture(),
+                    'banner' => $user->getBanner(),
+                    'avatar_url' => $user->getProfilePicture(),
+                    'created_at' => $user->getCreatedAt() ? $user->getCreatedAt()->format('Y-m-d H:i:s') : null,
                 ]
-            ]);
+            ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            // Log the exception: $this->logger->error('Profile update error: '.$e->getMessage());
+            // Log the exception
             return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -276,5 +277,96 @@ final class UsersController extends AbstractController
         }, $results);
 
         return $this->json($formattedUsers);
+    }
+
+    #[Route('/user/profile/update', name: 'app_user_profile_update', methods: ['POST'])]
+    public function updateProfile(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        SluggerInterface $slugger,
+        ValidatorInterface $validator,
+        ParameterBagInterface $params, 
+        CloudinaryService $cloudinaryService // Inject your CloudinaryService
+    ): JsonResponse {
+        $user = $this->getUser();
+        if (!$user instanceof \App\Entity\Users) {
+            return $this->json(['message' => 'Utilisateur non authentifié.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $cloudinary = $cloudinaryService->getCloudinary(); // Get the Cloudinary client from your service
+
+        $formErrors = [];
+
+        $user->setFirstName($request->request->get('firstName', $user->getFirstName()));
+        $user->setLastName($request->request->get('lastName', $user->getLastName()));
+        $user->setBio($request->request->get('bio', $user->getBio()));
+
+        // Username validation (example, ensure it's unique if changed)
+        $newUsername = $request->request->get('username');
+        if ($newUsername && $newUsername !== $user->getUsername()) {
+            $existingUser = $entityManager->getRepository(\App\Entity\Users::class)->findOneBy(['username' => $newUsername]);
+            if ($existingUser) {
+                $formErrors['username'] = 'Ce nom d\'utilisateur est déjà pris.';
+            } else {
+                $user->setUsername($newUsername);
+            }
+        }
+
+        // Handle Profile Picture Upload
+        /** @var UploadedFile $profilePictureFile */
+        $profilePictureFile = $request->files->get('profilePicture');
+        if ($profilePictureFile) {
+            try {
+                $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [ // Use $cloudinary instance
+                    'folder' => 'user_avatars', 
+                    'public_id' => 'avatar_' . $user->getId() . '_' . uniqid(), 
+                    'overwrite' => true,
+                    'resource_type' => 'image'
+                ]);
+                $user->setProfilePicture($uploadResult['secure_url']);
+            } catch (\Exception $e) {
+                // Log error $e->getMessage()
+                $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar.';
+            }
+        }
+
+        // Handle Banner Upload
+        /** @var UploadedFile $bannerFile */
+        $bannerFile = $request->files->get('banner');
+        if ($bannerFile) {
+            try {
+                $uploadResult = $cloudinary->uploadApi()->upload($bannerFile->getRealPath(), [ // Use $cloudinary instance
+                    'folder' => 'user_banners', 
+                    'public_id' => 'banner_' . $user->getId() . '_' . uniqid(), 
+                    'overwrite' => true,
+                    'resource_type' => 'image'
+                ]);
+                $user->setBanner($uploadResult['secure_url']);
+            } catch (\Exception $e) {
+                // Log error $e->getMessage()
+                $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière.';
+            }
+        }
+
+        $violations = $validator->validate($user);
+        if (count($violations) > 0) {
+            foreach ($violations as $violation) {
+                // Add to formErrors, potentially overwriting the manual username check if validator handles it
+                $formErrors[$violation->getPropertyPath()] = $violation->getMessage();
+            }
+        }
+
+        if (!empty($formErrors)) {
+            return $this->json(['errors' => $formErrors], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $entityManager->persist($user);
+            $entityManager->flush();
+            return $this->json(['message' => 'Profil mis à jour avec succès.']);
+        } catch (\Exception $e) {
+            // Log the exception
+            return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

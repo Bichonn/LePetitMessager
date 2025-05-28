@@ -10,34 +10,45 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\Filesystem\Filesystem;
-
+use App\Service\CloudinaryService; // Add this
 
 class PostsController extends AbstractController
 {
+    // Helper function to extract public_id and resource_type from Cloudinary URL
+    private function extractPublicIdAndResourceTypeFromUrl(string $url): ?array
+    {
+        $pattern = '#^https://res\.cloudinary\.com/([^/]+)/([a-z]+)/(upload|fetch|private|authenticated|sprite|facebook|twitter|youtube|vimeo)/?(?:[^/]+/)?v\d+/(.+)\.(?:[a-zA-Z0-9]+)$#';
+        if (preg_match($pattern, $url, $matches)) {
+            return [
+                'public_id' => $matches[4], // e.g., folder/public_id_value
+                'resource_type' => $matches[2] // e.g., image, video
+            ];
+        }
+        return null;
+    }
+
     #[Route('/post/create', name: 'app_post_create', methods: ['POST'])]
     public function create(
         Request $request,
         EntityManagerInterface $entityManager,
-        SluggerInterface $slugger
+        // SluggerInterface $slugger, // Remove if not used for Cloudinary public_id generation
+        CloudinaryService $cloudinaryService
     ): JsonResponse {
         $content = $request->request->get('content');
+        /** @var UploadedFile|null $mediaFile */
         $mediaFile = $request->files->get('media');
 
-        // 1. Vérification du contenu texte (obligatoire)
-        if (empty($content)) {
-            return $this->json(
-                ['message' => 'Le contenu texte est obligatoire'],
-                Response::HTTP_BAD_REQUEST
-            );
+        if (empty($content) && !$mediaFile) { // Allow posts with only media or only text
+             return $this->json(
+                 ['message' => 'Le contenu du post ou un média est obligatoire.'],
+                 Response::HTTP_BAD_REQUEST
+             );
         }
 
-        // 2. Vérification de l'utilisateur connecté (obligatoire)
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof Users) {
             return $this->json(
                 ['message' => 'Vous devez être connecté pour créer un post'],
                 Response::HTTP_UNAUTHORIZED
@@ -45,30 +56,24 @@ class PostsController extends AbstractController
         }
 
         $post = new Posts();
-        $post->setFkUser($user); // Obligatoire
-        $post->setContentText($content); // Obligatoire
+        $post->setFkUser($user);
+        if(!empty($content)) {
+            $post->setContentText($content);
+        }
         $post->setCreatedAt(new \DateTimeImmutable());
 
-        // Gestion du média (optionnel)
         if ($mediaFile) {
-            $originalFilename = pathinfo($mediaFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $mediaFile->guessExtension();
-
+            $cloudinary = $cloudinaryService->getCloudinary();
             try {
-                if (!file_exists($this->getParameter('uploads_directory'))) {
-                    mkdir($this->getParameter('uploads_directory'), 0777, true);
-                }
-
-                $mediaFile->move(
-                    $this->getParameter('uploads_directory'),
-                    $newFilename
-                );
-
-                $post->setContentMultimedia($newFilename);
+                $uploadResult = $cloudinary->uploadApi()->upload($mediaFile->getRealPath(), [
+                    'folder' => 'post_media', // Optional: specify a folder in Cloudinary
+                    'resource_type' => 'auto' // Automatically detect image or video
+                ]);
+                $post->setContentMultimedia($uploadResult['secure_url']);
             } catch (\Exception $e) {
+                // Log error $e->getMessage()
                 return $this->json([
-                    'message' => 'Erreur lors de l\'upload du fichier : ' . $e->getMessage()
+                    'message' => 'Erreur lors de l\'upload du fichier média sur Cloudinary: ' . $e->getMessage()
                 ], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
@@ -77,21 +82,22 @@ class PostsController extends AbstractController
         $entityManager->flush();
 
         return $this->json(
-            ['message' => 'Post créé avec succès'],
+            ['message' => 'Post créé avec succès'], // Consider returning the created post data
             Response::HTTP_CREATED
         );
     }
 
-    #[Route('/post/{id}/update', name: 'app_post_update', methods: ['POST'])] // Using POST for FormData
+    #[Route('/post/{id}/update', name: 'app_post_update', methods: ['POST'])]
     public function update(
         Request $request,
-        Posts $post, // ParamConverter fetches the Post by ID
+        Posts $post,
         EntityManagerInterface $entityManager,
-        SluggerInterface $slugger,
-        Filesystem $filesystem
+        // SluggerInterface $slugger, // Remove if not used for Cloudinary public_id
+        // Filesystem $filesystem, // Remove as local files are not handled
+        CloudinaryService $cloudinaryService
     ): JsonResponse {
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof Users) {
             return $this->json(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
         }
         if ($post->getFkUser() !== $user) {
@@ -99,52 +105,57 @@ class PostsController extends AbstractController
         }
 
         $newContentText = $request->request->get('content_text');
+        /** @var UploadedFile|null $newMediaFile */
         $newMediaFile = $request->files->get('media');
         $removeMediaFlag = $request->request->get('remove_media') === '1';
 
-        // Update content text (allow empty string to clear text)
+        $cloudinary = $cloudinaryService->getCloudinary();
+        $oldMediaUrl = $post->getContentMultimedia();
+
         if ($newContentText !== null) {
             $post->setContentText(trim($newContentText) === '' ? null : $newContentText);
         }
 
-        $oldMediaFilename = $post->getContentMultimedia();
-
-        // Handle media removal if flag is set and there was an old media
-        if ($removeMediaFlag && $oldMediaFilename) {
-            $oldMediaPath = $this->getParameter('uploads_directory') . '/' . $oldMediaFilename;
-            if ($filesystem->exists($oldMediaPath)) {
-                $filesystem->remove($oldMediaPath);
+        // Handle media removal if flag is set
+        if ($removeMediaFlag && $oldMediaUrl) {
+            $mediaInfo = $this->extractPublicIdAndResourceTypeFromUrl($oldMediaUrl);
+            if ($mediaInfo) {
+                try {
+                    $cloudinary->uploadApi()->destroy($mediaInfo['public_id'], ['resource_type' => $mediaInfo['resource_type']]);
+                } catch (\Exception $e) {
+                    // Log error: "Failed to delete old media from Cloudinary: " . $e->getMessage()
+                }
             }
             $post->setContentMultimedia(null);
-            $oldMediaFilename = null; // Media is now removed
+            $oldMediaUrl = null; // Media is now removed
         }
 
         // Handle new media upload
         if ($newMediaFile instanceof UploadedFile) {
-            // Delete old media if it exists and a new one is uploaded
-            if ($oldMediaFilename) {
-                $oldMediaPath = $this->getParameter('uploads_directory') . '/' . $oldMediaFilename;
-                if ($filesystem->exists($oldMediaPath)) {
-                    $filesystem->remove($oldMediaPath);
+            // Delete old media from Cloudinary if it exists and a new one is uploaded
+            if ($oldMediaUrl) {
+                $mediaInfo = $this->extractPublicIdAndResourceTypeFromUrl($oldMediaUrl);
+                if ($mediaInfo) {
+                    try {
+                        $cloudinary->uploadApi()->destroy($mediaInfo['public_id'], ['resource_type' => $mediaInfo['resource_type']]);
+                    } catch (\Exception $e) {
+                        // Log error: "Failed to delete old media from Cloudinary before new upload: " . $e->getMessage()
+                    }
                 }
             }
 
-            $originalFilename = pathinfo($newMediaFile->getClientOriginalName(), PATHINFO_FILENAME);
-            $safeFilename = $slugger->slug($originalFilename);
-            $newFilename = $safeFilename . '-' . uniqid() . '.' . $newMediaFile->guessExtension();
-
             try {
-                if (!file_exists($this->getParameter('uploads_directory'))) {
-                    mkdir($this->getParameter('uploads_directory'), 0777, true);
-                }
-                $newMediaFile->move($this->getParameter('uploads_directory'), $newFilename);
-                $post->setContentMultimedia($newFilename);
+                $uploadResult = $cloudinary->uploadApi()->upload($newMediaFile->getRealPath(), [
+                    'folder' => 'post_media',
+                    'resource_type' => 'auto'
+                ]);
+                $post->setContentMultimedia($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                return $this->json(['message' => 'Erreur lors de l\'upload du nouveau fichier: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+                // Log error $e->getMessage()
+                return $this->json(['message' => 'Erreur lors de l\'upload du nouveau fichier média sur Cloudinary: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
             }
         }
 
-        // A post must have either text content or multimedia content
         if (empty($post->getContentText()) && empty($post->getContentMultimedia())) {
             return $this->json(['message' => 'Le post ne peut pas être vide. Veuillez ajouter du texte ou un média.'], Response::HTTP_BAD_REQUEST);
         }
@@ -155,11 +166,12 @@ class PostsController extends AbstractController
         return $this->json(
             [
                 'message' => 'Post mis à jour avec succès!',
-                'post' => [
+                'post' => [ // Return updated post data for frontend
                     'id' => $post->getId(),
                     'content_text' => $post->getContentText(),
-                    'content_multimedia' => $post->getContentMultimedia(),
-                    'updated_at' => $post->getUpdatedAt()->format('Y-m-d H:i:s'),
+                    'content_multimedia' => $post->getContentMultimedia(), // This will be the Cloudinary URL
+                    'updated_at' => $post->getUpdatedAt()?->format('Y-m-d H:i:s'),
+                     // Include other fields if your frontend needs them
                 ]
             ],
             Response::HTTP_OK
@@ -168,12 +180,13 @@ class PostsController extends AbstractController
 
     #[Route('/post/{id}/delete', name: 'app_post_delete', methods: ['DELETE'])]
     public function delete(
-        Posts $post, // ParamConverter fetches the Post by ID
+        Posts $post,
         EntityManagerInterface $entityManager,
-        Filesystem $filesystem
+        // Filesystem $filesystem, // Remove
+        CloudinaryService $cloudinaryService
     ): JsonResponse {
         $user = $this->getUser();
-        if (!$user) {
+        if (!$user instanceof Users) {
             return $this->json(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
         }
 
@@ -181,16 +194,16 @@ class PostsController extends AbstractController
             return $this->json(['message' => 'Vous n\'êtes pas autorisé à supprimer ce post.'], Response::HTTP_FORBIDDEN);
         }
 
-        // Delete associated media file if it exists
-        $mediaFilename = $post->getContentMultimedia();
-        if ($mediaFilename) {
-            $mediaPath = $this->getParameter('uploads_directory') . '/' . $mediaFilename;
-            if ($filesystem->exists($mediaPath)) {
+        $mediaUrl = $post->getContentMultimedia();
+        if ($mediaUrl) {
+            $mediaInfo = $this->extractPublicIdAndResourceTypeFromUrl($mediaUrl);
+            if ($mediaInfo) {
+                $cloudinary = $cloudinaryService->getCloudinary();
                 try {
-                    $filesystem->remove($mediaPath);
+                    $cloudinary->uploadApi()->destroy($mediaInfo['public_id'], ['resource_type' => $mediaInfo['resource_type']]);
                 } catch (\Exception $e) {
-                    // Log error or handle, but proceed with DB deletion
-                    // For example: $this->logger->error('Failed to delete media file: '.$e->getMessage());
+                    // Log error: "Failed to delete media from Cloudinary: " . $e->getMessage()
+                    // Decide if you want to stop the DB deletion or proceed.
                 }
             }
         }
@@ -225,9 +238,10 @@ class PostsController extends AbstractController
             $likes = $post->getLikes();
             $likesCount = count($likes);
             $likedByUser = false;
-            if ($currentUser) {
+            if ($currentUser instanceof Users) {
                 foreach ($likes as $like) {
-                    if ($like->getFkUser() && $like->getFkUser()->getId() === $currentUser->getId()) {
+                    $likeUser = $like->getFkUser();
+                    if ($likeUser instanceof Users && $likeUser->getId() === $currentUser->getId()) {
                         $likedByUser = true;
                         break;
                     }

@@ -14,7 +14,7 @@ export default function IsImageFile({ filename }) {
     if (imageExtensions.includes(extension)) {
         return (
             <img
-                src={`/uploads/media/${filename}`}
+                src={filename} // Changed from /uploads/media/${filename}
                 alt="Post media"
                 className="img-fluid style-image"
             />

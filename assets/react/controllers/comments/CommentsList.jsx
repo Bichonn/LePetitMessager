@@ -71,9 +71,9 @@ export default function CommentsList({ postId }) {
           {comment.content_multimedia && (
             <div className="mt-1 ms-4">
               {comment.content_multimedia.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i) ? (
-                <img src={`/uploads/media/${comment.content_multimedia}`} alt="media" className="img-fluid" style={{ maxHeight: 120 }} />
+                <img src={comment.content_multimedia} alt="media" className="img-fluid" style={{ maxHeight: 120 }} />
               ) : comment.content_multimedia.match(/\.(mp4|webm|ogg|mov)$/i) ? (
-                <video src={`/uploads/media/${comment.content_multimedia}`} controls className="img-fluid" style={{ maxHeight: 120 }} />
+                <video src={comment.content_multimedia} controls className="img-fluid" style={{ maxHeight: 120 }} />
               ) : null}
             </div>
           )}

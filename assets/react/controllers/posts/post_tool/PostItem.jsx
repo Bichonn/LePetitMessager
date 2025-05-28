@@ -141,8 +141,8 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                 <UpdatePost
                     postId={post.id}
                     initialContent={post.content_text}
-                    initialMediaUrl={post.content_multimedia ? `/uploads/media/${post.content_multimedia}` : null}
-                    initialMediaFilename={post.content_multimedia}
+                    initialMediaUrl={post.content_multimedia} // Directly use the Cloudinary URL
+                    initialMediaFilename={post.content_multimedia ? post.content_multimedia.split('/').pop() : null} // Filename part for display, if needed
                     onClose={handleCloseUpdateModal}
                     onUpdated={handlePostUpdated}
                 />

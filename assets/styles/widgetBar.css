@@ -37,10 +37,36 @@
     min-height: 0; /* Important for scroll within flex */
 }
 
-/* New class for the div wrapping the React component in Twig */
+/* New class for the div wrapping the React component in base.html.Twig */
 .react-component-wrapper {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
     min-height: 0; /* Crucial for scrollable flex children */
+}
+
+/* Styles for SearchBar suggestions dropdown */
+.search-suggestions-list {
+    z-index: 1050;
+    top: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.search-suggestion-item {
+    cursor: pointer;
+}
+
+.search-suggestion-avatar {
+    width: 30px;
+    height: 30px;
+    border: 1px solid #000;
+    margin-right: 10px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.search-input-field {
+    padding-top: 0.75rem;
+    padding-bottom: 0.60rem;
 }

@@ -16,6 +16,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use App\Repository\UsersRepository; // Ensure this use statement is present
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 final class UsersController extends AbstractController
 {
@@ -119,14 +120,15 @@ final class UsersController extends AbstractController
     }
 
     #[Route('/user/update', name: 'app_user_update', methods: ['POST'])]
-    public function updateUser(
+    public function update(
         Request $request,
         EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
-        CsrfTokenManagerInterface $csrfTokenManager,
         SluggerInterface $slugger,
+        CsrfTokenManagerInterface $csrfTokenManager,
         ParameterBagInterface $params
-    ): JsonResponse {
+    ): Response {
         $user = $this->getUser();
         if (!$user instanceof Users) {
             return $this->json(['error' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
@@ -235,5 +237,33 @@ final class UsersController extends AbstractController
             // Log the exception: $this->logger->error('Profile update error: '.$e->getMessage());
             return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/users/search/{term}', name: 'app_users_search_by_username_term', methods: ['GET'])]
+    public function searchUsersByUsername(string $term, EntityManagerInterface $entityManager): JsonResponse
+    {
+        if (empty(trim($term)) || strlen($term) < 2) { // Longueur minimale de 2 caractères pour la recherche
+            return $this->json([], Response::HTTP_OK);
+        }
+
+        $usersRepository = $entityManager->getRepository(Users::class);
+        
+        $queryBuilder = $usersRepository->createQueryBuilder('u')
+            ->select('u.id, u.username, u.profile_picture')
+            ->where('LOWER(u.username) LIKE LOWER(:term)') // Recherche insensible à la casse
+            ->setParameter('term', '%' . $term . '%')
+            ->setMaxResults(10); // Limiter le nombre de suggestions
+
+        $results = $queryBuilder->getQuery()->getResult();
+
+        $formattedUsers = array_map(function ($user) {
+            return [
+                'id' => $user['id'],
+                'username' => $user['username'],
+                'avatar_url' => $user['profile_picture'] // Assurez-vous que profile_picture contient l'URL de l'avatar
+            ];
+        }, $results);
+
+        return $this->json($formattedUsers);
     }
 }

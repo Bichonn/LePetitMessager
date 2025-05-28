@@ -36,16 +36,12 @@
 
                 <!-- Wigets (Droite) -->
                 <div class="widget-side-container col-md-4 d-flex flex-column">
-
-                    {# Remplacer le contenu statique de la sidebar par un composant React dynamique #}
-                    {# Ce composant (par exemple, 'layout/RightSidebarArea') gérera l'affichage #}
-                    {# soit de la sidebar par défaut (recherche, authentification, footer) #}
-                    {# soit des commentaires pour un post spécifique. #}
+				
                     <div {{ react_component('layout/RightSidebarArea', {
                         'isAuthenticated': app.user is not null,
                         'username': app.user ? app.user.username : null,
                         'logoutPath': app.user ? path('app_logout') : null
-                    }) }}></div>
+                    }) }} class="react-component-wrapper"></div>
 
                 </div>
                 

@@ -10,15 +10,6 @@ body {
 .large-placeholder::placeholder {
     font-size: 2rem;
 }
-
-.custom-register-button {
-    padding: 5px 25px;
-    font-size: 1.2rem;
-    background-color: #cfb484;
-    border: 2px solid #000;
-    cursor: pointer;
-}
-
 .custom-cancel-button {
     border-radius: 0;
     background-color: transparent;
@@ -37,7 +28,7 @@ body {
 }
 
 .custom-publish-button {
-    background-color: #cfb484;
+    background-color: #d9b983;
     border-left: 2px solid #000;
     border-top: 1px solid #000;
     color: #000;

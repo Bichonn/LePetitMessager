@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
-export default function CommentForm({ postId, onCommentAdded }) {
+export default function CommentForm({ postId, onCommentAdded, className }) {
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Gestion du preview
   const handleFileChange = (e) => {
@@ -51,6 +51,7 @@ export default function CommentForm({ postId, onCommentAdded }) {
     }
 
     setIsSubmitting(true);
+    setFeedback({ type: '', message: '' }); // Clear previous feedback
 
     const formData = new FormData();
     formData.append('content', content);
@@ -73,7 +74,12 @@ export default function CommentForm({ postId, onCommentAdded }) {
         setFile(null);
         setPreview(null);
         setFeedback({ type: 'success', message: 'Commentaire posté avec succès !' });
+        // Dispatch event before calling onCommentAdded
+        document.dispatchEvent(new CustomEvent('commentCreated', { detail: { postId: postId } }));
         if (onCommentAdded) onCommentAdded();
+        setTimeout(() => {
+          setFeedback({ type: '', message: '' });
+        }, 2000); // Clear feedback after 2 seconds
       } else {
         setFeedback({ type: 'error', message: data.message || 'Erreur lors de la publication' });
       }
@@ -85,11 +91,11 @@ export default function CommentForm({ postId, onCommentAdded }) {
   };
 
   return (
-    <div className="comment-form-card mt-2">
+    <div className={`comment-form-card border-bottom border-dark ${className || ''}`}>
       <form onSubmit={handleSubmit}>
-        <div className="mb-2">
+        <div className="">
           <textarea
-            className="form-control"
+            className="form-control border-0 border-top border-bottom border-dark bg-color-search"
             placeholder="Votre commentaire..."
             rows={2}
             value={content}
@@ -129,14 +135,14 @@ export default function CommentForm({ postId, onCommentAdded }) {
               accept="image/*,video/*"
               onChange={handleFileChange}
             />
-            <label htmlFor={`media-comment-upload-${postId}`} className="btn btn-outline-secondary mb-0">
-              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '20px' }} />
+            <label htmlFor={`media-comment-upload-${postId}`} className="btn p-0 ml-5">
+              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '30px' }} />
             </label>
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary rounded-pill px-3"
+            className="custom-publish-button"
             disabled={isSubmitting || (!content && !file)}
           >
             {isSubmitting ? 'Envoi...' : 'Commenter'}

@@ -3,8 +3,44 @@
     position: fixed;
     right: 0;
     border-left: 1px solid black;
+    /* Ensure it's a flex container if its direct child needs to grow */
+    display: flex; 
+    flex-direction: column;
 }
 
 .inner-shadow {
     box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+}
+
+/* New class for the main container of RightSidebarArea */
+.sidebar-area-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    width: 100%;
+}
+
+/* New class for the comments view specifically */
+.comments-view {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0; /* Important for scroll within flex */
+    width: 100%;
+}
+
+/* New class for the scrollable area containing CommentsList */
+.comments-list-scrollable-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    min-height: 0; /* Important for scroll within flex */
+}
+
+/* New class for the div wrapping the React component in Twig */
+.react-component-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0; /* Crucial for scrollable flex children */
 }

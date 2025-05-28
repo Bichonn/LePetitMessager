@@ -3,15 +3,13 @@ import React, { useState, useEffect } from 'react';
 import SearchBar from '../SearchBar';
 import LoginForm from '../auth/LoginForm';
 import RegisterForm from '../auth/RegisterForm';
-import LogOut from '../auth/LogOut'; // Assurez-vous que ce composant existe dans assets/react/controllers/auth/
-import Footer from './Footer';       // Assurez-vous que ce composant existe dans assets/react/controllers/layout/
-
-// Assurez-vous que ces composants de commentaires existent et sont correctement importés
-import CommentsList from '../comments/CommentsList'; // Ex: assets/react/controllers/comments/CommentsList.jsx
-import CommentForm from '../comments/CommentForm';   // Ex: assets/react/controllers/comments/CommentForm.jsx
+import LogOut from '../auth/LogOut';
+import Footer from './Footer';
+import CommentsList from '../comments/CommentsList';
+import CommentForm from '../comments/CommentForm';
 
 export default function RightSidebarArea({ isAuthenticated, username, logoutPath }) {
-  const [currentView, setCurrentView] = useState('default'); // 'default' ou 'comments'
+  const [currentView, setCurrentView] = useState('default');
   const [postIdForComments, setPostIdForComments] = useState(null);
 
   useEffect(() => {
@@ -22,15 +20,11 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
         setCurrentView('comments');
       }
     };
-
-    // Écoute d'un événement personnalisé pour afficher les commentaires
     document.addEventListener('showPostCommentsInSidebar', handleShowComments);
-
     return () => {
-      // Nettoyage de l'écouteur d'événements
       document.removeEventListener('showPostCommentsInSidebar', handleShowComments);
     };
-  }, []); // S'exécute une seule fois au montage
+  }, []);
 
   const switchToDefaultView = () => {
     setCurrentView('default');
@@ -57,27 +51,27 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
   );
 
   const renderCommentsView = () => (
-    <div className="container p-3">
-      <button onClick={switchToDefaultView} className="btn btn-sm btn-outline-secondary mb-3">
-        &larr; Retour à la sidebar
+    <div className="comments-view border-bottom border-dark"> {/* Use CSS class */}
+      <button onClick={switchToDefaultView} className="btn btn-primary flex-shrink-0">
+        &larr; Retirer les commentaires
       </button>
-      {/* CommentsList devrait prendre postId et gérer l'affichage des commentaires */}
-      <CommentsList postId={postIdForComments} />
-      {/* CommentForm prend postId et une fonction callback pour un nouveau commentaire */}
-      <CommentForm postId={postIdForComments} onCommentAdded={() => {
-        // Optionnel : Actualiser CommentsList ou notifier l'utilisateur
-        // Par exemple, CommentsList pourrait écouter un événement spécifique.
-        console.log(`Nouveau commentaire ajouté au post ${postIdForComments}. CommentsList pourrait avoir besoin d'être actualisé.`);
-        // Vous pourriez déclencher un événement ici pour que CommentsList le capte et se mette à jour.
-        // document.dispatchEvent(new CustomEvent(`commentAddedToPost_${postIdForComments}`));
-      }} />
+      <CommentForm
+        postId={postIdForComments}
+        onCommentAdded={() => {
+          console.log(`Nouveau commentaire ajouté au post ${postIdForComments}. CommentsList pourrait avoir besoin d'être actualisé.`);
+        }}
+        className="flex-shrink-0" // Prevent CommentForm from shrinking/growing
+      />
+      <div className="comments-list-scrollable-container"> {/* Use CSS class */}
+        <CommentsList postId={postIdForComments} />
+      </div>
     </div>
   );
 
   return (
-    <>
+    <div className="sidebar-area-container"> {/* Use CSS class */}
       {currentView === 'comments' && postIdForComments ? renderCommentsView() : renderDefaultSidebar()}
-      <Footer />
-    </>
+      {currentView !== 'comments' && <Footer />}
+    </div>
   );
 }

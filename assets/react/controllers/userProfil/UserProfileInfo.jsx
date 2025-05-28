@@ -1,6 +1,7 @@
 import React from 'react';
 import '../../../styles/ShowProfil.css';
 import '../../../styles/app.css';
+import FollowBtn from './btn_user/FollowBtn.jsx';
 
 export default function UserProfileInfo({ user, onEditClick }) {
   if (!user) return null;
@@ -36,6 +37,7 @@ export default function UserProfileInfo({ user, onEditClick }) {
                 {user.first_name} {user.last_name} -- Membre depuis le{' '}
                 {new Date(user.created_at).toLocaleDateString()}
               </p>
+              <FollowBtn userId={user.id} initialFollowed={user.followed_by_user} />
             </div>
             {onEditClick && (
               <button className="btn btn-primary" onClick={onEditClick}>

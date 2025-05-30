@@ -140,8 +140,11 @@ export default function CreatePost() {
             rows={3}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            maxLength={1000}
+            maxLength={180}
           />
+          <div className="text-start text-muted small ms-1">
+            {content.length}/180
+          </div>
         </div>
 
         {preview && (

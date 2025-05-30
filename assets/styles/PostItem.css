@@ -6,15 +6,25 @@
 }
 
 .style-image {
-  width: 30%;
+  width: 40%;
   height: auto;
-  border-radius: 15px;
+  border-radius: 10px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .style-video {
-  width: 50%;
+  width: 40%; 
   height: auto;
-  border-radius: 15px;
+  border-radius: 10px;
+  display: block; 
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.media-preview {
+  width: 100%;
 }
 
 .ms-6 {
@@ -23,6 +33,11 @@
 
 .ms-7 {
   margin-left: 2rem;
+}
+
+.text-content-area {
+  max-width: 100%;
+  word-wrap: break-word;
 }
 
 .post-item-container {

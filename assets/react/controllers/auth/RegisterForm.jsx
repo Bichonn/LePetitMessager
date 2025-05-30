@@ -13,6 +13,8 @@ export default function RegisterForm() {
     const [showModal, setShowModal] = useState(false);
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errors, setErrors] = useState({
         email: null,
         username: null,
@@ -48,6 +50,13 @@ export default function RegisterForm() {
 
         if (password !== confirmPassword) {
             setErrors({...errors, password: "Les mots de passe ne correspondent pas."});
+            return;
+        }
+
+        // Strong password validation (minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        if (!strongPasswordRegex.test(password)) {
+            setErrors({...errors, password: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial."});
             return;
         }
 
@@ -99,7 +108,7 @@ export default function RegisterForm() {
                             <div className="modal-body">
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
                                     <div className="mb-3">
-                                        <label htmlFor="firstName" className="form-label text-decoration-underline">Prénom</label>
+                                        <label htmlFor="firstName" className="form-label text-decoration-underline mb-0">Prénom</label>
                                         <input
                                             type="text"
                                             id="firstName"
@@ -110,7 +119,7 @@ export default function RegisterForm() {
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="lastName" className="form-label text-decoration-underline">Nom</label>
+                                        <label htmlFor="lastName" className="form-label text-decoration-underline mb-0">Nom</label>
                                         <input
                                             type="text"
                                             id="lastName"
@@ -121,7 +130,7 @@ export default function RegisterForm() {
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="username" className="form-label text-decoration-underline">Pseudo</label>
+                                        <label htmlFor="username" className="form-label text-decoration-underline mb-0">Pseudo</label>
                                         {errors.username && <div className="text-danger small mb-1">{errors.username}</div>}
                                         <input
                                             type="text"
@@ -133,7 +142,7 @@ export default function RegisterForm() {
                                         />
                                     </div>
                                     <div className="mb-3">
-                                        <label htmlFor="email" className="form-label text-decoration-underline">Email</label>
+                                        <label htmlFor="email" className="form-label text-decoration-underline mb-0">Email</label>
                                         {errors.email && <div className="text-danger small mb-1">{errors.email}</div>}
                                         <input
                                             type="email"
@@ -144,28 +153,50 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
-                                    <div className="mb-3">
-                                        <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
+                                    <div className="mb-3 position-relative">
+                                        <label htmlFor="password" className="form-label text-decoration-underline mb-0">Mot de passe</label>
                                         <input
-                                            type="password"
+                                            type={showPassword ? "text" : "password"}
                                             id="password"
                                             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                             value={password}
                                             onChange={handlePasswordChange}
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary password-toggle-btn"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                        >
+                                            <img
+                                                src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
+                                                alt={showPassword ? "Masquer" : "Voir"}
+                                            />
+                                        </button>
                                     </div>
-                                    <div className="mb-3">
-                                        <label htmlFor="confirmPassword" className="form-label text-decoration-underline">Confirmer le mot de passe</label>
+                                    <div className="mb-3 position-relative">
+                                        <label htmlFor="confirmPassword" className="form-label text-decoration-underline mb-0">Confirmer le mot de passe</label>
                                         {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
                                         <input
-                                            type="password"
+                                            type={showConfirmPassword ? "text" : "password"}
                                             id="confirmPassword"
                                             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                             value={confirmPassword}
                                             onChange={e => setConfirmPassword(e.target.value)}
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary password-toggle-btn"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            title={showConfirmPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                        >
+                                            <img
+                                                src={showConfirmPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
+                                                alt={showConfirmPassword ? "Masquer" : "Voir"}
+                                            />
+                                        </button>
                                     </div>
 
                                     {errors.general && <div className="alert alert-danger">{errors.general}</div>}

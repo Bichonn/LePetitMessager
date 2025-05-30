@@ -101,14 +101,18 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     </div>
                 </div>
                 <div className="ms-6">
-                    <p>{post.content_text}</p>
-                    {post.content_multimedia && (
-                        <div className="media-preview">
-                            <IsImageFile filename={post.content_multimedia} />
-                            <IsVideoFile filename={post.content_multimedia} />
+                    <div> {/* Removed d-flex to stack children */}
+                        <div className="flex-grow-1 text-content-area"> {/* Text content container */}
+                            <p>{post.content_text}</p>
                         </div>
-                    )}
-                    <div className="d-flex justify-content-between">
+                        {post.content_multimedia && (
+                            <div className="media-preview mt-2"> {/* Multimedia content container, removed ms-auto, added margin-top */}
+                                <IsImageFile filename={post.content_multimedia} />
+                                <IsVideoFile filename={post.content_multimedia} />
+                            </div>
+                        )}
+                    </div>
+                    <div className="d-flex justify-content-between mt-2"> {/* Added margin top for spacing */}
                         <div className="d-flex justify-content-start">
                             <LikeBtn
                                 postId={post.id}
@@ -126,14 +130,6 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             <ShareBtn />
                         </div>
                     </div>
-
-                    {/* Supprimé: Le formulaire de commentaire et la liste sont maintenant dans RightSidebarArea */}
-                    {/* {showCommentForm && (
-                        <div>
-                            <CommentForm postId={post.id} onCommentAdded={() => setShowCommentForm(false)} />
-                        </div>
-                    )}
-                    <CommentsList postId={post.id} /> */}
                 </div>
             </div>
 

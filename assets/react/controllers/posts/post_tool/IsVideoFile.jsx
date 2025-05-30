@@ -12,7 +12,7 @@ export default function IsVideoFile({ filename }) {
     if (videoExtensions.includes(extension)) {
         return (
             <video
-                src={filename} // Changed from /uploads/media/${filename}
+                src={filename}
                 controls
                 className="img-fluid style-video"
             >
@@ -21,5 +21,5 @@ export default function IsVideoFile({ filename }) {
         );
     }
 
-    return null; // Ne rien rendre si ce n'est pas une vidéo
+    return null;
 }

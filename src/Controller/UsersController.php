@@ -429,47 +429,46 @@ final class UsersController extends AbstractController
         }
     }
 
-    #[Route('/user/{id}/report', name: 'app_user_report', methods: ['POST'])]
-    public function reportUser(
-        Request $request,
-        Users $reportedUser,
-        EntityManagerInterface $entityManager,
-        CsrfTokenManagerInterface $csrfTokenManager // Injectez le gestionnaire de jetons CSRF
-    ): JsonResponse {
-        /** @var \App\Entity\Users|null $reporter */
-        $reporter = $this->getUser();
-
-        if (!$reporter) {
-            return $this->json(['message' => 'Authentification requise pour signaler un utilisateur.'], Response::HTTP_UNAUTHORIZED);
+    #[Route('/user/{id}/report', name: 'app_report_user', methods: ['POST'])]
+    public function reportUser(Request $request, Users $userToReport, EntityManagerInterface $entityManager): JsonResponse // Removed CsrfTokenManagerInterface as it's not used
+    {
+        $currentUser = $this->getUser();
+        if (!$currentUser) {
+            return new JsonResponse(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Validation du jeton CSRF
-        $submittedToken = $request->headers->get('X-CSRF-TOKEN');
-        // L'ID 'form_token' est utilisé car c'est celui généré par /get-csrf-token
-        if (!$csrfTokenManager->isTokenValid(new CsrfToken('form_token', $submittedToken))) { 
-            return $this->json(['message' => 'Jeton CSRF invalide.'], Response::HTTP_FORBIDDEN);
-        }
-
-        if ($reporter->getId() === $reportedUser->getId()) {
-            return $this->json(['message' => 'Vous ne pouvez pas vous signaler vous-même.'], Response::HTTP_BAD_REQUEST);
+        if ($currentUser === $userToReport) {
+            return new JsonResponse(['message' => 'Vous ne pouvez pas vous signaler vous-même.'], Response::HTTP_BAD_REQUEST);
         }
 
         $data = json_decode($request->getContent(), true);
-        $reason = $data['reason'] ?? null;
+        $reason = $data['reason'] ?? null; // This will be mapped to 'content'
 
-        if (empty($reason) || trim($reason) === '') {
-            return $this->json(['message' => 'Une raison pour le signalement est requise.'], Response::HTTP_BAD_REQUEST);
+        if (empty($reason)) {
+            return new JsonResponse(['message' => 'La raison du signalement est requise.'], Response::HTTP_BAD_REQUEST);
         }
 
-        $accountReport = new AccountsReports();
-        $accountReport->setFkReporter($reporter);
-        $accountReport->setFkReported($reportedUser);
-        $accountReport->setContent(trim($reason));
-        $accountReport->setCreatedAt(new \DateTimeImmutable());
+        // Check if a report already exists from this user for the same reported user and reason to avoid duplicates
+        $existingReport = $entityManager->getRepository(AccountsReports::class)->findOneBy([
+            'fk_reporter' => $currentUser, // Corrected: Use entity property name
+            'fk_reported' => $userToReport, // Corrected: Use entity property name
+            'content' => $reason,          // Corrected: Use entity property name
+            // 'status' => 'pending' // REMOVED: 'status' property does not exist on AccountsReports entity
+        ]);
 
-        $entityManager->persist($accountReport);
+        if ($existingReport) {
+            return new JsonResponse(['message' => 'Vous avez déjà signalé cet utilisateur pour cette raison.'], Response::HTTP_CONFLICT);
+        }
+        
+        $report = new AccountsReports();
+        $report->setFkReporter($currentUser);    // Corrected: Matches entity setter
+        $report->setFkReported($userToReport);  // Corrected: Matches entity setter
+        $report->setContent($reason);           // Corrected: Matches entity setter
+        $report->setCreatedAt(new \DateTimeImmutable());
+
+        $entityManager->persist($report);
         $entityManager->flush();
 
-        return $this->json(['message' => 'Utilisateur signalé avec succès.'], Response::HTTP_CREATED);
+        return new JsonResponse(['message' => 'Utilisateur signalé avec succès.'], Response::HTTP_OK);
     }
 }

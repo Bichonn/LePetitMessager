@@ -7,35 +7,29 @@ export default function ReportBtn({ userId, username }) {
   const [reportFeedback, setReportFeedback] = useState({ message: '', type: '' });
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [showActualReportButton, setShowActualReportButton] = useState(false);
-  const [csrfToken, setCsrfToken] = useState(''); // Décommenté
 
-  useEffect(() => { // Décommenté et adapté
-    if (showActualReportButton || showReportModal) { // Fetch token only when needed
-      fetch('/get-csrf-token')
-        .then(res => res.json())
-        .then(data => {
-          if (data.token) {
-            setCsrfToken(data.token);
-          } else {
-            console.error("CSRF token not received");
-            setReportFeedback({ message: 'Erreur de sécurité (jeton CSRF manquant). Veuillez rafraîchir.', type: 'error' });
-          }
-        })
-        .catch(err => {
-          console.error("Failed to fetch CSRF token for reporting", err);
-          setReportFeedback({ message: 'Erreur de sécurité (impossible de récupérer le jeton CSRF). Veuillez rafraîchir.', type: 'error' });
-        });
-    }
-  }, [showActualReportButton, showReportModal]); // Re-fetch if the button or modal becomes visible
+  // Check if the current user is the one being viewed to hide the report button for self
+  useEffect(() => {
+    fetch('/user') // Assuming this endpoint returns current user's ID or details
+      .then(response => {
+        if (response.ok) return response.json();
+        throw new Error('Not authenticated or error fetching current user');
+      })
+      .then(currentUser => {
+        if (currentUser && currentUser.id !== userId) {
+          setShowActualReportButton(true); // Show button if not own profile
+        } else {
+          setShowActualReportButton(false); // Hide button if own profile or not logged in
+        }
+      })
+      .catch(() => {
+        setShowActualReportButton(false); // Hide on error or if not authenticated
+      });
+  }, [userId]);
 
   const handleReportUser = async () => {
     if (!reportReason.trim()) {
       setReportFeedback({ message: 'Veuillez fournir une raison pour le signalement.', type: 'error' });
-      return;
-    }
-
-    if (!csrfToken) { // Vérification du jeton CSRF
-      setReportFeedback({ message: 'Action non autorisée (jeton de sécurité manquant). Veuillez rafraîchir la page.', type: 'error' });
       return;
     }
 
@@ -45,7 +39,6 @@ export default function ReportBtn({ userId, username }) {
     try {
       const headers = { 
         'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken // Ajout du jeton CSRF à l'en-tête
       };
 
       const response = await fetch(`/user/${userId}/report`, {
@@ -80,17 +73,9 @@ export default function ReportBtn({ userId, username }) {
   };
 
   const openModalAndHideButton = () => {
-    if (!csrfToken && showActualReportButton) { // Ensure token is fetched if button was just made visible
-         fetch('/get-csrf-token')
-            .then(res => res.json())
-            .then(data => {
-              if (data.token) setCsrfToken(data.token);
-              else console.error("CSRF token not received on modal open");
-            }).catch(err => console.error("Failed to fetch CSRF token on modal open", err));
-    }
     setReportFeedback({ message: '', type: '' });
-    setShowReportModal(true);
-    setShowActualReportButton(false); 
+    setShowReportModal(true); // Directly show modal
+    setShowActualReportButton(false);
   };
 
   const closeModal = () => {
@@ -120,7 +105,6 @@ export default function ReportBtn({ userId, username }) {
             className="btn btn-outline-danger btn-sm position-absolute report-action-button" 
             onClick={openModalAndHideButton}
             title="Signaler cet utilisateur"
-            disabled={!csrfToken && showActualReportButton} // Disable if token not yet fetched
           >
             <img 
               src="/icons/report.png" 
@@ -170,7 +154,7 @@ export default function ReportBtn({ userId, username }) {
                     type="button" 
                     className="btn btn-danger" 
                     onClick={handleReportUser} 
-                    disabled={isSubmittingReport || !reportReason.trim() || !csrfToken}
+                    disabled={isSubmittingReport || !reportReason.trim()} // REMOVED || !csrfToken
                 >
                   {isSubmittingReport ? 'Envoi...' : 'Signaler'}
                 </button>

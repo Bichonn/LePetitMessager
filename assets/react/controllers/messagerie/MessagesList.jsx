@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from 'react';
 
-export default function MessagesList({ recipientId, currentUserId }) {
+export default function MessagesList({ recipientId, currentUserId, refreshTrigger }) {
   const [messages, setMessages] = useState([]);
 
   useEffect(() => {
     fetch(`/messages/thread/${recipientId}`)
       .then(res => res.json())
       .then(data => setMessages(data));
-  }, [recipientId]);
+  }, [recipientId, refreshTrigger]); // Ajoute refreshTrigger ici
 
   return (
     <div className="messages-list p-2" style={{ maxHeight: 400, overflowY: 'auto' }}>

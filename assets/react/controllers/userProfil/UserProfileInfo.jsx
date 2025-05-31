@@ -10,23 +10,25 @@ export default function UserProfileInfo({ user, onEditClick }) {
 
   return (
     <div className="profile-header-container border-start border-bottom border-end border-dark">
-      <div className="banner-container border-bottom border-dark">
-        {user.banner && (
+      {user.banner && (
+        <div className="banner-container border-bottom border-dark">
           <img
             src={user.banner}
             alt="Banner"
             className="banner-image"
           />
-        )}
-      </div>
+        </div>
+      )}
 
-      <div className="profile-avatar-wrapper">
-        <img
-          src={user.avatar_url || '/default-avatar.png'}
-          alt="avatar"
-          className="rounded-circle profil-avatar"
-        />
-      </div>
+      {user.avatar_url && (
+        <div className="profile-avatar-wrapper">
+          <img
+            src={user.avatar_url} // No fallback needed here as we only render if it exists
+            alt="avatar"
+            className="rounded-circle profil-avatar"
+          />
+        </div>
+      )}
 
       <div className="container p-4 profil-container shadow bg-color-search">
         <div className="profile-info-details">

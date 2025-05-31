@@ -23,7 +23,7 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
       </div>
 
       {isAuthenticated && isAdmin && (
-        <a href="/admin" className="nav-link"> {/* Mettez ici le lien vers votre page d'administration */}
+        <a href="/admin" className="nav-link">
           <NavIcons iconPath={"/icons/admin.png"} iconName={"Admin"} />
         </a>
       )}

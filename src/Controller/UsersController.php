@@ -28,13 +28,13 @@ final class UsersController extends AbstractController
         return $this->render('users/index.html.twig');
     }
 
-    #[Route('/profil/view/{username}', name: 'app_view_user_profile', methods: ['GET'])]
-    public function viewUserProfilePage(string $username): Response
+    #[Route('/profil/view/{id}', name: 'app_view_user_profile', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function viewUserProfilePage(int $id): Response
     {
         // This action renders the Twig template for viewing a specific user's profile.
         // The ShowProfil React component will handle fetching the user data via an API call.
         return $this->render('users/view_profile.html.twig', [
-            'username' => $username,
+            'id' => $id, // Pass 'id' instead of 'username'
         ]);
     }
 
@@ -118,6 +118,56 @@ final class UsersController extends AbstractController
         // Ajout du champ followed_by_user
         $followedByUser = false;
         if ($currentUser && !$isOwnProfile) {
+            $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
+                'fk_follower' => $currentUser,
+                'fk_following' => $userToView
+            ]);
+            $followedByUser = $existingFollow !== null;
+        }
+        $userDataArray['followed_by_user'] = $followedByUser;
+
+        return $this->json($userDataArray, Response::HTTP_OK);
+    }
+
+    #[Route('/user/id/{id}', name: 'app_get_user_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
+    public function getUserById(int $id, UsersRepository $usersRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $userToView = $usersRepository->find($id); // Find by ID
+
+        if (!$userToView) {
+            return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $currentUser = $this->getUser();
+        $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
+
+        if ($userToView->isPrivateAccount() && !$isOwnProfile) {
+            return $this->json([
+                'username' => $userToView->getUsername(),
+                'avatar_url' => $userToView->getProfilePicture(),
+                'is_private' => true,
+                'is_own_profile' => false,
+                'private_account' => true,
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $userDataArray = [
+            'id' => $userToView->getId(),
+            'first_name' => $userToView->getFirstName(),
+            'last_name' => $userToView->getLastName(),
+            'username' => $userToView->getUsername(),
+            'banner' => $userToView->getBanner(),
+            'profile_picture' => $userToView->getProfilePicture(),
+            'avatar_url' => $userToView->getProfilePicture(),
+            'bio' => $userToView->getBio(),
+            'user_premium' => $userToView->isUserPremium(),
+            'created_at' => $userToView->getCreatedAt() ? $userToView->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            'private_account' => $userToView->isPrivateAccount(),
+            'is_own_profile' => $isOwnProfile,
+        ];
+
+        $followedByUser = false;
+        if ($currentUser instanceof Users && !$isOwnProfile) {
             $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
                 'fk_follower' => $currentUser,
                 'fk_following' => $userToView

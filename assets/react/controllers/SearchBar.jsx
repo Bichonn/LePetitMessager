@@ -60,10 +60,10 @@ export default function SearchBar({ onSearch }) {
     }
   };
 
-  const handleSuggestionClick = (username) => {
+  const handleSuggestionClick = (userId) => { // Parameter changed to userId
     setSearchTerm('');
     setSuggestions([]);
-    window.location.href = `/profil/view/${username}`;
+    window.location.href = `/profil/view/${userId}`; // Use userId for navigation
   };
 
   return (
@@ -92,7 +92,7 @@ export default function SearchBar({ onSearch }) {
             <li
               key={user.id}
               className="list-group-item d-flex align-items-center border-dark search-suggestion-item rounded-0 bg-color-search"
-              onClick={() => handleSuggestionClick(user.username)}
+              onClick={() => handleSuggestionClick(user.id)} // MODIFIED: Pass user.id instead of user.username
             >
               <img
                 src={user.avatar_url || '/default-avatar.png'}

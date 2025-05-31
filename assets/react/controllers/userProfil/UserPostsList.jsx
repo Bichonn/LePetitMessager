@@ -16,7 +16,7 @@ export default function UserPostsList({ user }) { // Attend l'objet 'user' du pr
     setPostsError(null);
     try {
       // Appel du nouvel endpoint
-      const response = await fetch(`/users/${userId}/posts`); 
+      const response = await fetch(`/users/${userId}/posts`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({})); // Gérer le cas où la réponse d'erreur n'est pas JSON
         throw new Error(errorData.message || `Erreur HTTP ${response.status} lors de la récupération des posts de l'utilisateur`);
@@ -77,15 +77,14 @@ export default function UserPostsList({ user }) { // Attend l'objet 'user' du pr
       </div>
 
       {user && userPosts.length === 0 && !postsLoading && !postsError && (
-        <div className="container p-3 border-start border-end border-bottom border-dark">
-          <p className="text-muted my-3">Cet utilisateur n'a pas encore posté de message.</p>
-        </div>
+        <p className="text-muted my-3 ms-2">Cet utilisateur n'a pas encore posté de message.</p>
+
       )}
       {user && userPosts.map(post => (
         <PostItem
           key={post.id}
           post={post}
-           author={post.user || user} 
+          author={post.user || user}
           onPostDeleted={handlePostDeleted}
           onPostActuallyUpdated={handlePostUpdated}
         />

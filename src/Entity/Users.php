@@ -320,6 +320,37 @@ class Users implements UserInterface, PasswordAuthenticatedUserInterface
         return in_array(strtoupper($role), $this->roles, true);
     }
 
+    public function isAdmin(): bool
+    {
+        return in_array('ROLE_ADMIN', $this->roles);
+    }
+
+    public function setAdmin(bool $makeAdmin): self
+    {
+        $roles = $this->getRoles();
+        if (!in_array('ROLE_USER', $roles)) {
+            $roles[] = 'ROLE_USER';
+        }
+
+        if ($makeAdmin) {
+            if (!in_array('ROLE_ADMIN', $roles)) {
+                $roles[] = 'ROLE_ADMIN';
+            }
+        } else {
+            // Remove ROLE_ADMIN if it exists
+            // Ensure we don't remove the last role if it's ROLE_ADMIN and the user must have at least ROLE_USER
+            if (in_array('ROLE_ADMIN', $roles)) {
+                $roles = array_filter($roles, fn($role) => $role !== 'ROLE_ADMIN');
+                // If roles became empty, re-add ROLE_USER
+                if (empty($roles)) {
+                    $roles[] = 'ROLE_USER';
+                }
+            }
+        }
+        $this->setRoles(array_values(array_unique($roles))); // Ensure unique roles and re-index
+        return $this;
+    }
+
     /**
      * @return Collection<int, Posts>
      */

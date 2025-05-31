@@ -12,7 +12,8 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use App\Service\CloudinaryService; // Add this
+use App\Service\CloudinaryService;
+use App\Repository\PostsRepository;
 
 class PostsController extends AbstractController
 {
@@ -219,14 +220,29 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts', name: 'app_posts_list', methods: ['GET'])]
-    public function list(EntityManagerInterface $entityManager, SerializerInterface $serializer): JsonResponse
-    {
-        $posts = $entityManager->getRepository(Posts::class)->findBy([], ['created_at' => 'DESC']);
+    public function list(
+        Request $request, // Add Request object
+        EntityManagerInterface $entityManager,
+        SerializerInterface $serializer,
+        PostsRepository $postsRepository // Inject PostsRepository
+    ): JsonResponse {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 20); // Default limit to 20 posts per page
+        $offset = ($page - 1) * $limit;
 
-        if (!$posts) {
+        // Use the repository to find paginated posts
+        $posts = $postsRepository->findBy([], ['created_at' => 'DESC'], $limit, $offset);
+        $totalPosts = $postsRepository->count([]); // Get total count for pagination
+
+        if (empty($posts) && $page === 1) { // Modifié pour retourner OK si aucun post mais pas une erreur
             return $this->json(
-                ['message' => 'Aucun post trouvé'],
-                Response::HTTP_NOT_FOUND
+                [
+                    'posts' => [],
+                    'totalPosts' => 0,
+                    'currentPage' => 1,
+                    'limit' => $limit
+                ],
+                Response::HTTP_OK
             );
         }
 
@@ -268,7 +284,12 @@ class PostsController extends AbstractController
             $data[] = $postData;
         }
 
-        return new JsonResponse($data);
+        return new JsonResponse([
+            'posts' => $data,
+            'totalPosts' => $totalPosts,
+            'currentPage' => $page,
+            'limit' => $limit
+        ]);
     }
 
     #[Route('/users/{userId}/posts', name: 'app_user_posts_list', methods: ['GET'])]

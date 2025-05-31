@@ -1,0 +1,14 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord Admin{% endblock %}
+
+{% block main_content %}
+    <div class="container-fluid mt-3">
+        <h1 class="mb-4">Tableau de Bord Administrateur</h1>
+        <div {{ react_component('admin/AdminDashboard', { 
+            'csrfTokenDelete': csrf_token('delete-user%s') 
+        }) }}>
+            Chargement du tableau de bord...
+        </div>
+    </div>
+{% endblock %}

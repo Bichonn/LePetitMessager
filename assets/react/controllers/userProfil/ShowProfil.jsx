@@ -4,7 +4,7 @@ import UserProfileInfo from './UserProfileInfo';
 import UserPostsList from './UserPostsList';
 import EditProfileForm from './EditProfileForm';
 
-export default function ShowProfil({ targetUsername }) {
+export default function ShowProfil({ targetId }) { // Changed from targetUsername
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -15,7 +15,7 @@ export default function ShowProfil({ targetUsername }) {
     setError(null);
     setUser(null);
 
-    const endpoint = targetUsername ? `/user/username/${targetUsername}` : `/user`;
+    const endpoint = targetId ? `/user/id/${targetId}` : `/user`; // Use targetId and new endpoint
 
     try {
       const response = await fetch(endpoint);
@@ -44,11 +44,10 @@ export default function ShowProfil({ targetUsername }) {
 
   useEffect(() => {
     fetchUser();
-  }, [targetUsername]); // Re-fetch if targetUsername changes
+  }, [targetId]); // Re-fetch if targetId changes
 
   const handleProfileUpdated = (updatedUserData) => {
-    // setUser(updatedUserData); // Optimistically update or refetch
-    fetchUser(); // Refetch to ensure all data is current, respecting targetUsername
+    fetchUser(); 
     setShowEditModal(false);
   };
 

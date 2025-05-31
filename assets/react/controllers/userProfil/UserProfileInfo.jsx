@@ -2,11 +2,14 @@ import React from 'react';
 import '../../../styles/ShowProfil.css';
 import '../../../styles/app.css';
 import FollowBtn from './btn_user/FollowBtn.jsx';
+import ReportUserButton from './btn_user/ReportBtn.jsx';
 
 export default function UserProfileInfo({ user, onEditClick }) {
-  if (!user) return null;
+  const isOwnProfile = user && user.is_own_profile;
 
-  const isOwnProfile = user.is_own_profile;
+  if (!user) {
+    return <div className="text-center p-3">Chargement des informations du profil...</div>;
+  }
 
   return (
     <div className="profile-header-container border-start border-bottom border-end border-dark">
@@ -23,7 +26,7 @@ export default function UserProfileInfo({ user, onEditClick }) {
       {user.avatar_url && (
         <div className="profile-avatar-wrapper">
           <img
-            src={user.avatar_url} // No fallback needed here as we only render if it exists
+            src={user.avatar_url}
             alt="avatar"
             className="rounded-circle profil-avatar"
           />
@@ -35,7 +38,7 @@ export default function UserProfileInfo({ user, onEditClick }) {
           <div className="d-flex justify-content-between align-items-start">
             <div>
               <h3 className="mb-1 fw-bold fst-italic">
-                {user.username} {user.private_account && <img src="/icons/cadenas.png" className="lock-icon-img ms-1" />}
+                {user.username} {user.private_account && !isOwnProfile && <img src="/icons/cadenas.png" className="lock-icon-img ms-1" alt="Profil privé"/>}
               </h3>
               {(!user.private_account || isOwnProfile) && (
                 <>
@@ -55,13 +58,20 @@ export default function UserProfileInfo({ user, onEditClick }) {
                   {user.message || "Ce compte est privé."}
                 </p>
               )}
-              {!isOwnProfile && user.id && <FollowBtn userId={user.id} initialFollowed={user.followed_by_user} />}
             </div>
-            {isOwnProfile && onEditClick && (
-              <button className="btn btn-primary" onClick={onEditClick}>
-                Modifier le profil
-              </button>
-            )}
+            <div className="d-flex flex-column align-items-end">
+              {isOwnProfile && onEditClick && (
+                <button className="btn btn-primary mb-2" onClick={onEditClick}>
+                  Modifier le profil
+                </button>
+              )}
+              {!isOwnProfile && user.id && (
+                <>
+                  <FollowBtn userId={user.id} initialFollowed={user.followed_by_user} />
+                  <ReportUserButton userId={user.id} username={user.username} />
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

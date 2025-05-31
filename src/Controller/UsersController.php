@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\AccountsReports;
 use App\Entity\Users;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -133,39 +134,16 @@ final class UsersController extends AbstractController
     public function getUserById(int $id, UsersRepository $usersRepository, EntityManagerInterface $entityManager): JsonResponse
     {
         $userToView = $usersRepository->find($id); // Find by ID
-
+    
         if (!$userToView) {
             return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
         }
-
+    
         $currentUser = $this->getUser();
         $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
-
-        if ($userToView->isPrivateAccount() && !$isOwnProfile) {
-            return $this->json([
-                'username' => $userToView->getUsername(),
-                'avatar_url' => $userToView->getProfilePicture(),
-                'is_private' => true,
-                'is_own_profile' => false,
-                'private_account' => true,
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        $userDataArray = [
-            'id' => $userToView->getId(),
-            'first_name' => $userToView->getFirstName(),
-            'last_name' => $userToView->getLastName(),
-            'username' => $userToView->getUsername(),
-            'banner' => $userToView->getBanner(),
-            'profile_picture' => $userToView->getProfilePicture(),
-            'avatar_url' => $userToView->getProfilePicture(),
-            'bio' => $userToView->getBio(),
-            'user_premium' => $userToView->isUserPremium(),
-            'created_at' => $userToView->getCreatedAt() ? $userToView->getCreatedAt()->format('Y-m-d H:i:s') : null,
-            'private_account' => $userToView->isPrivateAccount(),
-            'is_own_profile' => $isOwnProfile,
-        ];
-
+    
+        // Déterminer si l'utilisateur actuel suit l'utilisateur consulté
+        // Cette logique est nécessaire avant la vérification du profil privé pour inclure 'followed_by_user'
         $followedByUser = false;
         if ($currentUser instanceof Users && !$isOwnProfile) {
             $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
@@ -174,8 +152,39 @@ final class UsersController extends AbstractController
             ]);
             $followedByUser = $existingFollow !== null;
         }
-        $userDataArray['followed_by_user'] = $followedByUser;
-
+    
+        if ($userToView->isPrivateAccount() && !$isOwnProfile) {
+            return $this->json([
+                'id' => $userToView->getId(), // Ajouter l'ID de l'utilisateur consulté
+                'username' => $userToView->getUsername(),
+                'avatar_url' => $userToView->getProfilePicture(),
+                'is_private' => true,
+                'is_own_profile' => false, // $isOwnProfile sera false ici
+                'private_account' => true,
+                'message' => "Ce compte est privé.", // Message spécifique pour les profils privés
+                'followed_by_user' => $followedByUser // Ajouter le statut de suivi
+            ], Response::HTTP_OK); // Changer en HTTP_OK pour que le front reçoive les données et gère l'affichage privé
+                                     // Ou garder HTTP_FORBIDDEN si le front gère déjà bien ce statut mais a besoin des données.
+                                     // Pour la simplicité de l'affichage des boutons, HTTP_OK avec les données est plus direct.
+                                     // Si vous gardez HTTP_FORBIDDEN, assurez-vous que ShowProfil.jsx traite bien la réponse.
+        }
+    
+        $userDataArray = [
+            'id' => $userToView->getId(),
+            'first_name' => $userToView->getFirstName(),
+            'last_name' => $userToView->getLastName(),
+            'username' => $userToView->getUsername(),
+            'banner' => $userToView->getBanner(),
+            'profile_picture' => $userToView->getProfilePicture(),
+            'avatar_url' => $userToView->getProfilePicture(), // Assurez la cohérence
+            'bio' => $userToView->getBio(),
+            'user_premium' => $userToView->isUserPremium(),
+            'created_at' => $userToView->getCreatedAt() ? $userToView->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            'private_account' => $userToView->isPrivateAccount(),
+            'is_own_profile' => $isOwnProfile,
+            'followed_by_user' => $followedByUser // Assurez-vous que cela est inclus
+        ];
+    
         return $this->json($userDataArray, Response::HTTP_OK);
     }
 
@@ -418,5 +427,51 @@ final class UsersController extends AbstractController
             // Log the exception
             return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
+    }
+
+    #[Route('/user/{id}/report', name: 'app_user_report', methods: ['POST'])]
+    public function reportUser(
+        Request $request,
+        Users $reportedUser, // Symfony fetches the User entity based on {id}
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var \App\Entity\Users|null $reporter */
+        $reporter = $this->getUser();
+
+        if (!$reporter) {
+            return $this->json(['message' => 'Authentification requise pour signaler un utilisateur.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($reporter->getId() === $reportedUser->getId()) {
+            return $this->json(['message' => 'Vous ne pouvez pas vous signaler vous-même.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $reason = $data['reason'] ?? null;
+
+        if (empty($reason) || trim($reason) === '') {
+            return $this->json(['message' => 'Une raison pour le signalement est requise.'], Response::HTTP_BAD_REQUEST);
+        }
+        
+        // Optional: Check if this user has already reported the target user recently
+        // $existingReport = $entityManager->getRepository(AccountsReports::class)->findOneBy([
+        //     'fk_reporter' => $reporter,
+        //     'fk_reported' => $reportedUser,
+        //     // Potentially add a status or time condition here (e.g., only one report per week)
+        // ]);
+        // if ($existingReport) {
+        //     return $this->json(['message' => 'Vous avez déjà signalé cet utilisateur récemment.'], Response::HTTP_CONFLICT);
+        // }
+
+        $accountReport = new AccountsReports();
+        $accountReport->setFkReporter($reporter);
+        $accountReport->setFkReported($reportedUser);
+        $accountReport->setContent(trim($reason));
+        $accountReport->setCreatedAt(new \DateTimeImmutable());
+
+        $entityManager->persist($accountReport);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Utilisateur signalé avec succès.'], Response::HTTP_CREATED);
     }
 }

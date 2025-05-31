@@ -3,5 +3,6 @@
 {% block title %}Discussion{% endblock %}
 
 {% block main_content %}
+    <div {{ react_component('messagerie/MessagesList', { recipientId: recipientId, currentUserId: app.user.id }) }}></div>
     <div {{ react_component('messagerie/MessageForm', { recipientId: recipientId }) }}></div>
 {% endblock %}

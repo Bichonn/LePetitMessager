@@ -143,4 +143,40 @@ final class MessagesController extends AbstractController
             'recipientId' => $id,
         ]);
     }
+
+    #[Route('/messages/thread/{id}', name: 'app_messages_thread', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function getThread(int $id, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $recipient = $entityManager->getRepository(Users::class)->find($id);
+        if (!$recipient) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $messages = $entityManager->getRepository(Messages::class)->createQueryBuilder('m')
+            ->where('(m.fk_user1 = :user AND m.fk_user2 = :recipient) OR (m.fk_user1 = :recipient AND m.fk_user2 = :user)')
+            ->setParameter('user', $user)
+            ->setParameter('recipient', $recipient)
+            ->orderBy('m.created_at', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $data = [];
+        foreach ($messages as $message) {
+            $data[] = [
+                'id' => $message->getId(),
+                'from' => $message->getFkUser1()->getId(),
+                'to' => $message->getFkUser2()->getId(),
+                'content' => $message->getContentText(),
+                'media' => $message->getContentMultimedia(),
+                'created_at' => $message->getCreatedAt()?->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        return $this->json($data);
+    }
 }

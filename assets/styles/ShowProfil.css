@@ -52,3 +52,26 @@
   height: 20px;
   vertical-align: middle;
 }
+
+.report-options-icon {
+  width: 20px;
+  height: 20px;
+  filter: var(--icon-filter, none);
+}
+
+.report-action-button {
+  top: 0px;
+  right: 30px; /* Vous devrez peut-être ajuster cette valeur */
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.report-button-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 4px;
+}
+
+.report-modal-custom.modal.fade.show.d-block { /* Cible plus spécifique pour le fond du modal */
+  background-color: rgba(0,0,0,0.5);
+}

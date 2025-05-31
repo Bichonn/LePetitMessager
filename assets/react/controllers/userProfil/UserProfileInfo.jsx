@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Assurez-vous que useState et useEffect sont importés
 import '../../../styles/ShowProfil.css';
 import '../../../styles/app.css';
 import FollowBtn from './btn_user/FollowBtn.jsx';
-import ReportUserButton from './btn_user/ReportBtn.jsx';
+import ReportBtn from './btn_user/ReportBtn.jsx';
 
 export default function UserProfileInfo({ user, onEditClick }) {
   const isOwnProfile = user && user.is_own_profile;
+  const [visitorIsAuthenticated, setVisitorIsAuthenticated] = useState(false); // Nouvel état
+
+  useEffect(() => {
+    // Vérifier si le visiteur est authentifié
+    fetch('/user') // L'endpoint /user renvoie les données de l'utilisateur connecté ou 401
+      .then(response => {
+        if (response.ok) {
+          setVisitorIsAuthenticated(true);
+        } else {
+          setVisitorIsAuthenticated(false);
+        }
+      })
+      .catch(() => {
+        setVisitorIsAuthenticated(false); // En cas d'erreur réseau, considérer comme non authentifié
+      });
+  }, []); // Exécuter une seule fois au montage du composant
 
   if (!user) {
     return <div className="text-center p-3">Chargement des informations du profil...</div>;
@@ -65,10 +81,11 @@ export default function UserProfileInfo({ user, onEditClick }) {
                   Modifier le profil
                 </button>
               )}
-              {!isOwnProfile && user.id && (
+              {/* Condition mise à jour ici */}
+              {visitorIsAuthenticated && !isOwnProfile && user.id && (
                 <>
+                  <ReportBtn userId={user.id} username={user.username} />
                   <FollowBtn userId={user.id} initialFollowed={user.followed_by_user} />
-                  <ReportUserButton userId={user.id} username={user.username} />
                 </>
               )}
             </div>

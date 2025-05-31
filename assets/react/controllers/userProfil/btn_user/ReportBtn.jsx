@@ -1,50 +1,52 @@
-// filepath: assets/react/controllers/userProfil/btn_user/ReportUserButton.jsx
 import React, { useState, useEffect } from 'react';
+import '../../../../styles/ShowProfil.css'; 
 
 export default function ReportBtn({ userId, username }) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportFeedback, setReportFeedback] = useState({ message: '', type: '' });
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
-  // const [csrfToken, setCsrfToken] = useState(''); // Décommentez si vous utilisez CSRF
+  const [showActualReportButton, setShowActualReportButton] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(''); // Décommenté
 
-  // Décommentez et adaptez si vous utilisez CSRF
-  // useEffect(() => {
-  //   fetch('/get-csrf-token') 
-  //       .then(res => res.json())
-  //       .then(data => {
-  //           if (data.token) {
-  //               setCsrfToken(data.token);
-  //           }
-  //       })
-  //       .catch(err => console.error("Failed to fetch CSRF token for reporting", err));
-  // }, []);
+  useEffect(() => { // Décommenté et adapté
+    if (showActualReportButton || showReportModal) { // Fetch token only when needed
+      fetch('/get-csrf-token')
+        .then(res => res.json())
+        .then(data => {
+          if (data.token) {
+            setCsrfToken(data.token);
+          } else {
+            console.error("CSRF token not received");
+            setReportFeedback({ message: 'Erreur de sécurité (jeton CSRF manquant). Veuillez rafraîchir.', type: 'error' });
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch CSRF token for reporting", err);
+          setReportFeedback({ message: 'Erreur de sécurité (impossible de récupérer le jeton CSRF). Veuillez rafraîchir.', type: 'error' });
+        });
+    }
+  }, [showActualReportButton, showReportModal]); // Re-fetch if the button or modal becomes visible
 
   const handleReportUser = async () => {
     if (!reportReason.trim()) {
       setReportFeedback({ message: 'Veuillez fournir une raison pour le signalement.', type: 'error' });
       return;
     }
-    // Décommentez et adaptez si vous utilisez CSRF
-    // if (!csrfToken && document.querySelector('meta[name="csrf-token"]')) { 
-    //     setCsrfToken(document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'));
-    // }
-    // if (!csrfToken) {
-    //   setReportFeedback({ message: 'Action non autorisée (token manquant). Veuillez rafraîchir.', type: 'error' });
-    //   return;
-    // }
+
+    if (!csrfToken) { // Vérification du jeton CSRF
+      setReportFeedback({ message: 'Action non autorisée (jeton de sécurité manquant). Veuillez rafraîchir la page.', type: 'error' });
+      return;
+    }
 
     setIsSubmittingReport(true);
     setReportFeedback({ message: '', type: '' });
 
     try {
-      const headers = {
+      const headers = { 
         'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken // Ajout du jeton CSRF à l'en-tête
       };
-      // Décommentez et adaptez si vous utilisez CSRF
-      // if (csrfToken) {
-      //   headers['X-CSRF-TOKEN'] = csrfToken;
-      // }
 
       const response = await fetch(`/user/${userId}/report`, {
         method: 'POST',
@@ -60,7 +62,11 @@ export default function ReportBtn({ userId, username }) {
           setReportFeedback({ message: '', type: '' });
         }, 2000);
       } else {
-        setReportFeedback({ message: data.message || 'Erreur lors du signalement.', type: 'error' });
+        if (response.status === 403) {
+             setReportFeedback({ message: data.message || 'Action non autorisée (jeton de sécurité invalide).', type: 'error' });
+        } else {
+            setReportFeedback({ message: data.message || 'Erreur lors du signalement.', type: 'error' });
+        }
       }
     } catch (error) {
       setReportFeedback({ message: 'Erreur de connexion lors du signalement.', type: 'error' });
@@ -69,27 +75,73 @@ export default function ReportBtn({ userId, username }) {
     }
   };
 
+  const toggleReportButtonVisibility = () => {
+    setShowActualReportButton(prev => !prev);
+  };
+
+  const openModalAndHideButton = () => {
+    if (!csrfToken && showActualReportButton) { // Ensure token is fetched if button was just made visible
+         fetch('/get-csrf-token')
+            .then(res => res.json())
+            .then(data => {
+              if (data.token) setCsrfToken(data.token);
+              else console.error("CSRF token not received on modal open");
+            }).catch(err => console.error("Failed to fetch CSRF token on modal open", err));
+    }
+    setReportFeedback({ message: '', type: '' });
+    setShowReportModal(true);
+    setShowActualReportButton(false); 
+  };
+
+  const closeModal = () => {
+    setShowReportModal(false);
+  };
+
   return (
-    <>
+    <div className="report-options-container mt-2">
       <button
-        className="btn btn-outline-danger mt-2"
-        onClick={() => {
-          setReportFeedback({ message: '', type: '' });
-          setShowReportModal(true);
-        }}
-        title="Signaler cet utilisateur"
+        type="button"
+        className="btn btn-sm p-0"
+        onClick={toggleReportButtonVisibility}
+        title="Options"
+        aria-label="Options pour cet utilisateur"
       >
-        <img src="/icons/report.png" alt="Signaler" style={{ width: '20px', height: '20px', marginRight: '5px' }} />
-        Signaler
+        <img 
+          src="/icons/3-points.png" 
+          alt="Options" 
+          className="report-options-icon"
+        />
       </button>
 
+      {showActualReportButton && (
+        <div className="position-relative">
+          <button
+            type="button"
+            className="btn btn-outline-danger btn-sm position-absolute report-action-button" 
+            onClick={openModalAndHideButton}
+            title="Signaler cet utilisateur"
+            disabled={!csrfToken && showActualReportButton} // Disable if token not yet fetched
+          >
+            <img 
+              src="/icons/report.png" 
+              alt="" 
+              className="report-button-icon"
+            />
+            Signaler
+          </button>
+        </div>
+      )}
+
       {showReportModal && (
-        <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+        <div 
+          className="modal fade show d-block report-modal-custom" 
+          tabIndex="-1" 
+        >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">Signaler {username}</h5>
-                <button type="button" className="btn-close" onClick={() => setShowReportModal(false)} disabled={isSubmittingReport}></button>
+                <button type="button" className="btn-close" onClick={closeModal} disabled={isSubmittingReport}></button>
               </div>
               <div className="modal-body">
                 <div className="mb-3">
@@ -111,10 +163,15 @@ export default function ReportBtn({ userId, username }) {
                 )}
               </div>
               <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setShowReportModal(false)} disabled={isSubmittingReport}>
+                <button type="button" className="btn btn-secondary" onClick={closeModal} disabled={isSubmittingReport}>
                   Annuler
                 </button>
-                <button type="button" className="btn btn-danger" onClick={handleReportUser} disabled={isSubmittingReport || !reportReason.trim()}>
+                <button 
+                    type="button" 
+                    className="btn btn-danger" 
+                    onClick={handleReportUser} 
+                    disabled={isSubmittingReport || !reportReason.trim() || !csrfToken}
+                >
                   {isSubmittingReport ? 'Envoi...' : 'Signaler'}
                 </button>
               </div>
@@ -122,6 +179,6 @@ export default function ReportBtn({ userId, username }) {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

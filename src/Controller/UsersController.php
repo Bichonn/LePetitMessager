@@ -432,14 +432,22 @@ final class UsersController extends AbstractController
     #[Route('/user/{id}/report', name: 'app_user_report', methods: ['POST'])]
     public function reportUser(
         Request $request,
-        Users $reportedUser, // Symfony fetches the User entity based on {id}
-        EntityManagerInterface $entityManager
+        Users $reportedUser,
+        EntityManagerInterface $entityManager,
+        CsrfTokenManagerInterface $csrfTokenManager // Injectez le gestionnaire de jetons CSRF
     ): JsonResponse {
         /** @var \App\Entity\Users|null $reporter */
         $reporter = $this->getUser();
 
         if (!$reporter) {
             return $this->json(['message' => 'Authentification requise pour signaler un utilisateur.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Validation du jeton CSRF
+        $submittedToken = $request->headers->get('X-CSRF-TOKEN');
+        // L'ID 'form_token' est utilisé car c'est celui généré par /get-csrf-token
+        if (!$csrfTokenManager->isTokenValid(new CsrfToken('form_token', $submittedToken))) { 
+            return $this->json(['message' => 'Jeton CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
 
         if ($reporter->getId() === $reportedUser->getId()) {
@@ -452,16 +460,6 @@ final class UsersController extends AbstractController
         if (empty($reason) || trim($reason) === '') {
             return $this->json(['message' => 'Une raison pour le signalement est requise.'], Response::HTTP_BAD_REQUEST);
         }
-        
-        // Optional: Check if this user has already reported the target user recently
-        // $existingReport = $entityManager->getRepository(AccountsReports::class)->findOneBy([
-        //     'fk_reporter' => $reporter,
-        //     'fk_reported' => $reportedUser,
-        //     // Potentially add a status or time condition here (e.g., only one report per week)
-        // ]);
-        // if ($existingReport) {
-        //     return $this->json(['message' => 'Vous avez déjà signalé cet utilisateur récemment.'], Response::HTTP_CONFLICT);
-        // }
 
         $accountReport = new AccountsReports();
         $accountReport->setFkReporter($reporter);

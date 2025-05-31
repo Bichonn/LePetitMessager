@@ -170,17 +170,19 @@ export default function RegisterForm() {
                                             onChange={handlePasswordChange}
                                             required
                                         />
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary password-toggle-btn"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
-                                        >
-                                            <img
-                                                src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
-                                                alt={showPassword ? "Masquer" : "Voir"}
-                                            />
-                                        </button>
+                                        {!errors.password && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary password-toggle-btn"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                            >
+                                                <img
+                                                    src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
+                                                    alt={showPassword ? "Masquer" : "Voir"}
+                                                />
+                                            </button>
+                                        )}
                                     </div>
                                     <div className="mb-3 position-relative">
                                         <label htmlFor="confirmPassword" className="form-label text-decoration-underline mb-0">Confirmer le mot de passe</label>
@@ -193,17 +195,19 @@ export default function RegisterForm() {
                                             onChange={e => setConfirmPassword(e.target.value)}
                                             required
                                         />
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary password-toggle-btn"
-                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                            title={showConfirmPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
-                                        >
-                                            <img
-                                                src={showConfirmPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
-                                                alt={showConfirmPassword ? "Masquer" : "Voir"}
-                                            />
-                                        </button>
+                                        {!errors.password && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary password-toggle-btn"
+                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                title={showConfirmPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                            >
+                                                <img
+                                                    src={showConfirmPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
+                                                    alt={showConfirmPassword ? "Masquer" : "Voir"}
+                                                />
+                                            </button>
+                                        )}
                                     </div>
 
                                     {errors.general && <div className="alert alert-danger">{errors.general}</div>}

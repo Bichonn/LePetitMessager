@@ -27,7 +27,10 @@
 
 				<!-- Barre de navigation (Gauche) -->
 				<div class="col-md-1">
-                    <div {{ react_component('layout/Navbar', { 'isAuthenticated': app.user is not null }) }}></div>
+                    <div {{ react_component('layout/Navbar', {
+                        'isAuthenticated': app.user is not null,
+                        'isAdmin': app.user is not null and is_granted('ROLE_ADMIN')
+                    }) }}></div>
                 </div>
 
 				<!-- Contenu principal (Centre) -->

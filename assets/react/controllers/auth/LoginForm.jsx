@@ -138,7 +138,7 @@ export default function LoginForm() {
                                             required
                                         />
                                     </div>
-                                    <div className="mb-3 position-relative"> {/* Added position-relative */}
+                                    <div className="mb-3 position-relative">
                                         <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
                                         {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
                                         <input
@@ -149,17 +149,19 @@ export default function LoginForm() {
                                             onChange={handlePasswordChange}
                                             required
                                         />
-                                        <button
-                                            type="button"
-                                            className="btn btn-outline-secondary password-toggle-btn login-password-toggle-btn" // Added new class
-                                            onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
-                                            title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
-                                        >
-                                            <img
-                                                src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"} // Conditional icon
-                                                alt={showPassword ? "Masquer" : "Voir"}
-                                            />
-                                        </button>
+                                        {!errors.password && (
+                                            <button
+                                                type="button"
+                                                className="btn btn-outline-secondary password-toggle-btn login-password-toggle-btn" 
+                                                onClick={() => setShowPassword(!showPassword)} 
+                                                title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                            >
+                                                <img
+                                                    src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"}
+                                                    alt={showPassword ? "Masquer" : "Voir"}
+                                                />
+                                            </button>
+                                        )}
                                     </div>
                                     <input type="hidden" name="_csrf_token" value={csrfToken} />
 

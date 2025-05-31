@@ -54,7 +54,7 @@ export default function RegisterForm() {
         }
 
         // Strong password validation (minimum 8 characters, 1 uppercase, 1 lowercase, 1 number, 1 special character)
-        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+        const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&_#^()\-\+\.,:;<=>])[A-Za-z\d@$!%*?&_#^()\-\+\.,:;<=>]{8,}$/;
         if (!strongPasswordRegex.test(password)) {
             setErrors({...errors, password: "Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial."});
             return;
@@ -87,7 +87,14 @@ export default function RegisterForm() {
                 }
             }
         } catch (error) {
-            setErrors({...errors, general: "Erreur de connexion au serveur"});
+            console.error("Registration fetch error:", error); // Log the full error object
+            let errorMessage = "Erreur de connexion au serveur";
+            if (error instanceof TypeError && error.message === "Failed to fetch") {
+                errorMessage = "Impossible de joindre le serveur. Vérifiez votre connexion internet ou que le serveur est bien démarré.";
+            } else if (error.message) {
+                errorMessage += `: ${error.message}`;
+            }
+            setErrors({...errors, general: errorMessage});
         }
     };
 

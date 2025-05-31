@@ -64,6 +64,10 @@
     padding: 0;
 }
 
+.login-password-toggle-btn {
+    top: 65%;
+}
+
 .password-toggle-btn img {
     width: 20px;
     height: 20px;

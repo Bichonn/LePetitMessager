@@ -6,6 +6,7 @@ export default function LoginForm() {
     const [showModal, setShowModal] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [csrfToken, setCsrfToken] = useState('');
     const [status, setStatus] = useState('');
     const [errors, setErrors] = useState({
@@ -137,17 +138,28 @@ export default function LoginForm() {
                                             required
                                         />
                                     </div>
-                                    <div className="mb-3">
+                                    <div className="mb-3 position-relative"> {/* Added position-relative */}
                                         <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
                                         {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
                                         <input
-                                            type="password"
+                                            type={showPassword ? "text" : "password"} // Changed type based on showPassword state
                                             id="password"
                                             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                             value={password}
                                             onChange={handlePasswordChange}
                                             required
                                         />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-secondary password-toggle-btn login-password-toggle-btn" // Added new class
+                                            onClick={() => setShowPassword(!showPassword)} // Toggle showPassword state
+                                            title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
+                                        >
+                                            <img
+                                                src={showPassword ? "/icons/voir-mdp.png" : "/icons/hide-mdp.png"} // Conditional icon
+                                                alt={showPassword ? "Masquer" : "Voir"}
+                                            />
+                                        </button>
                                     </div>
                                     <input type="hidden" name="_csrf_token" value={csrfToken} />
 

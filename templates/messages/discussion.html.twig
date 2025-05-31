@@ -1,0 +1,7 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Discussion{% endblock %}
+
+{% block main_content %}
+<div {{ react_component('messagerie/DiscussionPage', { recipientId: recipientId, currentUserId: app.user.id }) }}></div>
+{% endblock %}

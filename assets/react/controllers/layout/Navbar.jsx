@@ -15,7 +15,9 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
         <a href="/" className="nav-link">
           <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
         </a>
-        <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
+        <a href="/messages" className="nav-link">
+          <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
+        </a>
         <div onClick={handleWriteClick} style={{ cursor: 'pointer' }} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleWriteClick()}>
           <NavIcons iconPath={"/icons/write.png"} iconName={"Ecrire"} />
         </div>

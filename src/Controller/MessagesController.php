@@ -57,7 +57,7 @@ final class MessagesController extends AbstractController
         }
 
         $FkUser2 = $entityManager->getRepository(Users::class)->find($fk_user2);
-        if (!$fk_user2) {
+        if (!$FkUser2) {
             return $this->json(['message' => 'Messager destinataire introuvable'], Response::HTTP_NOT_FOUND);
         }
 
@@ -98,5 +98,85 @@ final class MessagesController extends AbstractController
             ['message' => 'Message envoyé avec succès'],
             Response::HTTP_CREATED
         );
+    }
+
+    #[Route('/messages/users', name: 'app_messages_users', methods: ['GET'])]
+    public function getMessagedUsers(EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Récupère tous les messages où l'utilisateur est soit fk_user1 soit fk_user2
+        $messages = $entityManager->getRepository(Messages::class)->createQueryBuilder('m')
+            ->where('m.fk_user1 = :user OR m.fk_user2 = :user')
+            ->setParameter('user', $user)
+            ->orderBy('m.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $users = [];
+        foreach ($messages as $message) {
+            $other = $message->getFkUser1() === $user ? $message->getFkUser2() : $message->getFkUser1();
+            if ($other && !isset($users[$other->getId()])) {
+                $users[$other->getId()] = [
+                    'id' => $other->getId(),
+                    'username' => $other->getUsername(),
+                    'avatar_url' => $other->getProfilePicture(),
+                ];
+            }
+        }
+
+        return $this->json(array_values($users));
+    }
+
+    #[Route('/messages/{id}', name: 'app_messages_discussion', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function discussion(int $id, EntityManagerInterface $entityManager): Response
+    {
+        $recipient = $entityManager->getRepository(Users::class)->find($id);
+        if (!$recipient) {
+            throw $this->createNotFoundException('Utilisateur non trouvé');
+        }
+
+        return $this->render('messages/discussion.html.twig', [
+            'recipientId' => $id,
+        ]);
+    }
+
+    #[Route('/messages/thread/{id}', name: 'app_messages_thread', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function getThread(int $id, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $recipient = $entityManager->getRepository(Users::class)->find($id);
+        if (!$recipient) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        $messages = $entityManager->getRepository(Messages::class)->createQueryBuilder('m')
+            ->where('(m.fk_user1 = :user AND m.fk_user2 = :recipient) OR (m.fk_user1 = :recipient AND m.fk_user2 = :user)')
+            ->setParameter('user', $user)
+            ->setParameter('recipient', $recipient)
+            ->orderBy('m.created_at', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        $data = [];
+        foreach ($messages as $message) {
+            $data[] = [
+                'id' => $message->getId(),
+                'from' => $message->getFkUser1()->getId(),
+                'to' => $message->getFkUser2()->getId(),
+                'content' => $message->getContentText(),
+                'media' => $message->getContentMultimedia(),
+                'created_at' => $message->getCreatedAt()?->format('Y-m-d H:i:s'),
+            ];
+        }
+
+        return $this->json($data);
     }
 }

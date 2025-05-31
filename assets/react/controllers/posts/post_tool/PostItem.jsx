@@ -77,7 +77,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
 
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
-    const userProfileUrl = `/profil/view/${author.username}`;
+    const userProfileUrl = `/profil/view/${author.id}`;
 
     return (
         <>
@@ -86,8 +86,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     <img
                         src={author.avatar_url || '/default-avatar.png'}
                         alt={`${author.username}'s avatar`}
-                        className="rounded-circle me-2"
-                        style={{ width: '40px', height: '40px', objectFit: 'cover' }}
+                        className="rounded-circle me-2 post-author-avatar" // MODIFIED: Added post-author-avatar class
                     />
                     <div>
                         <h5 className="mb-0">

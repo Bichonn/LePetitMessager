@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Users;
+use App\Entity\AccountsReports;
+use App\Repository\AccountsReportsRepository;
 use App\Repository\UsersRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -79,7 +81,7 @@ class AdminController extends AbstractController
     }
 
     #[Route('/api/users/{id}/delete', name: 'app_admin_api_delete_user', methods: ['DELETE'])]
-    public function deleteUser(Users $user, EntityManagerInterface $em, Request $request): JsonResponse
+    public function deleteUser(Users $user, EntityManagerInterface $em): JsonResponse
     {
         /** @var Users $currentUser */
         $currentUser = $this->getUser();
@@ -87,22 +89,51 @@ class AdminController extends AbstractController
             return $this->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], Response::HTTP_FORBIDDEN);
         }
 
-        // Add CSRF token validation for critical operations like delete
-        // $submittedToken = $request->headers->get('X-CSRF-TOKEN'); // Or from request body
-        // if (!$this->isCsrfTokenValid('delete-user'.$user->getId(), $submittedToken)) {
-        //     return $this->json(['message' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
-        // }
-
         try {
-            // Consider implications: what happens to user's posts, comments, etc.?
-            // You might need to anonymize or reassign content, or set up cascade deletes in Doctrine.
-            // For now, direct removal:
             $em->remove($user);
             $em->flush();
             return $this->json(['message' => 'Utilisateur supprimé avec succès.']);
         } catch (\Exception $e) {
             // Log the error
             return $this->json(['message' => 'Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/account-reports', name: 'app_admin_api_account_reports', methods: ['GET'])]
+    public function getAccountReports(AccountsReportsRepository $reportsRepository): JsonResponse
+    {
+        $reportsEntities = $reportsRepository->findBy([], ['created_at' => 'DESC']);
+        $data = [];
+        foreach ($reportsEntities as $report) {
+            $data[] = [
+                'id' => $report->getId(),
+                'reporterUsername' => $report->getFkReporter() ? $report->getFkReporter()->getUsername() : null,
+                'reportedUsername' => $report->getFkReported() ? $report->getFkReported()->getUsername() : null,
+                'content' => $report->getContent(),
+                'created_at' => $report->getCreatedAt() ? $report->getCreatedAt()->format('Y-m-d H:i:s') : null,
+            ];
+        }
+        return $this->json($data);
+
+    }
+
+    #[Route('/api/account-reports/{id}', name: 'app_admin_api_delete_account_report', methods: ['DELETE'])]
+    public function deleteAccountReport(AccountsReports $report, EntityManagerInterface $em): JsonResponse
+    {
+        // Optional: Add security check to ensure only admins can delete
+        // $this->denyAccessUnlessGranted('ROLE_ADMIN');
+
+        if (!$report) {
+            return $this->json(['message' => 'Signalement introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $em->remove($report);
+            $em->flush();
+            return $this->json(['message' => 'Signalement supprimé avec succès.'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // Log the error: $this->logger->error('Failed to delete account report: ' . $e->getMessage());
+            return $this->json(['message' => 'Erreur lors de la suppression du signalement: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

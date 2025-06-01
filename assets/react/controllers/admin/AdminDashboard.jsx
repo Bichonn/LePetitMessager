@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import '../../../styles/AdminDashboard.css';
+import '../../../styles/app.css';
 
 export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
@@ -101,21 +102,21 @@ export default function AdminDashboard() {
     };
 
     if (loading) return (
-        <div className="admin-dashboard-container p-3 text-center">
+        <div className="p-3 text-center">
             Chargement des utilisateurs...
         </div>
     );
-    if (error) return (
-        <div className="admin-dashboard-container p-3">
+    if (error) return ( 
+        <div className="p-3">
             <div className="alert alert-danger">Erreur: {error}</div>
         </div>
     );
 
     return (
-        <div className="admin-dashboard-container p-3">
-            <h2 className="mb-4">Tableau de bord d'administration</h2>
-            <div className="table-responsive">
-                <table className="table table-striped table-hover">
+        <div>
+            <h2 className="mb-0 border-start border-end border-dark p-3 text-center text-decoration-underline bg-color-search  inner-shadow">Tableau de bord d'administration</h2>
+            <div className="table-responsive border border-dark">
+                <table className="table table-striped table-hover mb-0">
                     <thead className="table-dark">
                         <tr>
                             <th>ID</th>
@@ -138,20 +139,20 @@ export default function AdminDashboard() {
                                 <td>{user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</td>
                                 <td>
                                     <button
-                                        className={`btn btn-sm me-1 ${user.is_banned ? 'btn-success' : 'btn-warning'}`}
+                                        className={`btn mb-1 ${user.is_banned ? 'btn-admin-unban' : 'btn-admin-ban'}`}
                                         onClick={() => handleToggleBan(user.id)}>
                                         {user.is_banned ? 'Débannir' : 'Bannir'}
                                     </button>
                                     <button
-                                        className={`btn btn-sm me-1 ${user.roles.includes('ROLE_ADMIN') ? 'btn-secondary' : 'btn-info'}`}
+                                        className={`btn mb-1 ${user.roles.includes('ROLE_ADMIN') ? 'btn-admin-promote' : 'btn-admin-promote'}`}
                                         onClick={() => handleToggleAdmin(user.id)}
                                         disabled={user.roles.includes('ROLE_ADMIN') && user.id === currentAdminId}>
                                         {user.roles.includes('ROLE_ADMIN') ? 'Retirer Admin' : 'Promouvoir Admin'}
                                     </button>
                                     <button
-                                        className="btn btn-sm btn-danger"
+                                        className="btn btn-admin-supp"
                                         onClick={() => handleDeleteUser(user.id, user.username)}
-                                        disabled={user.id === currentAdminId} // Optionally prevent self-deletion
+                                        disabled={user.id === currentAdminId} // prevent self-deletion
                                     >
                                         Supprimer
                                     </button>

@@ -1,18 +1,9 @@
-.admin-dashboard-container {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 0.375rem; /* Rayon de bordure standard de Bootstrap */
-  margin-top: 1rem; /* Ajoute un peu d'espace au-dessus */
+.table-responsive .table tbody td {
+  background-color: #DFC699; /* Couleur de bg-color-search */
+  /* La bordure sera gérée par la règle plus générale ci-dessous */
 }
 
-.admin-dashboard-container h2 {
-    color: var(--text-color);
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 0.5rem;
-}
-
-.admin-dashboard-container .table th,
-.admin-dashboard-container .table td {
-  border-color: var(--border-color); /* Assure que les bordures de la table correspondent au thème */
+/* Ajoute une bordure noire à toutes les cellules (en-têtes et données) */
+.table-responsive .table td {
+  border: 1px solid #000;
 }

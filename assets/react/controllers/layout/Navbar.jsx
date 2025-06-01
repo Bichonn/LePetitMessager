@@ -10,7 +10,7 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
   };
 
   return (
-    <div className="navbar-container border-end border-dark position-fixed">
+    <div className="navbar-container border-end border-dark position-fixed inner-shadow">
       <div className="navbar-top">
         <a href="/" className="nav-link">
           <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />

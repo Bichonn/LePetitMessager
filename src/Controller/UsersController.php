@@ -450,10 +450,9 @@ final class UsersController extends AbstractController
 
         // Check if a report already exists from this user for the same reported user and reason to avoid duplicates
         $existingReport = $entityManager->getRepository(AccountsReports::class)->findOneBy([
-            'fk_reporter' => $currentUser, // Corrected: Use entity property name
-            'fk_reported' => $userToReport, // Corrected: Use entity property name
-            'content' => $reason,          // Corrected: Use entity property name
-            // 'status' => 'pending' // REMOVED: 'status' property does not exist on AccountsReports entity
+            'fk_reporter' => $currentUser,
+            'fk_reported' => $userToReport, 
+            'content' => $reason,
         ]);
 
         if ($existingReport) {
@@ -461,9 +460,9 @@ final class UsersController extends AbstractController
         }
         
         $report = new AccountsReports();
-        $report->setFkReporter($currentUser);    // Corrected: Matches entity setter
-        $report->setFkReported($userToReport);  // Corrected: Matches entity setter
-        $report->setContent($reason);           // Corrected: Matches entity setter
+        $report->setFkReporter($currentUser);
+        $report->setFkReported($userToReport);
+        $report->setContent($reason);
         $report->setCreatedAt(new \DateTimeImmutable());
 
         $entityManager->persist($report);

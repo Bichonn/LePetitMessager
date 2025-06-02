@@ -100,8 +100,11 @@ export default function CommentForm({ postId, onCommentAdded, className }) {
             rows={2}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            maxLength={500}
+            maxLength={180}
           />
+          <div className="text-start text-muted small ms-1">
+            {content.length}/180
+          </div>
         </div>
 
         {preview && (
@@ -150,7 +153,7 @@ export default function CommentForm({ postId, onCommentAdded, className }) {
         </div>
 
         {feedback.message && (
-          <div className={`alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-2`}>
+          <div className={`custom-alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-2`}>
             {feedback.message}
           </div>
         )}

@@ -60,8 +60,8 @@
 }
 
 .report-action-button {
-  top: 0px;
-  right: 30px; /* Vous devrez peut-être ajuster cette valeur */
+  bottom: 16px; /* Ajustez cette valeur si nécessaire. Elle suppose que le bouton 3-points fait ~24px de haut + 2px d'espacement. */
+  right: 20px; /* Vous devrez peut-être ajuster cette valeur pour l'alignement horizontal désiré */
   z-index: 10;
   white-space: nowrap;
 }

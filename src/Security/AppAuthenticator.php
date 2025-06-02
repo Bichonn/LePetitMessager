@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,12 +23,44 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator) {}
+    private UrlGeneratorInterface $urlGenerator;
+
+    public function __construct(UrlGeneratorInterface $urlGenerator)
+    {
+        $this->urlGenerator = $urlGenerator;
+    }
 
     public function authenticate(Request $request): Passport
     {
-        $email = $request->getPayload()->getString('email');
+        if ($request->attributes->get('_programmatic_login')) {
+            // Programmatic login after registration
+            // The user object is already validated and available to UserAuthenticatorInterface::authenticateUser
+            // We need to provide a UserBadge. The email can be taken from the request content.
+            $email = '';
+            $content = $request->getContent();
+            if (!empty($content)) {
+                $requestData = json_decode($content, true);
+                if (isset($requestData['email']) && is_string($requestData['email'])) {
+                    $email = $requestData['email'];
+                }
+            }
+            if (empty($email)) {
+                // This should ideally not happen if the registration request was valid.
+                // UserAuthenticatorInterface::authenticateUser will use the User object's identifier.
+            }
 
+            return new Passport(
+                new UserBadge($email), // User identifier for the Passport
+                // No PasswordCredentials needed for programmatic login via authenticateUser
+                new PasswordCredentials(''),
+                [
+                    new RememberMeBadge(),
+                ]
+            );
+        }
+
+        // Standard login form submission
+        $email = $request->getPayload()->getString('email');
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
 
         return new Passport(
@@ -42,13 +75,16 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        // If the request is an AJAX request (e.g., from your RegisterForm), return JSON
+        if ($request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json') {
+            return new JsonResponse(['success' => true, 'message' => 'Logged in successfully.']);
+        }
+
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
 
-        // For example:
-        // return new RedirectResponse($this->urlGenerator->generate('some_route'));
-        return new RedirectResponse('/'); // Redirige vers la page d'accueil après la connexion
+        return new RedirectResponse($this->urlGenerator->generate('app_test'));
     }
 
     protected function getLoginUrl(Request $request): string

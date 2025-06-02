@@ -162,7 +162,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
               </div>
 
               {feedback.message && (
-                <div className={`alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
+                <div className={`custom-alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
                   {feedback.message}
                 </div>
               )}

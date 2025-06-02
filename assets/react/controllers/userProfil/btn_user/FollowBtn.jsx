@@ -29,7 +29,7 @@ const FollowBtn = ({ userId, initialFollowed = false }) => {
     return (
         <div>
             <button
-                className={`btn btn-primary${followed ? 'active' : ''}`}
+                className={`btn btn-primary mt-2${followed ? 'active' : ''}`}
                 onClick={handleFollowClick}
                 title={followed ? "Se désabonner" : "Suivre"}
             >

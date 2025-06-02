@@ -50,10 +50,19 @@ class RegisterController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            return new JsonResponse(['status' => 'User created'], 201);
+            // Set a flag for programmatic login
+            $request->attributes->set('_programmatic_login', true);
+
+            // Authenticate the user programmatically after registration
+            return $userAuthenticator->authenticateUser(
+                $user,
+                $authenticator,
+                $request
+            ) ?? new JsonResponse(['status' => 'User created and logged in successfully'], 201); // Changed status message for clarity
         } catch (\Exception $e) {
-            // Capturer d'autres erreurs potentielles
-            return new JsonResponse(['error' => 'Une erreur est survenue lors de l\'inscription.'], 500);
+            // It's good practice to log the specific error, e.g., using Psr\Log\LoggerInterface
+            // $this->logger->error('Registration/Login Error: ' . $e->getMessage(), ['exception' => $e]);
+            return new JsonResponse(['error' => 'Une erreur est survenue lors de l\'inscription. ' . $e->getMessage()], 500); // Added $e->getMessage() for more details during development
         }
     }
 }

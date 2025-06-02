@@ -174,7 +174,7 @@ export default function LoginForm() {
                                     )}
 
                                     {tokenError && (
-                                        <div className="custom-alert custom-alert-danger mb-3">
+                                        <div className="custom-alert mb-3">
                                             Impossible de récupérer le token de sécurité. Veuillez rafraîchir la page.
                                         </div>
                                     )}

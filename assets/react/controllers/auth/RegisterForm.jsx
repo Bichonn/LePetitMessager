@@ -65,11 +65,15 @@ export default function RegisterForm() {
         try {
             const res = await fetch('/register', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json', // Add this line
+                    'X-Requested-With': 'XMLHttpRequest' // Add this for isXmlHttpRequest()
+                },
                 body: JSON.stringify(dataToSend)
             });
 
-            const data = await res.json();
+            const data = await res.json(); // This line expects a JSON response
 
             if (res.ok) {
                 setStatus('Compte créé avec succès !');
@@ -214,7 +218,7 @@ export default function RegisterForm() {
 
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>
                                     {status && (
-                                        <div className="alert alert-success mt-3">
+                                        <div className="custom-alert mt-3">
                                             {status}
                                         </div>
                                     )}

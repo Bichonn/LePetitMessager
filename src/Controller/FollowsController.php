@@ -79,4 +79,28 @@ final class FollowsController extends AbstractController
             ], Response::HTTP_CREATED);
         }
     }
+
+    #[Route('/following', name: 'app_following', methods: ['GET'])]
+    public function getFollowingList(EntityManagerInterface $entityManager): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $follows = $entityManager->getRepository(Follows::class)
+            ->findBy(['fk_follower' => $user]);
+
+        $data = [];
+        foreach ($follows as $follow) {
+            $followed = $follow->getFkFollowing();
+            $data[] = [
+                'id' => $followed->getId(),
+                'username' => $followed->getUsername(),
+                'avatar_url' => $followed->getProfilePicture(),
+            ];
+        }
+
+        return $this->json($data);
+    }
 }

@@ -58,7 +58,6 @@ export default function ListUsers() {
             <div
               key={user.id}
               className="user-bar d-flex align-items-center p-2"
-              style={{ cursor: 'pointer' }}
               onClick={() => handleUserClick(user)}
             >
               <img
@@ -79,7 +78,6 @@ export default function ListUsers() {
             <div
               key={user.id}
               className="user-bar d-flex align-items-center p-2"
-              style={{ cursor: 'pointer' }}
               onClick={() => handleUserClick(user)}
             >
               <img

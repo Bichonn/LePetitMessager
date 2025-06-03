@@ -84,9 +84,9 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
             <div className="post-item-container border border-dark bg-color-search p-1">
                 <div className="d-flex align-items-center ms-7">
                     <img
-                        src={author.avatar_url || '/default-avatar.png'}
+                        src={author.avatar_url || 'icons/default-avatar.png'}
                         alt={`${author.username}'s avatar`}
-                        className="rounded-circle me-2 post-author-avatar" // MODIFIED: Added post-author-avatar class
+                        className="rounded-circle me-2 post-author-avatar border border-dark"
                     />
                     <div>
                         <h5 className="mb-0">

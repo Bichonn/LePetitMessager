@@ -27,19 +27,12 @@ export default function MessagesList({ recipientId, currentUserId, refreshTrigge
           <div className={`d-inline-block p-2 rounded-0 mb-1 ${msg.from === currentUserId ? 'message-sent' : 'message-received'}`}>
             {msg.content}
             {msg.media && (
-              <div style={{ marginTop: '5px' }}>
+              <div className="message-media-container">
                 {isVideo(msg.media) ? (
                   <video
                     src={msg.media}
                     controls
-                    style={{
-                      maxWidth: '200px',
-                      maxHeight: '200px',
-                      display: 'block',
-                      borderRadius: '4px',
-                      marginBottom: '5px',
-                      cursor: 'pointer'
-                    }}
+                    className="message-media"
                     onClick={() => window.open(msg.media, '_blank')}
                   >
                     Votre navigateur ne supporte pas la balise vidéo.
@@ -48,14 +41,7 @@ export default function MessagesList({ recipientId, currentUserId, refreshTrigge
                   <img
                     src={msg.media}
                     alt="Média"
-                    style={{
-                      maxWidth: '200px',
-                      maxHeight: '200px',
-                      display: 'block',
-                      borderRadius: '4px',
-                      marginBottom: '5px',
-                      cursor: 'pointer'
-                    }}
+                    className="message-media"
                     onClick={() => window.open(msg.media, '_blank')}
                   />
                 )}

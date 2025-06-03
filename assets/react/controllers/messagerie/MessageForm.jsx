@@ -100,12 +100,11 @@ export default function MessageForm({ recipientId, onMessageSent }) {
         {preview && (
           <div className="text-center">
             {preview.type === 'image' ? (
-              <img src={preview.url} alt="Preview" className="img-fluid mb-1 mt-1" style={{ maxHeight: '200px' }} />
+              <img src={preview.url} alt="Preview" className="img-fluid mb-1 mt-1 message-form-preview-image" />
             ) : preview.type === 'video' ? (
               <video
                 src={preview.url}
-                className="img-fluid"
-                style={{ maxHeight: '200px' }}
+                className="img-fluid message-form-preview-video"
                 controls
               />
             ) : null}
@@ -129,7 +128,7 @@ export default function MessageForm({ recipientId, onMessageSent }) {
               onChange={handleFileChange}
             />
             <label htmlFor="media-upload-message" className="btn p-0 ml-5">
-              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '30px' }} />
+              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid message-form-media-icon" />
             </label>
           </div>
 

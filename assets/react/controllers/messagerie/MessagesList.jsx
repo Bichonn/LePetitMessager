@@ -9,22 +9,61 @@ export default function MessagesList({ recipientId, currentUserId, refreshTrigge
       .then(data => setMessages(data));
   }, [recipientId, refreshTrigger]);
 
+  const isVideo = (mediaUrl) => {
+    if (!mediaUrl) return false;
+    const videoExtensions = ['.mp4', '.webm', '.ogg'];
+    const lowercasedUrl = mediaUrl.toLowerCase();
+    return videoExtensions.some(ext => lowercasedUrl.endsWith(ext));
+  };
+
   return (
     <div className="messages-list p-2">
       {messages.length === 0 && <div className="text-muted">Aucun message</div>}
       {messages.map(msg => (
         <div
           key={msg.id}
-          className={`mb-2 ${msg.from === currentUserId ? 'text-end' : 'text-start'}`}
+          className={` ${msg.from === currentUserId ? 'text-end' : 'text-start'}`}
         >
-          <div className={`d-inline-block p-2 rounded ${msg.from === currentUserId ? 'bg-primary text-white' : 'bg-light'}`}>
+          <div className={`d-inline-block p-2 rounded-0 mb-1 ${msg.from === currentUserId ? 'message-sent' : 'message-received'}`}>
             {msg.content}
             {msg.media && (
-              <div>
-                <a href={`/uploads/${msg.media}`} target="_blank" rel="noopener noreferrer">Voir le média</a>
+              <div style={{ marginTop: '5px' }}>
+                {isVideo(msg.media) ? (
+                  <video
+                    src={msg.media}
+                    controls
+                    style={{
+                      maxWidth: '200px',
+                      maxHeight: '200px',
+                      display: 'block',
+                      borderRadius: '4px',
+                      marginBottom: '5px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => window.open(msg.media, '_blank')}
+                  >
+                    Votre navigateur ne supporte pas la balise vidéo.
+                  </video>
+                ) : (
+                  <img
+                    src={msg.media}
+                    alt="Média"
+                    style={{
+                      maxWidth: '200px',
+                      maxHeight: '200px',
+                      display: 'block',
+                      borderRadius: '4px',
+                      marginBottom: '5px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => window.open(msg.media, '_blank')}
+                  />
+                )}
               </div>
             )}
-            <div className="small text-muted">{msg.created_at}</div>
+            <div className="small text-muted">
+              {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+            </div>
           </div>
         </div>
       ))}

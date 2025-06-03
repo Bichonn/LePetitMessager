@@ -1,22 +1,54 @@
 .profil-container {
   background-color: #e5d7b7;
   color: #2e2b1b;
+  margin-top: 0; 
+  padding-left: 150px !important;
 }
 
 .profil-avatar {
+  object-fit: cover;
+  border: 1px solid #000; /* Bordure de l'avatar */
+  background-color: #fff; /* Fond de l'avatar, utile pour les images avec transparence */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); /* Ombre portée */
+  /* rounded-circle est appliqué via className dans UserProfileInfo.jsx */
+}
+
+/* Styles pour l'avatar QUAND UNE BANNIÈRE EST PRÉSENTE */
+.profil-avatar.avatar-with-banner {
   width: 110px;
   height: 110px;
-  object-fit: cover;
-  border: 4px solid #b2a17e;
+}
+
+/* Styles pour l'avatar QUAND AUCUNE BANNIÈRE N'EST PRÉSENTE */
+.profil-avatar.avatar-no-banner {
+  width: 70px;  /* Taille réduite */
+  height: 70px; /* Taille réduite */
 }
 
 .profile-header-container {
   position: relative;
+  /* Les bordures sont appliquées via des classes dans UserProfileInfo.jsx */
+}
+
+/* Styles pour le conteneur d'en-tête quand AUCUNE bannière n'est présente */
+.profile-header-container.no-banner-present {
+  min-height: 90px; /* Hauteur minimale pour accommoder le petit avatar + espacement. Ajustez si nécessaire. */
+  /* Vous pouvez ajouter un fond si vous le souhaitez, ex: background-color: #f8f9fa; */
+}
+
+/* Positionnement de l'avatar wrapper QUAND UNE BANNIÈRE EST PRÉSENTE */
+.profile-header-container:not(.no-banner-present) .profile-avatar-wrapper {
+  top: 65px; /* Positionnement vertical pour chevaucher la bannière */
+}
+
+/* Positionnement de l'avatar wrapper QUAND AUCUNE BANNIÈRE N'EST PRÉSENTE */
+.profile-header-container.no-banner-present .profile-avatar-wrapper {
+  top: 10px; /* Remonté pour être près du haut du conteneur d'en-tête */
 }
 
 .banner-container {
-  height: 100px;
-  background-color: #6c757d;
+  height: 100px; /* Hauteur de votre bannière */
+  background-color: #6c757d; /* Couleur de fond par défaut si l'image ne charge pas ou est transparente */
   overflow: hidden;
 }
 
@@ -28,23 +60,8 @@
 
 .profile-avatar-wrapper {
   position: absolute;
-  top: 65px;
-  left: 24px;
+  left: 24px; /* Positionnement horizontal constant */
   z-index: 2;
-}
-
-.profil-avatar {
-  width: 110px;
-  height: 110px;
-  object-fit: cover;
-  border: 1px solid #000;
-  background-color: #fff;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-}
-
-.profil-container {
-  margin-top: 0;
-  padding-left: 150px !important;
 }
 
 .lock-icon-img {

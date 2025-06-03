@@ -25,6 +25,14 @@ export default function ListUsers() {
     window.location.href = `/messages/${user.id}`;
   };
 
+  const toggleShowFollowing = () => {
+    if (!showFollowing) {
+      fetchFollowing(); // This already sets showFollowing to true
+    } else {
+      setShowFollowing(false);
+    }
+  };
+
   return (
     <div className="list-users">
       <div className="d-flex align-items-center p-3 border border-dark bg-color-search inner-shadow"> {/* Changed: removed justify-content-between */}
@@ -32,13 +40,16 @@ export default function ListUsers() {
           <h1 className='text-decoration-underline'>La Petite Messagerie</h1>
         </div>
       </div>
-      <button
-        className="btn btn-link p-0"
-        title="Voir les suivis"
-        onClick={fetchFollowing}
-      >
-        <img src="/icons/following.png" alt="Suivis" style={{ width: 24, height: 24 }} />
-      </button>
+
+      <div className="p-2 text-center border border-dark">
+        <button 
+          className="btn btn-primary" 
+          title={showFollowing ? "Retour à la messagerie" : "Voir les suivis"} 
+          onClick={toggleShowFollowing}
+        >
+          {showFollowing ? "Retour à la messagerie" : "Voir les suivis"}
+        </button>
+      </div>
       {showFollowing ? (
         <div>
           <div className="fw-bold mb-2">Vous suivez :</div>
@@ -60,9 +71,6 @@ export default function ListUsers() {
               <span className="fw-bold">{user.username}</span>
             </div>
           ))}
-          <button className="btn btn-sm btn-outline-secondary mt-2" onClick={() => setShowFollowing(false)}>
-            Retour à la messagerie
-          </button>
         </div>
       ) : (
         <>

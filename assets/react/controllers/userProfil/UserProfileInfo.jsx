@@ -6,11 +6,10 @@ import ReportBtn from './btn_user/ReportBtn.jsx';
 
 export default function UserProfileInfo({ user, onEditClick }) {
   const isOwnProfile = user && user.is_own_profile;
-  const [visitorIsAuthenticated, setVisitorIsAuthenticated] = useState(false); // Nouvel état
+  const [visitorIsAuthenticated, setVisitorIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    // Vérifier si le visiteur est authentifié
-    fetch('/user') // L'endpoint /user renvoie les données de l'utilisateur connecté ou 401
+    fetch('/user')
       .then(response => {
         if (response.ok) {
           setVisitorIsAuthenticated(true);
@@ -19,16 +18,18 @@ export default function UserProfileInfo({ user, onEditClick }) {
         }
       })
       .catch(() => {
-        setVisitorIsAuthenticated(false); // En cas d'erreur réseau, considérer comme non authentifié
+        setVisitorIsAuthenticated(false);
       });
-  }, []); // Exécuter une seule fois au montage du composant
+  }, []);
 
   if (!user) {
     return <div className="text-center p-3">Chargement des informations du profil...</div>;
   }
 
+  const hasBanner = !!user.banner;
+
   return (
-    <div className="profile-header-container border-start border-bottom border-end border-dark">
+    <div className={`profile-header-container border-start border-bottom border-end border-dark ${!hasBanner ? 'no-banner-present' : ''}`}>
       {user.banner && (
         <div className="banner-container border-bottom border-dark">
           <img
@@ -44,7 +45,7 @@ export default function UserProfileInfo({ user, onEditClick }) {
           <img
             src={user.avatar_url}
             alt="avatar"
-            className="rounded-circle profil-avatar"
+            className={`rounded-circle profil-avatar ${!hasBanner ? 'avatar-no-banner' : 'avatar-with-banner'}`}
           />
         </div>
       )}

@@ -32,3 +32,15 @@
   bottom: 0;
   z-index: 10;
 }
+
+.message-sent {
+  background-color: #d9b983; 
+  color: #000000; 
+  border: 1px solid #000000; 
+}
+
+.message-received {
+  background-color: #EBE0CC; /* Lighter shade in the same tone as sent messages */
+  color: #000000; 
+  border: 1px solid #000000;
+}

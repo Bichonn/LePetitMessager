@@ -332,4 +332,76 @@ class PostsController extends AbstractController
 
         return new JsonResponse($data);
     }
+
+    #[Route('/posts/top-data', name: 'app_posts_top_data', methods: ['GET'])]
+    public function topPostsData(
+        Request $request,
+        PostsRepository $postsRepository,
+        EntityManagerInterface $entityManager // Keep if needed for other logic, not directly used here for read
+    ): JsonResponse {
+        $page = $request->query->getInt('page', 1);
+        $limit = $request->query->getInt('limit', 20);
+
+        $paginator = $postsRepository->findTopPostsPaginated($page, $limit);
+        $posts = iterator_to_array($paginator);
+        $totalPosts = count($paginator);
+
+        if (empty($posts) && $page === 1) {
+            return $this->json(
+                [
+                    'posts' => [],
+                    'totalPosts' => 0,
+                    'currentPage' => 1,
+                    'limit' => $limit
+                ],
+                Response::HTTP_OK
+            );
+        }
+
+        $currentUser = $this->getUser();
+        $data = [];
+        foreach ($posts as $post) {
+            $likes = $post->getLikes();
+            $likesCount = count($likes);
+            $likedByUser = false;
+            if ($currentUser instanceof Users) {
+                foreach ($likes as $like) {
+                    $likeUser = $like->getFkUser();
+                    if ($likeUser instanceof Users && $likeUser->getId() === $currentUser->getId()) {
+                        $likedByUser = true;
+                        break;
+                    }
+                }
+            }
+
+            $postData = [
+                'id' => $post->getId(),
+                'content_text' => $post->getContentText(),
+                'content_multimedia' => $post->getContentMultimedia() ? $this->getParameter('uploads_posts_directory_url') . '/' . $post->getContentMultimedia() : null,
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => [
+                    'id' => $post->getFkUser()->getId(),
+                    'username' => $post->getFkUser()->getUsername(),
+                    'avatar_url' => $post->getFkUser()->getAvatarUrl() ? $this->getParameter('avatars_directory_url') . '/' . $post->getFkUser()->getAvatarUrl() : '/default-avatar.png',
+                ],
+                'likes_count' => $likesCount,
+                'liked_by_user' => $likedByUser,
+                // Add other fields like 'comments_count' if your PostItem component expects them
+            ];
+            $data[] = $postData;
+        }
+
+        return $this->json([
+            'posts' => $data,
+            'totalPosts' => $totalPosts,
+            'currentPage' => $page,
+            'limit' => $limit,
+        ]);
+    }
+
+    #[Route('/posts/top', name: 'app_posts_top_page', methods: ['GET'])]
+    public function topPostsPage(): Response
+    {
+        return $this->render('posts/top_posts.html.twig');
+    }
 }

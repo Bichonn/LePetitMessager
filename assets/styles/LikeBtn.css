@@ -34,3 +34,7 @@
     transform: scale(1);
   }
 }
+
+.like-count-closer {
+  margin-left: -0.5rem;
+}

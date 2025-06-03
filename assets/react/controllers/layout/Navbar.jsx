@@ -21,7 +21,9 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
         <div onClick={handleWriteClick} style={{ cursor: 'pointer' }} role="button" tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && handleWriteClick()}>
           <NavIcons iconPath={"/icons/write.png"} iconName={"Ecrire"} />
         </div>
-        <NavIcons iconPath={"/icons/top.png"} iconName={"Gros titre"} />
+        <a href="/posts/top" className="nav-link">
+          <NavIcons iconPath={"/icons/top.png"} iconName={"Gros titre"} />
+        </a>
       </div>
 
       {isAuthenticated && isAdmin && (

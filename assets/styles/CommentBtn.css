@@ -1,3 +1,7 @@
+.comment-btn-wrapper {
+  margin-left: 0.5rem; /* Ajustez cette valeur selon l'espacement désiré */
+}
+
 .comment-btn-wrapper .btn {
   display: flex;
   align-items: center;

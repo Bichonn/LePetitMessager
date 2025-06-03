@@ -72,10 +72,6 @@ export default function UserPostsList({ user }) { // Attend l'objet 'user' du pr
 
   return (
     <>
-      <div className="container p-2 shadow border border-dark">
-        <h3 className="fw-bold">Message(s) Récent :</h3>
-      </div>
-
       {user && userPosts.length === 0 && !postsLoading && !postsError && (
         <p className="text-muted my-3 ms-2">Cet utilisateur n'a pas encore posté de message.</p>
 

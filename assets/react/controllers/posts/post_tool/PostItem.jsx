@@ -6,7 +6,6 @@ import CommentBtn from '../btn_post/CommentBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
-import ShareBtn from '../btn_post/ShareBtn';
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -100,18 +99,18 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     </div>
                 </div>
                 <div className="ms-6">
-                    <div> {/* Removed d-flex to stack children */}
-                        <div className="flex-grow-1 text-content-area"> {/* Text content container */}
+                    <div>
+                        <div className="flex-grow-1 text-content-area">
                             <p>{post.content_text}</p>
                         </div>
                         {post.content_multimedia && (
-                            <div className="media-preview mt-2"> {/* Multimedia content container, removed ms-auto, added margin-top */}
+                            <div className="media-preview mt-2">
                                 <IsImageFile filename={post.content_multimedia} />
                                 <IsVideoFile filename={post.content_multimedia} />
                             </div>
                         )}
                     </div>
-                    <div className="d-flex justify-content-between mt-2"> {/* Added margin top for spacing */}
+                    <div className="d-flex justify-content-between mt-2">
                         <div className="d-flex justify-content-start">
                             <LikeBtn
                                 postId={post.id}
@@ -124,9 +123,6 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             {canDelete && (
                                 <DeleteBtn onClick={handleDeleteClick} />
                             )}
-                        </div>
-                        <div className="d-flex justify-content-end">
-                            <ShareBtn />
                         </div>
                     </div>
                 </div>

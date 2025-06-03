@@ -7,6 +7,20 @@ const LikeBtn = ({ postId, initialLiked = false, likesCount = 0 }) => {
     const [feedback, setFeedback] = useState('');
 
     const handleLikeClick = async () => {
+        // Garder une copie de l'état précédent pour pouvoir annuler en cas d'erreur
+        const previousLiked = liked;
+        const previousCount = count;
+
+        // Mise à jour optimiste de l'UI
+        if (liked) {
+            setLiked(false);
+            setCount(count - 1);
+        } else {
+            setLiked(true);
+            setCount(count + 1);
+        }
+        setFeedback(''); // Réinitialiser le feedback
+
         try {
             const formData = new FormData();
             formData.append('post_id', postId);
@@ -17,19 +31,19 @@ const LikeBtn = ({ postId, initialLiked = false, likesCount = 0 }) => {
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
 
-            const data = await response.json();
-            if (response.ok) {
-                if (liked) {
-                    setLiked(false);
-                    setCount(count - 1);
-                } else {
-                    setLiked(true);
-                    setCount(count + 1);
-                }
-            } else {
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({})); // Gérer le cas où la réponse d'erreur n'est pas JSON
+                // Annuler la mise à jour optimiste en cas d'erreur
+                setLiked(previousLiked);
+                setCount(previousCount);
                 setFeedback(data.message || 'Erreur lors du like');
             }
+            // Si la réponse est ok, la mise à jour optimiste était correcte, rien de plus à faire.
+            // La réponse du serveur confirme l'action, mais l'UI est déjà à jour.
         } catch (err) {
+            // Annuler la mise à jour optimiste en cas d'erreur de connexion
+            setLiked(previousLiked);
+            setCount(previousCount);
             setFeedback('Erreur de connexion');
         }
     };

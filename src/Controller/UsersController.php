@@ -18,7 +18,9 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use App\Service\CloudinaryService; // Add this line
 use App\Repository\UsersRepository;
+use App\Repository\PostsRepository; // Add this if not already present
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use App\Entity\Posts;
 
 final class UsersController extends AbstractController
 {
@@ -466,5 +468,77 @@ final class UsersController extends AbstractController
         $entityManager->flush();
 
         return new JsonResponse(['message' => 'Utilisateur signalé avec succès.'], Response::HTTP_OK);
+    }
+
+    #[Route('/users/{userId}/liked-posts', name: 'app_user_liked_posts_list', methods: ['GET'], requirements: ['userId' => '\d+'])]
+    public function listUserLikedPosts(
+        int $userId,
+        EntityManagerInterface $entityManager,
+        PostsRepository $postsRepository // Utilisé pour la cohérence des comptes de likes et du statut liked_by_user
+    ): JsonResponse {
+        $userRepository = $entityManager->getRepository(Users::class);
+        $profileUser = $userRepository->find($userId); // L'utilisateur dont on consulte le profil
+
+        if (!$profileUser) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Logique de confidentialité : si on peut voir le profil, on peut voir ses likes publics.
+        // Des règles plus complexes pourraient être ajoutées ici si les posts aimés des profils privés ont une visibilité différente.
+        // Par exemple, vérifier si l'utilisateur actuel suit le profil privé.
+
+        $likedPostsEntities = [];
+        foreach ($profileUser->getLikes() as $like) { // $profileUser->getLikes() retourne Collection<Likes>
+            $post = $like->getFkPost();
+            if ($post) {
+                // Utiliser l'ID du post comme clé pour éviter les doublons, puis réindexer.
+                $likedPostsEntities[$post->getId()] = $post;
+            }
+        }
+        $likedPostsEntities = array_values($likedPostsEntities); // Réindexer le tableau
+        
+        // Trier les posts aimés par date de création du post, décroissant.
+        // Alternativement, trier par date du like si $like->getCreatedAt() est disponible et préféré.
+        usort($likedPostsEntities, function (Posts $a, Posts $b) {
+            return $b->getCreatedAt() <=> $a->getCreatedAt();
+        });
+
+        $data = [];
+        $currentUser = $this->getUser(); // Pour le statut 'liked_by_user' sur les posts affichés
+
+        foreach ($likedPostsEntities as $post) {
+            $likesCollection = $post->getLikes();
+            $likesCount = count($likesCollection);
+            $likedByCurrentUser = false; // Si l'utilisateur *actuel* (celui qui navigue) a aimé ce post
+            if ($currentUser instanceof Users) {
+                foreach ($likesCollection as $likeRelation) {
+                    if ($likeRelation->getFkUser() instanceof Users && $likeRelation->getFkUser()->getId() === $currentUser->getId()) {
+                        $likedByCurrentUser = true;
+                        break;
+                    }
+                }
+            }
+
+            $postData = [
+                'id' => $post->getId(),
+                'content_text' => $post->getContentText(),
+                'content_multimedia' => $post->getContentMultimedia(),
+                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'user' => null, // Auteur du post
+                'likes_count' => $likesCount,
+                'liked_by_user' => $likedByCurrentUser 
+            ];
+
+            if ($post->getFkUser()) { // Auteur du post (et non celui qui a liké)
+                $postData['user'] = [
+                    'id' => $post->getFkUser()->getId(),
+                    'username' => $post->getFkUser()->getUsername(),
+                    'avatar_url' => $post->getFkUser()->getProfilePicture()
+                ];
+            }
+            $data[] = $postData;
+        }
+
+        return $this->json($data, Response::HTTP_OK);
     }
 }

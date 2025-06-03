@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import '../../../styles/Message.css';
 
 export default function ListUsers() {
   const [users, setUsers] = useState([]);
@@ -26,16 +27,18 @@ export default function ListUsers() {
 
   return (
     <div className="list-users">
-      <div className="d-flex justify-content-between align-items-center p-2">
-        <h5>Messagerie</h5>
-        <button
-          className="btn btn-link p-0"
-          title="Voir les suivis"
-          onClick={fetchFollowing}
-        >
-          <img src="/icons/following.png" alt="Suivis" style={{ width: 24, height: 24 }} />
-        </button>
+      <div className="d-flex align-items-center p-3 border border-dark bg-color-search inner-shadow"> {/* Changed: removed justify-content-between */}
+        <div className="flex-grow-1 text-center">
+          <h1 className='text-decoration-underline'>La Petite Messagerie</h1>
+        </div>
       </div>
+      <button
+        className="btn btn-link p-0"
+        title="Voir les suivis"
+        onClick={fetchFollowing}
+      >
+        <img src="/icons/following.png" alt="Suivis" style={{ width: 24, height: 24 }} />
+      </button>
       {showFollowing ? (
         <div>
           <div className="fw-bold mb-2">Vous suivez :</div>

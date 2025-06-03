@@ -203,7 +203,7 @@ final class UsersController extends AbstractController
         }
 
         // Initialize Cloudinary if needed for other operations, or remove if not used in this specific method block
-        // $cloudinary = $cloudinaryService->getCloudinary(); 
+        $cloudinary = $cloudinaryService->getCloudinary(); // Ensure this line is uncommented
 
         $formErrors = [];
 
@@ -239,8 +239,6 @@ final class UsersController extends AbstractController
         $profilePictureFile = $request->files->get('profilePicture');
         if ($profilePictureFile) {
             try {
-                $cloudinary = $cloudinaryService->getCloudinary(); // Initialize Cloudinary client
-                // TODO: Delete old profile picture from Cloudinary if it exists and you want to replace it
                 $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [
                     'folder' => 'user_avatars',
                     'public_id' => 'avatar_' . $user->getId() . '_' . uniqid(),
@@ -259,7 +257,6 @@ final class UsersController extends AbstractController
         $bannerFile = $request->files->get('banner');
         if ($bannerFile) {
             try {
-                // TODO: Delete old banner from Cloudinary if it exists
                 $uploadResult = $cloudinary->uploadApi()->upload($bannerFile->getRealPath(), [
                     'folder' => 'user_banners',
                     'public_id' => 'banner_' . $user->getId() . '_' . uniqid(),

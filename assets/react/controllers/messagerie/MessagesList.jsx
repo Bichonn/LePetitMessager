@@ -7,10 +7,10 @@ export default function MessagesList({ recipientId, currentUserId, refreshTrigge
     fetch(`/messages/thread/${recipientId}`)
       .then(res => res.json())
       .then(data => setMessages(data));
-  }, [recipientId, refreshTrigger]); // Ajoute refreshTrigger ici
+  }, [recipientId, refreshTrigger]);
 
   return (
-    <div className="messages-list p-2" style={{ maxHeight: 400, overflowY: 'auto' }}>
+    <div className="messages-list p-2">
       {messages.length === 0 && <div className="text-muted">Aucun message</div>}
       {messages.map(msg => (
         <div

@@ -84,9 +84,9 @@ export default function MessageForm({ recipientId, onMessageSent }) {
   };
 
   return (
-    <div className="message-form border border-dark p-2">
+    <div className="message-form border border-dark">
       <form onSubmit={handleSubmit}>
-        <div className="mb-2">
+        <div>
           <textarea
             className="form-control border-0 border-bottom border-dark bg-color-search"
             placeholder="Votre message..."
@@ -119,7 +119,7 @@ export default function MessageForm({ recipientId, onMessageSent }) {
           </div>
         )}
 
-        <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex justify-content-between align-items-center mt-0">
           <div>
             <input
               type="file"
@@ -135,18 +135,12 @@ export default function MessageForm({ recipientId, onMessageSent }) {
 
           <button
             type="submit"
-            className="btn btn-primary"
+            className="custom-publish-button"
             disabled={isSubmitting || (!content && !file)}
           >
             {isSubmitting ? 'Envoi...' : 'Envoyer'}
           </button>
         </div>
-
-        {feedback.message && (
-          <div className={`alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
-            {feedback.message}
-          </div>
-        )}
       </form>
     </div>
   );

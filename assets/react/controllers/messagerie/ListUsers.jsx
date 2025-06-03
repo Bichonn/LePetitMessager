@@ -25,7 +25,7 @@ export default function ListUsers() {
   };
 
   return (
-    <div className="list-users border-end">
+    <div className="list-users">
       <div className="d-flex justify-content-between align-items-center p-2">
         <h5>Messagerie</h5>
         <button

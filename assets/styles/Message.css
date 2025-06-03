@@ -1,0 +1,34 @@
+/* Styles pour le conteneur de discussion */
+.discussion-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh; /* ou la hauteur souhaitée */
+  /* max-height: 600px; */ /* ajustez selon vos besoins */
+}
+
+/* Zone des messages qui prend l'espace restant */
+.messages-list-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+/* Formulaire fixé en bas */
+.message-form-container {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Mise à jour du style existant des messages */
+.messages-list {
+  height: 100%;
+  padding: 0.5rem;
+}
+
+/* Styles pour MessageForm pour rester en bas */
+.message-form {
+  position: -webkit-sticky; 
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}

@@ -4,7 +4,7 @@ namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Users;
 use App\Entity\Messages;
 use Doctrine\ORM\EntityManagerInterface;
@@ -15,13 +15,16 @@ use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Filesystem\Filesystem;
 
-final class MessagesController extends AbstractController
+class MessagesController extends AbstractController
 {
-    #[Route('/messages', name: 'app_messages')]
+    #[Route('/messages', name: 'app_messages_index', methods: ['GET'])]
     public function index(): Response
     {
+        // Si l'utilisateur n'est pas connecté, show_login_message sera true
+        $showLoginMessage = !$this->getUser(); 
+
         return $this->render('messages/index.html.twig', [
-            'controller_name' => 'MessagesController',
+            'show_login_message' => $showLoginMessage,
         ]);
     }
 

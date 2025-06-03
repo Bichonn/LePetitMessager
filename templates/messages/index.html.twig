@@ -3,5 +3,11 @@
 {% block title %}La petite messagerie{% endblock %}
 
 {% block main_content %}
-<div {{ react_component('messagerie/ListUsers') }}></div>
+  {% if show_login_message is defined and show_login_message %}
+    <div class="custom-alert text-center">
+      Vous devez être connecté pour accéder à la messagerie.
+    </div>
+  {% else %}
+    <div {{ react_component('messagerie/ListUsers') }}></div>
+  {% endif %}
 {% endblock %}

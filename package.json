@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.0.0",
+    "@paypal/paypal-js": "^8.2.0",
+    "@paypal/react-paypal-js": "^8.8.3",
     "@symfony/stimulus-bridge": "^3.2.0",
     "@symfony/ux-react": "file:vendor/symfony/ux-react/assets",
     "@symfony/ux-turbo": "^2.25.2",

@@ -5,6 +5,8 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     uploads_directory: '%kernel.project_dir%/public/uploads/media'
+    paypal_client_id: '%env(PAYPAL_CLIENT_ID)%'
+    paypal_secret: '%env(PAYPAL_SECRET)%'
 
 services:
     # default configuration for services in *this* file

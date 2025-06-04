@@ -541,4 +541,92 @@ final class UsersController extends AbstractController
 
         return $this->json($data, Response::HTTP_OK);
     }
+
+   #[Route('/user/premium', name: 'user_premium', methods: ['POST'])]
+public function activatePremium(Request $request, EntityManagerInterface $entityManager): JsonResponse
+{
+    $user = $this->getUser();
+    if (!$user) {
+        return $this->json(['message' => 'Non authentifié'], 401);
+    }
+
+    $content = $request->getContent();
+    if (empty($content)) {
+        return $this->json(['message' => 'Contenu de la requête vide'], 400);
+    }
+
+    $data = json_decode($content, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return $this->json(['message' => 'JSON invalide'], 400);
+    }
+
+    $paypalOrderId = $data['paypalOrderId'] ?? null;
+    if (!$paypalOrderId) {
+        return $this->json(['message' => 'Identifiant de commande PayPal manquant'], 400);
+    }
+
+    if (!$this->verifyPaypalPayment($paypalOrderId)) {
+        return $this->json(['message' => 'Paiement non vérifié'], 403);
+    }
+
+    try {
+        $user->setUserPremium(true);
+        $entityManager->flush();
+    } catch (\Exception $e) {
+        return $this->json(['message' => 'Erreur lors de la mise à jour du statut premium'], 500);
+    }
+
+    return $this->json(['success' => true]);
+}
+
+    private function verifyPaypalPayment(string $paypalOrderId): bool
+{
+    $clientId = getenv('AZCrzgiABqGSt1faUjds74y9qOOJs3ACp_Sy6-ZyEAsDJmFj5iLg5AK9xFYNRnaNJaUgvJ-6KPNoEeD6');
+    $secret = getenv('EGqQ_OwRWjYsH8fz1YS2g_o2CLdyBmZng2qHP4bFW6gFBEVOidTvqVvyKRRgzc_v5hoBGQQNd9b8z7lk');
+
+    // Obtenir un jeton d'accès OAuth2
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "https://api-m.paypal.com/v1/oauth2/token");
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Accept: application/json", "Accept-Language: en_US"]);
+    curl_setopt($ch, CURLOPT_USERPWD, "$clientId:$secret");
+    curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        // Gérer l'erreur cURL
+        curl_close($ch);
+        return false;
+    }
+    curl_close($ch);
+
+    $data = json_decode($result, true);
+    if (!isset($data['access_token'])) {
+        // Gérer l'absence de jeton d'accès
+        return false;
+    }
+    $accessToken = $data['access_token'];
+
+    // Vérifier la commande PayPal
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "https://api-m.paypal.com/v2/checkout/orders/$paypalOrderId");
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Content-Type: application/json",
+        "Authorization: Bearer $accessToken"
+    ]);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    $result = curl_exec($ch);
+    if (curl_errno($ch)) {
+        // Gérer l'erreur cURL
+        curl_close($ch);
+        return false;
+    }
+    curl_close($ch);
+
+    $order = json_decode($result, true);
+
+    // Vérifier que la commande est bien complétée
+    return isset($order['status']) && $order['status'] === 'COMPLETED';
+}
+
 }

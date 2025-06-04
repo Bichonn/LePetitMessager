@@ -3,7 +3,8 @@
 	<head>
 		<meta charset="UTF-8">
 		<title>
-			{% block title %}Le Petit Messager{% endblock %}
+			{% block title %}Le Petit Messager
+			{% endblock %}
 		</title>
 		<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
 		{% block stylesheets %}
@@ -23,28 +24,21 @@
 
 				<!-- Barre de navigation (Gauche) -->
 				<div class="col-md-1">
-                    <div {{ react_component('layout/Navbar', {
-                        'isAuthenticated': app.user is not null,
-                        'isAdmin': app.user is not null and is_granted('ROLE_ADMIN')
-                    }) }}></div>
-                </div>
+					<div {{ react_component('layout/Navbar', { 'isAuthenticated': app.user is not null, 'isAdmin': app.user is not null and is_granted('ROLE_ADMIN') } ) }}></div>
+				</div>
 
 				<!-- Contenu principal (Centre) -->
 				<div class="col-md-7"> {% block main_content %}{% endblock %}
+					</div>
+
+					<!-- Wigets (Droite) -->
+					<div class="widget-side-container col-md-4 d-flex flex-column">
+
+						<div {{ react_component('layout/RightSidebarArea', { 'isAuthenticated': app.user is not null, 'username': app.user ? app.user.username : null, 'logoutPath': app.user ? path('app_logout') : null } ) }} class="react-component-wrapper"></div>
+
+					</div>
+
 				</div>
-
-                <!-- Wigets (Droite) -->
-                <div class="widget-side-container col-md-4 d-flex flex-column">
-				
-                    <div {{ react_component('layout/RightSidebarArea', {
-                        'isAuthenticated': app.user is not null,
-                        'username': app.user ? app.user.username : null,
-                        'logoutPath': app.user ? path('app_logout') : null
-                    }) }} class="react-component-wrapper"></div>
-
-                </div>
-                
-            </div>
-		</div>	
-	</body>
-</html>
+			</div>
+		</body>
+	</html>

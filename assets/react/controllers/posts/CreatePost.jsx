@@ -1,38 +1,13 @@
 import React, { useState, useEffect } from 'react';
 
 export default function CreatePost() {
-  const [isVisible, setIsVisible] = useState(false);
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
 
-  // Listen for the custom event to toggle visibility
-  // and reset the form
-  useEffect(() => {
-    const handleOpenEvent = () => {
-      setIsVisible(prevIsVisible => {
-        const newVisibility = !prevIsVisible;
-        if (newVisibility) {
-          // Reset form only when opening
-          setContent('');
-          setFile(null);
-          setPreview(null);
-          setFeedback({ type: '', message: '' });
-          setIsSubmitting(false);
-        }
-        return newVisibility;
-      });
-    };
-    document.addEventListener('openCreatePostSection', handleOpenEvent);
-    return () => {
-      document.removeEventListener('openCreatePostSection', handleOpenEvent);
-    };
-  }, []);
-
   // Handle file selection and preview
-  // This function is called when the user selects a file
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -66,8 +41,7 @@ export default function CreatePost() {
     }
   };
 
-  // Clean up the object URL when the component unmounts
-  // or when the preview changes
+  // Clean up effect for preview URLs
   useEffect(() => {
     return () => {
       if (preview && preview.url && preview.url.startsWith('blob:')) {
@@ -77,7 +51,6 @@ export default function CreatePost() {
   }, [preview]);
 
   // Handle form submission
-  // This function is called when the user submits the form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -113,7 +86,6 @@ export default function CreatePost() {
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
 
         document.dispatchEvent(new CustomEvent('postCreated'));
-        setTimeout(() => setIsVisible(false), 1000);
       } else {
         const error = await response.json();
         setFeedback({ type: 'error', message: error.message || 'Erreur lors de la publication' });
@@ -124,11 +96,6 @@ export default function CreatePost() {
       setIsSubmitting(false);
     }
   };
-
-  // Close the post creation card when the user clicks outside of it
-  if (!isVisible) {
-    return null;
-  }
 
   return (
     <div className="post-creation-card border border-dark">

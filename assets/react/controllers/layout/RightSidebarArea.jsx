@@ -66,14 +66,14 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
         }}
         className="flex-shrink-0" // Prevent CommentForm from shrinking/growing
       />
-      <div className="comments-list-scrollable-container"> {/* Use CSS class */}
+      <div className="comments-list-scrollable-container">
         <CommentsList postId={postIdForComments} />
       </div>
     </div>
   );
 
   return (
-    <div className="sidebar-area-container"> {/* Use CSS class */}
+    <div className="sidebar-area-container">
       {currentView === 'comments' && postIdForComments ? renderCommentsView() : renderDefaultSidebar()}
       {currentView !== 'comments' && <Footer />}
     </div>

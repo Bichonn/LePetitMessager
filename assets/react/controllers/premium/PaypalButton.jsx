@@ -6,9 +6,21 @@ export default function PaypalButton({ onPaymentSuccess }) {
 
   return (
     <>
-      <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-        Devenez un grand messager
-      </button>
+      <div className="paypal-button-container text-center border-top border-bottom border-dark p-3">
+        <div className="mb-3">
+          <h3 className="text-decoration-underline">Devenez un grand messager !</h3>
+          <p className="fw-bold">En devenant Premium, vous bénéficiez de :</p>
+          <ul className="list-unstyled">
+            <li>• <span className="premium-benefit-text">Un badge spécial sur votre profil</span></li>
+            <li>• <span className="premium-benefit-text">Plus de caractères pour vos posts</span></li>
+            <li>• <span className="premium-benefit-text">La possibilité d'uploader plusieurs médias par post</span></li>
+          </ul>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+          Passer Premium
+        </button>
+      </div>
+
       {showModal && (
         <div className="modal fade show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog modal-dialog-centered">

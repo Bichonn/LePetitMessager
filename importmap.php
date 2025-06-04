@@ -37,4 +37,7 @@ return [
     '@symfony/ux-react' => [
         'path' => './vendor/symfony/ux-react/assets/dist/loader.js',
     ],
+    '@paypal/react-paypal-js' => [
+        'version' => '8.3.0',
+    ],
 ];

@@ -9,6 +9,7 @@ use App\Entity\Likes;
 use App\Entity\Posts;
 use App\Entity\Users;
 use App\Entity\Comments;
+use App\Entity\Notifications;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -53,20 +54,29 @@ final class LikesController extends AbstractController
         ]);
 
         if ($existingLike) {
-            // Si déjà liké, on unlike (supprime le like)
             $entityManager->remove($existingLike);
             $entityManager->flush();
-            return $this->json( Response::HTTP_OK);
+            return $this->json(Response::HTTP_OK);
         } else {
-            // Sinon, on ajoute le like
             $like = new Likes();
             $like->setFkUser($user);
             $like->setFkPost($post);
 
             $entityManager->persist($like);
+
+            if ($post->getFkUser() && $post->getFkUser() !== $user) { 
+                $notif = new Notifications();
+                $notif->setFkUser($post->getFkUser());
+                $notif->setFkPost($post);
+                $notif->setContent($user->getUsername() . " a aimé votre post.");
+                $notif->setIsRead(false);
+                $notif->setCreatedAt(new \DateTimeImmutable());
+                $entityManager->persist($notif);
+            }
+
             $entityManager->flush();
 
-            return $this->json( Response::HTTP_CREATED);
+            return $this->json(Response::HTTP_CREATED);
         }
     }
 }

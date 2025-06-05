@@ -24,7 +24,7 @@
 .icon-name-appear {
     white-space: nowrap;
     position: absolute;
-    top: 45px; 
+    top: 35px; 
     left: 50%;
     transform: translateX(-50%);
 }

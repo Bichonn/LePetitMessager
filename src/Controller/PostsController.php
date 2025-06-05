@@ -336,66 +336,71 @@ class PostsController extends AbstractController
     #[Route('/posts/top-data', name: 'app_posts_top_data', methods: ['GET'])]
     public function topPostsData(
         Request $request,
-        PostsRepository $postsRepository,
-        EntityManagerInterface $entityManager // Keep if needed for other logic, not directly used here for read
+        EntityManagerInterface $entityManager
     ): JsonResponse {
         $page = $request->query->getInt('page', 1);
         $limit = $request->query->getInt('limit', 20);
 
-        $paginator = $postsRepository->findTopPostsPaginated($page, $limit);
-        $posts = iterator_to_array($paginator);
-        $totalPosts = count($paginator);
+        // Get most liked posts
+        $qb = $entityManager->createQueryBuilder();
+        $qb->select('p', 'COUNT(l) as likesCount')
+           ->from('App\Entity\Posts', 'p')
+           ->leftJoin('p.likes', 'l')
+           ->groupBy('p.id')
+           ->having('COUNT(l) > 0')
+           ->orderBy('likesCount', 'DESC')
+           ->setFirstResult(($page - 1) * $limit)
+           ->setMaxResults($limit);
 
-        if (empty($posts) && $page === 1) {
-            return $this->json(
-                [
-                    'posts' => [],
-                    'totalPosts' => 0,
-                    'currentPage' => 1,
-                    'limit' => $limit
-                ],
-                Response::HTTP_OK
-            );
-        }
+        // Count total posts with at least one like
+        $qbCount = $entityManager->createQueryBuilder();
+        $qbCount->select('COUNT(DISTINCT p.id)')
+                ->from('App\Entity\Posts', 'p')
+                ->leftJoin('p.likes', 'l')
+                ->groupBy('p.id')
+                ->having('COUNT(l) > 0');  // Même filtre ici
+        
+        $totalPosts = count($qbCount->getQuery()->getResult());
 
+        $results = $qb->getQuery()->getResult();
+
+        // Format posts data
+        $postsData = [];
         $currentUser = $this->getUser();
-        $data = [];
-        foreach ($posts as $post) {
-            $likes = $post->getLikes();
-            $likesCount = count($likes);
+
+        foreach ($results as $result) {
+            $post = $result[0];
+            $likesCount = $result['likesCount'];
+            
             $likedByUser = false;
-            if ($currentUser instanceof Users) {
-                foreach ($likes as $like) {
-                    $likeUser = $like->getFkUser();
-                    if ($likeUser instanceof Users && $likeUser->getId() === $currentUser->getId()) {
-                        $likedByUser = true;
-                        break;
-                    }
-                }
+            if ($currentUser) {
+                $likedByUser = $post->getLikes()->exists(function($key, $like) use ($currentUser) {
+                    return $like->getFkUser() === $currentUser;
+                });
             }
 
             $postData = [
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
-                'content_multimedia' => $post->getContentMultimedia() ? $this->getParameter('uploads_posts_directory_url') . '/' . $post->getContentMultimedia() : null,
+                'content_multimedia' => $post->getContentMultimedia(),
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'likes_count' => $likesCount,
+                'liked_by_user' => $likedByUser,
                 'user' => [
                     'id' => $post->getFkUser()->getId(),
                     'username' => $post->getFkUser()->getUsername(),
-                    'avatar_url' => $post->getFkUser()->getAvatarUrl() ? $this->getParameter('avatars_directory_url') . '/' . $post->getFkUser()->getAvatarUrl() : '/default-avatar.png',
-                ],
-                'likes_count' => $likesCount,
-                'liked_by_user' => $likedByUser,
-                // Add other fields like 'comments_count' if your PostItem component expects them
+                    'avatar_url' => $post->getFkUser()->getProfilePicture()
+                ]
             ];
-            $data[] = $postData;
+
+            $postsData[] = $postData;
         }
 
         return $this->json([
-            'posts' => $data,
+            'posts' => $postsData,
             'totalPosts' => $totalPosts,
             'currentPage' => $page,
-            'limit' => $limit,
+            'limit' => $limit
         ]);
     }
 

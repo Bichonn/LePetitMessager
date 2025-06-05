@@ -73,7 +73,7 @@ export default function TopPostsList() {
 
     return (
         <div>
-            <h2 className="text-center p-3 text-decoration-underline">Gros Titres</h2>
+            <h2 className="text-center p-3 text-decoration-underline border border-dark mb-0 inner-shadow"> Les Gros Titres</h2>
             {posts.map((post, index) => {
                 const key = `${post.id}-${index}`; // Ensure unique key if post.id might not be unique during updates
                 if (posts.length === index + 1) {

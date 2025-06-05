@@ -5,7 +5,7 @@ export default function NotifsList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/notifications", {
+    fetch("/notifications/list", {
       headers: {
         "Accept": "application/json"
       }

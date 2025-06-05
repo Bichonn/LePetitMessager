@@ -24,7 +24,7 @@ final class NotificationsController extends AbstractController
         ]);
     }
 
-    #[Route('/notifications', name: 'notifications_list', methods: ['GET'])]
+    #[Route('/notifications/list', name: 'notifications_list', methods: ['GET'])]
     public function list(NotificationsRepository $repo): JsonResponse
     {
         $user = $this->getUser();

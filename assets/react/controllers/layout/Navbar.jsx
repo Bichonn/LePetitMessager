@@ -29,7 +29,9 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
         </a>
       )}
       <div className="navbar-bottom">
-        <NavIcons iconPath={"/icons/notif.png"} iconName={"Courier"} />
+        <a href="/notifications" className="nav-link">
+          <NavIcons iconPath={"/icons/notif.png"} iconName={"Courrier"} />
+        </a>
         {isAuthenticated && (
           <a href="/profil" className="nav-link">
             <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />

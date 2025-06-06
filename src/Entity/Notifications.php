@@ -18,7 +18,7 @@ class Notifications
     private ?Users $fk_user = null;
 
     #[ORM\ManyToOne(inversedBy: 'notifications')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Posts $fk_post = null;
 
     #[ORM\Column(length: 255)]

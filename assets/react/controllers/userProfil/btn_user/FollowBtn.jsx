@@ -18,8 +18,12 @@ const FollowBtn = ({ userId, initialFollowed = false }) => {
 
             const data = await response.json();
             if (response.ok) {
-                setFollowed(!followed);
+                if (typeof data.followed !== "undefined") {
+                    setFollowed(data.followed);
+                }
+                setFeedback('');
             } else {
+                setFeedback(data.message || 'Erreur lors du suivi');
             }
         } catch (err) {
             setFeedback('Erreur de connexion');

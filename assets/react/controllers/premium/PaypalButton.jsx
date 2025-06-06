@@ -6,7 +6,7 @@ export default function PaypalButton({ onPaymentSuccess }) {
 
   return (
     <>
-      <div className="paypal-button-container text-center border-top border-bottom border-dark p-3">
+      <div className="paypal-button-container text-center border-top border-bottom border-dark p-4">
         <div className="mb-3">
           <h3 className="text-decoration-underline">Devenez un grand messager !</h3>
           <p className="fw-bold">En devenant Premium, vous bénéficiez de :</p>

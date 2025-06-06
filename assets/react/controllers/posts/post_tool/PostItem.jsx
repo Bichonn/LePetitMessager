@@ -111,12 +111,14 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                         )}
                     </div>
                     <div className="d-flex justify-content-between mt-2">
-                        <div className="d-flex justify-content-start">
+                        <div className="d-flex justify-content-start align-items-center">
                             <LikeBtn
                                 postId={post.id}
                                 initialLiked={post.liked_by_user}
                                 likesCount={post.likes_count} />
                             <CommentBtn postId={post.id} onClick={() => handleCommentButtonClick(post.id)} />
+                        </div>
+                        <div className="d-flex justify-content-end">
                             {canUpdate && (
                                 <UpdateBtn onClick={handleUpdateClick} />
                             )}

@@ -629,4 +629,35 @@ public function activatePremium(Request $request, EntityManagerInterface $entity
     return isset($order['status']) && $order['status'] === 'COMPLETED';
 }
 
+    #[Route('/api/users/suggestions', name: 'app_api_user_suggestions', methods: ['GET'])]
+    public function getUserSuggestions(Request $request, EntityManagerInterface $entityManager): JsonResponse
+    {
+        $currentUser = $this->getUser();
+        $limit = $request->query->getInt('limit', 6); // Default to 6 if not provided
+
+        $usersRepository = $entityManager->getRepository(Users::class);
+        
+        $qb = $usersRepository->createQueryBuilder('u');
+        if ($currentUser instanceof Users) {
+            $qb->where('u.id != :currentUserId')
+               ->setParameter('currentUserId', $currentUser->getId());
+        }
+        $allUsers = $qb->getQuery()->getResult();
+        shuffle($allUsers); // Shuffle the array of users
+        $suggestedUsers = array_slice($allUsers, 0, $limit); // Take the limited number
+
+        $data = [];
+        foreach ($suggestedUsers as $user) {
+            if ($user instanceof Users) { // Ensure it's a Users entity
+                $data[] = [
+                    'id' => $user->getId(),
+                    'username' => $user->getUsername(),
+                    'avatar_url' => $user->getProfilePicture(), // Assuming getProfilePicture() returns the URL
+                ];
+            }
+        }
+
+        return $this->json($data, Response::HTTP_OK);
+    }
+
 }

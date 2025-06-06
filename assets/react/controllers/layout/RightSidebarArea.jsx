@@ -8,6 +8,7 @@ import Footer from './Footer';
 import CommentsList from '../comments/CommentsList';
 import CommentForm from '../comments/CommentForm';
 import PaypalButton from '../premium/PaypalButton';
+import SuggestedUsers from '../SuggestedUsers';
 
 export default function RightSidebarArea({ isAuthenticated, username, logoutPath }) {
   const [currentView, setCurrentView] = useState('default');
@@ -49,6 +50,7 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
         <>
           <LogOut username={username} logoutPath={logoutPath} />
           <PaypalButton onPaymentSuccess={() => window.location.reload()} />
+          <SuggestedUsers /> {/* Add the new component here */}
         </>
       )}
     </>

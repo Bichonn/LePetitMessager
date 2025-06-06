@@ -1,6 +1,15 @@
+/* Importer les polices depuis Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro&family=Rozha+One&display=swap');
+
+/* Appliquer Crimson Pro comme police par défaut */
 body {
     background-color: #F3DCB3 !important;
-    font-family: 'Cinzel', serif;
+    font-family: 'Crimson Pro', serif !important;
+}
+
+/* Appliquer Rozha One à tous les titres */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Rozha One', serif !important;
 }
 
 .bg-color-search {
@@ -66,4 +75,25 @@ body {
     border-radius: 0;
     text-align: center;
     font-style: italic;
+}
+
+/* Classes pour les bordures dynamiques */
+.border {
+  border: var(--border) !important;
+}
+
+.border-end {
+  border-right: var(--border) !important;
+}
+
+.border-start {
+  border-left: var(--border) !important;
+}
+
+.border-top {
+  border-top: var(--border) !important;
+}
+
+.border-bottom {
+  border-bottom: var(--border) !important;
 }

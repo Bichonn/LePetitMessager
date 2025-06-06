@@ -40,7 +40,7 @@
 }
 
 .message-received {
-  background-color: #EBE0CC; /* Lighter shade in the same tone as sent messages */
+  background-color: #EBE0CC;
   color: #000000; 
   border: 1px solid #000000;
 }

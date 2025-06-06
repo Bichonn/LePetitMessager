@@ -81,14 +81,14 @@ export default function ShowProfil({ targetId }) {
         <div>
           <div className="container p-2 text-center border border-dark">
             <button
-              className={`btn me-2 ${activeTab === 'recent' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn me-2 ${activeTab === 'recent' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
               onClick={() => setActiveTab('recent')}
               style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
             >
               Publications Récentes
             </button>
             <button
-              className={`btn ${activeTab === 'liked' ? 'btn-primary' : 'btn-outline-secondary'}`}
+              className={`btn ${activeTab === 'liked' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
               onClick={() => setActiveTab('liked')}
               style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
             >

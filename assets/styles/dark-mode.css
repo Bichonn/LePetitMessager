@@ -3,21 +3,34 @@
   --bg-color: #F3DCB3;
   --card-bg: #ffffff;
   --text-color: #212529;
+  --heading-color: inherit;
+  --link-color: inherit;
   --border-color: #A58D5E;
   --navbar-bg: #DFC699;
   --button-hover: #CAAF7A;
   --icon-text-bg: rgba(165, 141, 94, 0.7);
+  --search-bg: #DFC699;
+  --icon-filter: none;
+  --border: 1px solid #000000;  /* Nouvelle variable */
 }
 
 /* Variables couleurs en mode sombre */
 [data-bs-theme="dark"] {
-  --bg-color: #332D2D;
+  --bg-color: #1C1C1C;
   --card-bg: #1E1A1A;
   --text-color: #f8f9fa;
-  --border-color: #6C5F45;
+  --heading-color: #DFC699;
+  --link-color: #DFC699;
+  --border-color: #8C7D5F;
   --navbar-bg: #221E1E;
   --button-hover: #4A4343;
   --icon-text-bg: rgba(74, 67, 67, 0.9);
+  --search-bg: #221E1E;
+  --icon-filter: invert(1);
+  --border: 1px solid #6C5F45;  /* Bordure en mode sombre */
+  --button-bg: #1E1A1A;
+  --button-text: #DFC699;
+  --button-border: #DFC699;
 }
 
 /* Styles de base pour le body et les cartes */
@@ -45,3 +58,114 @@ body {
 .theme-toggle {
   margin-top: 0.5rem;
 }
+
+/* Modification des éléments bg-color-search */
+.bg-color-search {
+  background-color: var(--search-bg) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Style des icônes dans la navbar */
+.navbar-container img {
+  filter: var(--icon-filter);
+  transition: filter 0.3s ease;
+}
+
+/* Style pour tout le texte */
+body, p, span, div, a, input, textarea {
+  color: var(--text-color) !important;
+  transition: color 0.3s ease;
+}
+
+/* Style pour les titres, noms d'utilisateurs et placeholders */
+h1, h2, h3, h4, h5, h6, 
+.fw-bold,
+::placeholder {
+  color: var(--heading-color) !important;
+  transition: color 0.3s ease;
+}
+
+/* Assure que le placeholder garde la bonne couleur */
+input::placeholder,
+textarea::placeholder {
+  color: var(--heading-color) !important;
+  opacity: 0.8; /* Ajoute un peu de transparence pour les placeholders */
+}
+
+/* Styles pour les inputs et textarea */
+input, textarea {
+  color: var(--text-color) !important;
+  transition: color 0.3s ease;
+}
+
+/* Style pour les boutons en mode sombre */
+[data-bs-theme="dark"] .btn-primary,
+[data-bs-theme="dark"] .custom-publish-button,
+[data-bs-theme="dark"] .custom-cancel-button {
+  background-color: var(--button-bg) !important;
+  color: var(--button-text) !important;
+  border: 2px solid var(--button-border) !important;
+}
+
+[data-bs-theme="dark"] .btn-primary:hover,
+[data-bs-theme="dark"] .custom-publish-button:hover,
+[data-bs-theme="dark"] .custom-cancel-button:hover {
+  background-color: var(--button-hover) !important;
+  border-color: var(--button-border) !important;
+}
+
+/* Style pour les modals en mode sombre */
+[data-bs-theme="dark"] .modal-content {
+  background-color: var(--card-bg) !important;
+  border: 2px solid var(--border-color) !important;
+}
+
+[data-bs-theme="dark"] .modal-header {
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--navbar-bg) !important;
+}
+
+[data-bs-theme="dark"] .modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+[data-bs-theme="dark"] .form-control {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  color: var(--text-color) !important;
+}
+
+[data-bs-theme="dark"] .form-control:focus {
+  background-color: var(--card-bg);
+  border-color: var(--button-border);
+}
+
+[data-bs-theme="dark"] .modal-body .status-message {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+/* Style des messages en mode sombre */
+[data-bs-theme="dark"] .message-received {
+  background-color: #2C2C2C;
+  color: var(--text-color) !important;
+  border-color: var(--border-color);
+}
+
+[data-bs-theme="dark"] .message-sent {
+  background-color: #4A4343;
+  color: var(--text-color) !important;
+  border-color: var(--border-color);
+}
+
+/* Style pour l'icône de téléchargement en mode sombre */
+[data-bs-theme="dark"] .media-upload-icon {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+/* Style pour l'icône de commentaire en mode sombre */
+[data-bs-theme="dark"] .comment-btn-wrapper .icon {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+/* Autres styles existants... */

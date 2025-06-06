@@ -55,7 +55,7 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
   );
 
   const renderCommentsView = () => (
-    <div className="comments-view border-bottom border-dark"> {/* Use CSS class */}
+    <div className="comments-view border-bottom border-dark">
       <button onClick={switchToDefaultView} className="btn btn-primary flex-shrink-0">
         &larr; Retirer les commentaires
       </button>
@@ -73,7 +73,7 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
   );
 
   return (
-    <div className="sidebar-area-container">
+    <div className="sidebar-area-container border-start border-dark">
       {currentView === 'comments' && postIdForComments ? renderCommentsView() : renderDefaultSidebar()}
       {currentView !== 'comments' && <Footer />}
     </div>

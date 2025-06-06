@@ -6,7 +6,7 @@ export default function LogOut({ username, logoutPath }) {
     <div className="container border-bottom border-top border-dark">
       <div className="d-flex justify-content-center mb-1 mt-3">
         <h5 className="text-center text-decoration-underline">
-          Bienvenue, {username}!
+          Bienvenue, {username} !
         </h5>
       </div>
       <div className="d-flex justify-content-center mb-3">

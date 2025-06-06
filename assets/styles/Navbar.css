@@ -39,3 +39,21 @@
 .img-fluid.w-50:hover {
     transform: scale(1.1);
 }
+
+/* Style pour le theme toggle dans la navbar */
+.theme-toggle {
+  margin-top: auto;
+  padding: 0.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.theme-toggle button {
+  width: 40px;
+  height: 40px;
+  padding: 8px;
+}
+
+.theme-toggle button:hover {
+  transform: scale(1.1);
+}

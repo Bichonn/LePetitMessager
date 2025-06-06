@@ -110,7 +110,7 @@ export default function LoginForm() {
 
     return (
         <>
-            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+            <button className="btn btn-primary me-3" onClick={() => setShowModal(true)}>
                 Se connecter
             </button>
 

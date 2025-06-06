@@ -6,17 +6,28 @@ export const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   // État pour stocker le mode sombre (true/false)
   const [darkMode, setDarkMode] = useState(() => {
-    // Vérifier si une préférence a été sauvegardée dans localStorage
-    const savedMode = localStorage.getItem('darkMode');
-    return savedMode ? JSON.parse(savedMode) : false;
+    try {
+      // Récupérer la valeur depuis localStorage
+      const savedMode = localStorage.getItem('darkMode');
+      // Si la valeur existe et est 'true', retourner true, sinon false
+      return savedMode === 'true' ? true : false;
+    } catch (error) {
+      // En cas d'erreur (par exemple, localStorage non disponible), utiliser false (mode clair)
+      console.error("Erreur lors de l'accès à localStorage:", error);
+      return false;
+    }
   });
 
+  // Effet pour synchroniser avec localStorage et DOM
   useEffect(() => {
-    // Mettre à jour localStorage quand le mode change
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    
-    // Appliquer l'attribut data-bs-theme pour les styles CSS
-    document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
+    try {
+      // Enregistrer dans localStorage
+      localStorage.setItem('darkMode', darkMode.toString());
+      // Mettre à jour l'attribut data-bs-theme
+      document.documentElement.setAttribute('data-bs-theme', darkMode ? 'dark' : 'light');
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du thème:", error);
+    }
   }, [darkMode]);
 
   // Fonction pour basculer entre les modes

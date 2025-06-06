@@ -146,7 +146,12 @@ export default function CreatePost() {
               onChange={handleFileChange}
             />
             <label htmlFor="media-upload" className="btn p-0 ml-5">
-              <img src="/icons/image.png" alt="Ajouter média" className="img-fluid" style={{ width: '30px' }} />
+              <img 
+                src="/icons/image.png" 
+                alt="Ajouter média" 
+                className="img-fluid media-upload-icon" 
+                style={{ width: '30px' }} 
+              />
             </label>
           </div>
 

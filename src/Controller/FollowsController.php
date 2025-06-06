@@ -7,6 +7,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Users;
 use App\Entity\Follows;
+use App\Entity\Notifications;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -72,6 +73,15 @@ final class FollowsController extends AbstractController
             $follow->setCreatedAt(new \DateTimeImmutable());
 
             $entityManager->persist($follow);
+
+            $notif = new Notifications();
+            $notif->setFkUser($following);
+            $notif->setContent($user->getUsername() . " vous suit désormais.");
+            $notif->setIsRead(false);
+            $notif->setCreatedAt(new \DateTimeImmutable());
+            $notif->setFkPost(null);
+            $entityManager->persist($notif);
+
             $entityManager->flush();
 
             return $this->json([

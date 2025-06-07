@@ -8,6 +8,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\Posts;
 use App\Entity\Users;
 use App\Entity\Comments;
+use App\Entity\Notifications;
 use App\Repository\PostsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,6 +100,18 @@ final class CommentsController extends AbstractController
         }
 
         $entityManager->persist($comment);
+
+        // Création de la notification pour l'auteur du post (sauf si l'auteur commente son propre post)
+        if ($post->getFkUser() && $post->getFkUser() !== $user) {
+            $notif = new Notifications();
+            $notif->setFkUser($post->getFkUser());
+            $notif->setFkPost($post);
+            $notif->setContent($user->getUsername() . " a commenté votre post.");
+            $notif->setIsRead(false);
+            $notif->setCreatedAt(new \DateTimeImmutable());
+            $entityManager->persist($notif);
+        }
+
         $entityManager->flush();
 
         // Return the created comment data, including the Cloudinary URL

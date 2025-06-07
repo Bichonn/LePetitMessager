@@ -1,5 +1,6 @@
 import React from 'react';
 import NavIcons from './NavIcons';
+import NotifIcon from '../notifs/NotifIcon';
 import ThemeToggle from '../ThemeToggle';
 import { ThemeProvider } from '../../contexts/ThemeContext';
 import '../../../styles/Navbar.css';
@@ -33,7 +34,7 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
         )}
         <div className="navbar-bottom">
           <a href="/notifications" className="nav-link">
-            <NavIcons iconPath={"/icons/notif.png"} iconName={"Courrier"} />
+            <NotifIcon />
           </a>
           {isAuthenticated && (
             <a href="/profil" className="nav-link">

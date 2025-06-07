@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-export default function NavIcons({ iconPath, iconName }) {
+export default function NavIcons({ iconPath, iconName, className = "" }) {
     const [isHovered, setIsHovered] = useState(false);
 
     return (
@@ -8,7 +8,7 @@ export default function NavIcons({ iconPath, iconName }) {
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            <img className="img-fluid w-25" src={iconPath} alt={iconName} />
+            <img className={`img-fluid w-25 ${className}`} src={iconPath} alt={iconName} />
 
             {isHovered && (
                 <span className="position-absolute">

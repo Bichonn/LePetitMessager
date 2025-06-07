@@ -92,4 +92,21 @@ final class NotificationsController extends AbstractController
 
         return $this->json(['success' => true]);
     }
+
+    #[Route('/notifications/read', name: 'notifications_read', methods: ['POST'])]
+    public function markAllRead(NotificationsRepository $repo, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $this->getUser();
+        if (!$user) {
+            return $this->json(['message' => 'Non authentifié'], 401);
+        }
+    
+        $notifications = $repo->findBy(['fk_user' => $user, 'is_read' => false]);
+        foreach ($notifications as $notif) {
+            $notif->setIsRead(true);
+        }
+        $em->flush();
+    
+        return $this->json(['success' => true]);
+    }
 }

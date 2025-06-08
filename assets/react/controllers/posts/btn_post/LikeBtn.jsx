@@ -57,8 +57,8 @@ const LikeBtn = ({ postId, initialLiked = false, likesCount = 0 }) => {
             >
                 <svg
                     className="icon"
-                    width={30}
-                    height={30}
+                    width={22} // Changed from 30
+                    height={22} // Changed from 30
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                     fill={liked ? "#fd1853" : "none"}

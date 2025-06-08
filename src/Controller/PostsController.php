@@ -220,26 +220,26 @@ class PostsController extends AbstractController
     }
 
     #[Route('/posts', name: 'app_posts_list', methods: ['GET'])]
-    public function list(
-        Request $request, // Add Request object
-        EntityManagerInterface $entityManager,
-        SerializerInterface $serializer,
-        PostsRepository $postsRepository // Inject PostsRepository
-    ): JsonResponse {
+    public function list(Request $request, PostsRepository $postsRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
         $page = $request->query->getInt('page', 1);
-        $limit = $request->query->getInt('limit', 20); // Default limit to 20 posts per page
-        $offset = ($page - 1) * $limit;
+        $limit = $request->query->getInt('limit', 20);
 
-        // Use the repository to find paginated posts
-        $posts = $postsRepository->findBy([], ['created_at' => 'DESC'], $limit, $offset);
-        $totalPosts = $postsRepository->count([]); // Get total count for pagination
+        // Use the new repository method to find paginated posts for the feed
+        $paginator = $postsRepository->findFeedPostsPaginated($page, $limit);
+        
+        $postsEntities = [];
+        foreach ($paginator as $postEntity) {
+            $postsEntities[] = $postEntity;
+        }
+        $totalPosts = count($paginator);
 
-        if (empty($posts) && $page === 1) { // Modifié pour retourner OK si aucun post mais pas une erreur
+        if (empty($postsEntities) && $page === 1) {
             return $this->json(
                 [
                     'posts' => [],
                     'totalPosts' => 0,
-                    'currentPage' => 1,
+                    'currentPage' => 1, // Corrected to reflect current page even if empty
                     'limit' => $limit
                 ],
                 Response::HTTP_OK
@@ -250,7 +250,7 @@ class PostsController extends AbstractController
         $currentUser = $this->getUser();
 
         $data = [];
-        foreach ($posts as $post) {
+        foreach ($postsEntities as $post) { // Iterate over the correctly ordered $postsEntities
             $likes = $post->getLikes();
             $likesCount = count($likes);
             $likedByUser = false;
@@ -264,27 +264,61 @@ class PostsController extends AbstractController
                 }
             }
 
+            $repostsCollection = $post->getReposts(); // This is already ordered by created_at DESC
+            $repostsCount = count($repostsCollection);
+            $repostedByUser = false;
+            if ($currentUser instanceof Users) {
+                foreach ($repostsCollection as $repostEntity) { // Renamed to avoid conflict
+                    $repostUser = $repostEntity->getFkUser();
+                    if ($repostUser instanceof Users && $repostUser->getId() === $currentUser->getId()) {
+                        $repostedByUser = true;
+                        break;
+                    }
+                }
+            }
+
+            $commentsCollection = $post->getComments();
+            $commentsCount = count($commentsCollection);
+
+            $reposterInfo = null;
+            /** @var \App\Entity\Reposts|false $latestRepost */
+            $latestRepost = $repostsCollection->first(); // Get the latest repost
+
+            // If there is a latest repost and its creation date is more recent than the post's original creation date,
+            // it implies this repost influenced the post's position in the feed.
+            if ($latestRepost && $latestRepost->getCreatedAt() > $post->getCreatedAt()) {
+                $reposterUser = $latestRepost->getFkUser();
+                if ($reposterUser) {
+                    $reposterInfo = [
+                        'id' => $reposterUser->getId(),
+                        'username' => $reposterUser->getUsername(),
+                        // 'avatar_url' => $reposterUser->getProfilePicture(), // Optionally include if you want to display avatar
+                    ];
+                }
+            }
+
             $postData = [
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'user' => null, // Initialisation
+                'user' => [
+                    'id' => $post->getFkUser()?->getId(),
+                    'username' => $post->getFkUser()?->getUsername(),
+                    'avatar_url' => $post->getFkUser()?->getProfilePicture(),
+                ],
                 'likes_count' => $likesCount,
-                'liked_by_user' => $likedByUser
+                'liked_by_user' => $likedByUser,
+                'reposts_count' => $repostsCount,
+                'reposted_by_user' => $repostedByUser,
+                'comments_count' => $commentsCount, // Add this line
+                'reposter_info' => $reposterInfo, // Add reposter information
             ];
 
-            if ($post->getFkUser()) {
-                $postData['user'] = [
-                    'id' => $post->getFkUser()->getId(),
-                    'username' => $post->getFkUser()->getUsername(),
-                    'avatar_url' => $post->getFkUser()->getProfilePicture()
-                ];
-            }
             $data[] = $postData;
         }
 
-        return new JsonResponse([
+        return $this->json([
             'posts' => $data,
             'totalPosts' => $totalPosts,
             'currentPage' => $page,

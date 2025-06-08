@@ -31,6 +31,7 @@
   --button-bg: #1E1A1A;
   --button-text: #DFC699;
   --button-border: #DFC699;
+  --repost-icon-filter: brightness(0) invert(1); /* Add this for the repost icon in dark mode */
 }
 
 /* Styles de base pour le body et les cartes */
@@ -166,6 +167,66 @@ input, textarea {
 /* Style pour l'icône de commentaire en mode sombre */
 [data-bs-theme="dark"] .comment-btn-wrapper .icon {
   filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+/* Style pour l'icône de repost en mode sombre - utilise la nouvelle variable */
+[data-bs-theme="dark"] .repost-btn-wrapper .icon {
+  filter: var(--repost-icon-filter);
+}
+
+/* Style pour l'icône d'upload de média dans le formulaire de message en mode sombre */
+[data-bs-theme="dark"] .message-form-media-icon {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+[data-bs-theme="dark"] .delete-icon {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+[data-bs-theme="dark"] .edit-icon {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}
+
+[data-bs-theme="dark"] .comment-item strong {
+  color: var(--heading-color) !important; /* Applique la couleur des titres aux noms d'utilisateur dans les commentaires */
+}
+
+[data-bs-theme="dark"] .password-toggle-btn img {
+  filter: brightness(0) invert(1); /* Convertit l'icône de visibilité du mot de passe en blanc */
+}
+
+/* Admin Dashboard specific styles for dark mode */
+
+/* Override background for table body cells from AdminDashboard.css */
+[data-bs-theme="dark"] .table-responsive .table tbody td {
+  background-color: var(--card-bg); /* Base background for cells */
+  color: var(--text-color);
+}
+
+/* Striping for admin tables in dark mode - targets cells in odd rows */
+[data-bs-theme="dark"] .table-responsive .table.table-striped > tbody > tr:nth-of-type(odd) > td {
+  background-color: var(--search-bg); /* Slightly different dark background for stripes */
+}
+
+/* Hover effect for admin table rows in dark mode - targets cells in hovered rows */
+[data-bs-theme="dark"] .table-responsive .table.table-hover > tbody > tr:hover > td {
+  background-color: var(--button-hover);
+  color: var(--text-color); /* Ensure text color on hover */
+}
+
+/* Ensure borders for all admin table cells use the dark theme border color */
+/* This overrides the 'border: 1px solid #000' from AdminDashboard.css */
+[data-bs-theme="dark"] .table-responsive .table td,
+[data-bs-theme="dark"] .table-responsive .table th {
+  border-color: var(--border-color);
+}
+
+/* Styling for the table header (thead.table-dark) in admin views */
+/* This ensures the .table-dark class uses theme variables consistently */
+[data-bs-theme="dark"] .table-responsive .table > thead.table-dark > tr > th {
+  background-color: var(--navbar-bg); /* Distinct dark header background */
+  color: var(--heading-color); /* Header text color */
+  /* border-color is handled by the rule above */
 }
 
 /* Autres styles existants... */

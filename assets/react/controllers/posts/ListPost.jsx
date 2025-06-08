@@ -52,6 +52,17 @@ export default function PostList() {
         };
     }, [fetchPosts]); // fetchPosts est maintenant dans useCallback
 
+    // Gestion du repost de post
+    useEffect(() => {
+        const handlePostReposted = () => {
+            fetchPosts(1, false); // Recharger la première page pour voir le post reposté en haut
+        };
+        document.addEventListener('postReposted', handlePostReposted);
+        return () => {
+            document.removeEventListener('postReposted', handlePostReposted);
+        };
+    }, [fetchPosts]); // fetchPosts est dans useCallback
+
     // IntersectionObserver pour le chargement infini
     const lastPostElementRef = useCallback(node => {
         if (isLoading) return;

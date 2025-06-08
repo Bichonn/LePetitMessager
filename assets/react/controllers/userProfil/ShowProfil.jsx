@@ -4,13 +4,14 @@ import UserProfileInfo from './UserProfileInfo';
 import UserPostsList from './UserPostsList';
 import EditProfileForm from './EditProfileForm';
 import UserLikedPostsList from './UserLikedPostsList'; // Importer le nouveau composant
+import UserRepostedPostsList from './UserRepostedPostsList'; // Import the new component
 
 export default function ShowProfil({ targetId }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('recent'); // 'recent' ou 'liked'
+  const [activeTab, setActiveTab] = useState('recent'); // 'recent', 'liked', or 'reposted'
 
   const fetchUser = async () => {
     setIsLoading(true);
@@ -88,16 +89,24 @@ export default function ShowProfil({ targetId }) {
               Publications Récentes
             </button>
             <button
-              className={`btn ${activeTab === 'liked' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
+              className={`btn me-2 ${activeTab === 'liked' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
               onClick={() => setActiveTab('liked')}
               style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
             >
               Publications Aimées
             </button>
+            <button
+              className={`btn ${activeTab === 'reposted' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
+              onClick={() => setActiveTab('reposted')}
+              style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
+            >
+              Publications Republiées
+            </button>
           </div>
 
           {activeTab === 'recent' && <UserPostsList user={user} />}
           {activeTab === 'liked' && <UserLikedPostsList user={user} />}
+          {activeTab === 'reposted' && <UserRepostedPostsList user={user} />}
         </div>
       )}
     </>

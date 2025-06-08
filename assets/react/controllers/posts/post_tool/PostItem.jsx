@@ -3,6 +3,7 @@ import IsImageFile from './IsImageFile';
 import IsVideoFile from './IsVideoFile';
 import LikeBtn from '../btn_post/LikeBtn';
 import CommentBtn from '../btn_post/CommentBtn';
+import RepostBtn from '../btn_post/RepostBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
@@ -77,10 +78,24 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
     const userProfileUrl = `/profil/view/${author.id}`;
+    const { reposter_info } = post; // Destructure reposter_info from post
 
     return (
         <>
             <div className="post-item-container border border-dark bg-color-search p-1">
+                {/* Display Reposter Info if available */}
+                {reposter_info && (
+                    <div className="reposter-info mb-1 ms-2" style={{ fontSize: '0.85em', color: 'var(--bs-secondary-color)' }}>
+                        <small>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-arrow-repeat me-1" viewBox="0 0 16 16">
+                                <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
+                                <path fillRule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5A5.002 5.002 0 0 0 8 3zM3.5 9A5.002 5.002 0 0 0 8 13c1.552 0 2.94-.707 3.857-1.818a.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.5z"/>
+                            </svg>
+                            Republié par <a href={`/profil/view/${reposter_info.id}`} className="text-decoration-none fw-bold" style={{ color: 'inherit' }}>{reposter_info.username}</a>
+                        </small>
+                    </div>
+                )}
+
                 <div className="d-flex align-items-center ms-7">
                     <img
                         src={author.avatar_url || 'icons/default-avatar.png'}
@@ -116,7 +131,16 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                                 postId={post.id}
                                 initialLiked={post.liked_by_user}
                                 likesCount={post.likes_count} />
-                            <CommentBtn postId={post.id} onClick={() => handleCommentButtonClick(post.id)} />
+                            <CommentBtn
+                                postId={post.id}
+                                onClick={() => handleCommentButtonClick(post.id)}
+                                commentsCount={post.comments_count} // Add this prop
+                            />
+                            <RepostBtn
+                                postId={post.id}
+                                initialReposted={post.reposted_by_user}
+                                repostsCount={post.reposts_count}
+                            />
                         </div>
                         <div className="d-flex justify-content-end">
                             {canUpdate && (

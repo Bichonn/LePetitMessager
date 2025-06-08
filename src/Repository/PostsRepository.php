@@ -38,4 +38,33 @@ class PostsRepository extends ServiceEntityRepository
         // When using GROUP BY, Doctrine documentation recommends setting fetchJoinCollection to false.
         return new Paginator($query, false);
     }
+
+    /**
+     * @return Paginator<Posts> Returns an array of Posts objects ordered by their latest activity (repost or creation).
+     */
+    public function findFeedPostsPaginated(int $page, int $limit): Paginator
+    {
+        $qb = $this->createQueryBuilder('p')
+            // Select the main post entity and its author
+            ->addSelect('author_user')
+            ->leftJoin('p.fk_user', 'author_user')
+            // Left join with reposts to find the latest repost date
+            ->leftJoin('p.reposts', 'r')
+            // Define the effective_date for ordering: latest repost or creation date
+            ->addSelect('COALESCE(MAX(r.created_at), p.created_at) AS HIDDEN effective_date')
+            // Group by post ID and author ID (since author is selected)
+            // This is necessary because of the MAX() aggregate function.
+            ->groupBy('p.id, author_user.id')
+            // Order by the effective_date descending (most recent first)
+            ->orderBy('effective_date', 'DESC')
+            // As a secondary sort, order by the post's original creation date
+            ->addOrderBy('p.created_at', 'DESC');
+
+        $query = $qb->getQuery()
+            ->setFirstResult(($page - 1) * $limit)
+            ->setMaxResults($limit);
+
+        // Use Paginator. Set fetchJoinCollection to false due to GROUP BY.
+        return new Paginator($query, false);
+    }
 }

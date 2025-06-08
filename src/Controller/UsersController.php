@@ -21,6 +21,7 @@ use App\Repository\UsersRepository;
 use App\Repository\PostsRepository; // Add this if not already present
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\Posts;
+use App\Entity\Reposts; // Add this use statement
 
 final class UsersController extends AbstractController
 {
@@ -539,95 +540,91 @@ final class UsersController extends AbstractController
             $data[] = $postData;
         }
 
-        return $this->json($data, Response::HTTP_OK);
+        return $this->json($data, Response::HTTP_OK, [], ['groups' => 'user:read']);
     }
 
-   #[Route('/user/premium', name: 'user_premium', methods: ['POST'])]
-public function activatePremium(Request $request, EntityManagerInterface $entityManager): JsonResponse
-{
-    $user = $this->getUser();
-    if (!$user) {
-        return $this->json(['message' => 'Non authentifié'], 401);
+    #[Route('/users/{userId}/reposted-posts', name: 'app_user_reposted_posts_list', methods: ['GET'], requirements: ['userId' => '\d+'])]
+    public function listUserRepostedPosts(
+        int $userId,
+        EntityManagerInterface $entityManager
+        // PostsRepository $postsRepository // Not directly needed here for main query, but for helper logic
+    ): JsonResponse {
+        $userRepository = $entityManager->getRepository(Users::class);
+        $profileUser = $userRepository->find($userId);
+
+        if (!$profileUser) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+
+        // Similar privacy check as for liked posts can be added here if needed
+
+        $userReposts = $entityManager->getRepository(Reposts::class)->findBy(
+            ['fk_user' => $profileUser],
+            ['created_at' => 'DESC'] // Order by when the repost was made
+        );
+
+        $data = [];
+        $currentUser = $this->getUser();
+
+        foreach ($userReposts as $repost) {
+            $originalPost = $repost->getFkPost();
+            if ($originalPost) {
+                $likes = $originalPost->getLikes();
+                $likesCount = count($likes);
+                $likedByUser = false;
+                if ($currentUser instanceof Users) {
+                    foreach ($likes as $like) {
+                        if ($like->getFkUser() && $like->getFkUser()->getId() === $currentUser->getId()) {
+                            $likedByUser = true;
+                            break;
+                        }
+                    }
+                }
+
+                $repostsCollection = $originalPost->getReposts();
+                $repostsCount = count($repostsCollection);
+                $repostedByCurrentUser = false; // Specifically, if the current logged-in user also reposted this *original* post
+                if ($currentUser instanceof Users) {
+                    foreach ($repostsCollection as $rp) {
+                        if ($rp->getFkUser() && $rp->getFkUser()->getId() === $currentUser->getId()) {
+                            $repostedByCurrentUser = true;
+                            break;
+                        }
+                    }
+                }
+                
+                $commentsCollection = $originalPost->getComments();
+                $commentsCount = count($commentsCollection);
+
+                $postData = [
+                    'id' => $originalPost->getId(),
+                    'content_text' => $originalPost->getContentText(),
+                    'content_multimedia' => $originalPost->getContentMultimedia(),
+                    'created_at' => $originalPost->getCreatedAt()->format('Y-m-d H:i:s'), // Original post's creation date
+                    'user' => [ // Original author of the post
+                        'id' => $originalPost->getFkUser()?->getId(),
+                        'username' => $originalPost->getFkUser()?->getUsername(),
+                        'avatar_url' => $originalPost->getFkUser()?->getProfilePicture(),
+                    ],
+                    'likes_count' => $likesCount,
+                    'liked_by_user' => $likedByUser,
+                    'reposts_count' => $repostsCount, // Total reposts of the original post
+                    'reposted_by_user' => $repostedByCurrentUser, 
+                    'comments_count' => $commentsCount,
+                    'reposter_info' => [ // Info about the user who made THIS repost (whose profile we are viewing)
+                        'id' => $profileUser->getId(),
+                        'username' => $profileUser->getUsername(),
+                        'avatar_url' => $profileUser->getProfilePicture(),
+                    ],
+                    // We can also add the date of this specific repost if needed by the frontend
+                    'repost_created_at' => $repost->getCreatedAt()->format('Y-m-d H:i:s'),
+                ];
+                $data[] = $postData;
+            }
+        }
+
+        return $this->json($data);
     }
-
-    $content = $request->getContent();
-    if (empty($content)) {
-        return $this->json(['message' => 'Contenu de la requête vide'], 400);
-    }
-
-    $data = json_decode($content, true);
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        return $this->json(['message' => 'JSON invalide'], 400);
-    }
-
-    $paypalOrderId = $data['paypalOrderId'] ?? null;
-    if (!$paypalOrderId) {
-        return $this->json(['message' => 'Identifiant de commande PayPal manquant'], 400);
-    }
-
-    if (!$this->verifyPaypalPayment($paypalOrderId)) {
-        return $this->json(['message' => 'Paiement non vérifié'], 403);
-    }
-
-    try {
-        $user->setUserPremium(true);
-        $entityManager->flush();
-    } catch (\Exception $e) {
-        return $this->json(['message' => 'Erreur lors de la mise à jour du statut premium'], 500);
-    }
-
-    return $this->json(['success' => true]);
-}
-
-    private function verifyPaypalPayment(string $paypalOrderId): bool
-{
-    $clientId = getenv('AZCrzgiABqGSt1faUjds74y9qOOJs3ACp_Sy6-ZyEAsDJmFj5iLg5AK9xFYNRnaNJaUgvJ-6KPNoEeD6');
-    $secret = getenv('EGqQ_OwRWjYsH8fz1YS2g_o2CLdyBmZng2qHP4bFW6gFBEVOidTvqVvyKRRgzc_v5hoBGQQNd9b8z7lk');
-
-    // Obtenir un jeton d'accès OAuth2
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "https://api-m.paypal.com/v1/oauth2/token");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ["Accept: application/json", "Accept-Language: en_US"]);
-    curl_setopt($ch, CURLOPT_USERPWD, "$clientId:$secret");
-    curl_setopt($ch, CURLOPT_POSTFIELDS, "grant_type=client_credentials");
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_POST, true);
-    $result = curl_exec($ch);
-    if (curl_errno($ch)) {
-        // Gérer l'erreur cURL
-        curl_close($ch);
-        return false;
-    }
-    curl_close($ch);
-
-    $data = json_decode($result, true);
-    if (!isset($data['access_token'])) {
-        // Gérer l'absence de jeton d'accès
-        return false;
-    }
-    $accessToken = $data['access_token'];
-
-    // Vérifier la commande PayPal
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "https://api-m.paypal.com/v2/checkout/orders/$paypalOrderId");
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        "Content-Type: application/json",
-        "Authorization: Bearer $accessToken"
-    ]);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $result = curl_exec($ch);
-    if (curl_errno($ch)) {
-        // Gérer l'erreur cURL
-        curl_close($ch);
-        return false;
-    }
-    curl_close($ch);
-
-    $order = json_decode($result, true);
-
-    // Vérifier que la commande est bien complétée
-    return isset($order['status']) && $order['status'] === 'COMPLETED';
-}
 
     #[Route('/api/users/suggestions', name: 'app_api_user_suggestions', methods: ['GET'])]
     public function getUserSuggestions(Request $request, EntityManagerInterface $entityManager): JsonResponse
@@ -642,7 +639,13 @@ public function activatePremium(Request $request, EntityManagerInterface $entity
             $qb->where('u.id != :currentUserId')
                ->setParameter('currentUserId', $currentUser->getId());
         }
+
         $allUsers = $qb->getQuery()->getResult();
+        
+        $allUsers = array_filter($allUsers, function(Users $user) {
+            return !$user->isPrivateAccount();
+        });
+
         shuffle($allUsers); // Shuffle the array of users
         $suggestedUsers = array_slice($allUsers, 0, $limit); // Take the limited number
 
@@ -659,5 +662,4 @@ public function activatePremium(Request $request, EntityManagerInterface $entity
 
         return $this->json($data, Response::HTTP_OK);
     }
-
 }

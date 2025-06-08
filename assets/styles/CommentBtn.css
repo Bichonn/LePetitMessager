@@ -41,3 +41,10 @@
     transform: scale(1);
   }
 }
+
+.comment-count-closer {
+  margin-left: -0.2rem; /* Increased negative margin to pull it closer */
+  font-size: 0.85em;   /* Match other counts */
+  color: var(--bs-gray-600); /* Match other counts */
+  padding-left: 3px; /* Reduced padding from the icon */
+}

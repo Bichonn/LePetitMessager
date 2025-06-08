@@ -14,6 +14,8 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
+use App\Entity\PostsReports;
+use App\Repository\PostsReportsRepository;
 
 #[Route('/admin')]
 #[IsGranted('ROLE_ADMIN')]
@@ -134,6 +136,49 @@ class AdminController extends AbstractController
         } catch (\Exception $e) {
             // Log the error: $this->logger->error('Failed to delete account report: ' . $e->getMessage());
             return $this->json(['message' => 'Erreur lors de la suppression du signalement: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/post-reports', name: 'admin_api_post_reports_list', methods: ['GET'])]
+    public function getPostReports(PostsReportsRepository $postsReportsRepository, EntityManagerInterface $entityManager): JsonResponse
+    {
+        // $this->denyAccessUnlessGranted('ROLE_ADMIN'); // Uncomment if you want to restrict access
+
+        $reports = $postsReportsRepository->createQueryBuilder('pr')
+            ->select(
+                'pr.id',
+                'pr.content AS reason', // 'content' is the reason for the report
+                'pr.created_at',
+                'p.id AS post_id',
+                'reporter.username AS reporter_username',
+                'post_author.username AS post_author_username'
+            )
+            ->join('pr.fk_post', 'p')
+            ->join('pr.fk_user', 'reporter') // User who reported
+            ->join('p.fk_user', 'post_author') // Author of the post
+            ->orderBy('pr.created_at', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        return $this->json(['reports' => $reports]);
+    }
+
+    #[Route('/api/post-reports/{id}', name: 'admin_api_post_report_delete', methods: ['DELETE'])]
+    public function deletePostReport(PostsReports $report, EntityManagerInterface $em): JsonResponse
+    {
+        // $this->denyAccessUnlessGranted('ROLE_ADMIN'); // Uncomment if you want to restrict access
+
+        if (!$report) {
+            return $this->json(['message' => 'Signalement de post introuvable.'], Response::HTTP_NOT_FOUND);
+        }
+
+        try {
+            $em->remove($report);
+            $em->flush();
+            return $this->json(['message' => 'Signalement de post supprimé avec succès.'], Response::HTTP_OK);
+        } catch (\Exception $e) {
+            // Log the error
+            return $this->json(['message' => 'Erreur lors de la suppression du signalement de post: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 }

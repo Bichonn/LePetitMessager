@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Posts;
+use App\Entity\PostsReports;
 use App\Entity\Users;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -442,5 +443,51 @@ class PostsController extends AbstractController
     public function topPostsPage(): Response
     {
         return $this->render('posts/top_posts.html.twig');
+    }
+
+    #[Route('/post/{id}/report', name: 'app_post_report', methods: ['POST'])]
+    public function reportPost(
+        Request $request,
+        Posts $postToReport,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var Users|null $currentUser */
+        $currentUser = $this->getUser();
+        if (!$currentUser instanceof Users) {
+            return $this->json(['message' => 'Authentification requise pour signaler un post.'], Response::HTTP_UNAUTHORIZED);
+        }
+
+        if ($postToReport->getFkUser() === $currentUser) {
+            return $this->json(['message' => 'Vous ne pouvez pas signaler votre propre post.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $data = json_decode($request->getContent(), true);
+        $reason = $data['reason'] ?? null;
+
+        if (empty($reason)) {
+            return $this->json(['message' => 'La raison du signalement est requise.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Optional: Check for existing report from this user for this post to avoid duplicates
+        $existingReport = $entityManager->getRepository(PostsReports::class)->findOneBy([
+            'fk_user' => $currentUser, // MODIFIÉ: fk_reporter par fk_user
+            'fk_post' => $postToReport,
+            // 'content' => $reason, // You might want to allow multiple reports if reasons differ, or only one report per user per post
+        ]);
+
+        if ($existingReport) {
+            return $this->json(['message' => 'Vous avez déjà signalé ce post.'], Response::HTTP_CONFLICT);
+        }
+
+        $report = new PostsReports();
+        $report->setFkUser($currentUser); // MODIFIÉ: setFkReporter par setFkUser
+        $report->setFkPost($postToReport);
+        $report->setContent($reason);
+        $report->setCreatedAt(new \DateTimeImmutable());
+
+        $entityManager->persist($report);
+        $entityManager->flush();
+
+        return $this->json(['message' => 'Post signalé avec succès.'], Response::HTTP_OK);
     }
 }

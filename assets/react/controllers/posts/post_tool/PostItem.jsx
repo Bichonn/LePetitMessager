@@ -7,6 +7,7 @@ import RepostBtn from '../btn_post/RepostBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
+import ReportPostBtn from '../btn_post/ReportPostBtn'; // Add this import
 import '../../../../styles/PostItem.css';
 
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
@@ -80,6 +81,9 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
     const userProfileUrl = `/profil/view/${author.id}`;
     const { reposter_info } = post; // Destructure reposter_info from post
 
+    // Determine if the report button should be shown (not own post and user is logged in)
+    const showReportButton = currentUserId && author && author.id !== currentUserId;
+
     return (
         <>
             <div className="post-item-container border border-dark bg-color-search p-1">
@@ -102,7 +106,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                         alt={`${author.username}'s avatar`}
                         className="rounded-circle me-2 post-author-avatar border border-dark"
                     />
-                    <div>
+                    <div className="flex-grow-1">
                         <h5 className="mb-0">
                             <a href={userProfileUrl} className="text-decoration-none text-dark fw-bold">
                                 {author.username}
@@ -112,6 +116,9 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             {new Date(post.created_at).toLocaleString()}
                         </small>
                     </div>
+                    {showReportButton && (
+                        <ReportPostBtn postId={post.id} postAuthorUsername={author.username} />
+                    )}
                 </div>
                 <div className="ms-6">
                     <div>

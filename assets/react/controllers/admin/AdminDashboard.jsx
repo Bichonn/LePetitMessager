@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AccountReportsView from './AccountReportsView'; // Importez le nouveau composant
 import '../../../styles/AdminDashboard.css';
 import '../../../styles/app.css';
+import AccountReportsView from './AccountReportsView'; // Make sure this is imported
+import PostReportsView from './PostReportsView'; // Import the new component
 
 export default function AdminDashboard() {
     const [users, setUsers] = useState([]);
@@ -9,7 +10,7 @@ export default function AdminDashboard() {
     const [error, setError] = useState(null);
     const [csrfToken, setCsrfToken] = useState(''); // For actions like delete
     const [currentAdminId, setCurrentAdminId] = useState(null);
-    const [viewMode, setViewMode] = useState('users'); // 'users' ou 'reports'
+    const [viewMode, setViewMode] = useState('users'); // 'users', 'account_reports', or 'post_reports'
 
     const fetchUsers = useCallback(async () => {
         setLoading(true);
@@ -102,6 +103,7 @@ export default function AdminDashboard() {
 
     const switchToUsersView = () => setViewMode('users');
     const switchToReportsView = () => setViewMode('reports');
+    const switchToPostReportsView = () => setViewMode('post_reports'); // New handler
 
     if (loading && viewMode === 'users') return (
         <div className="p-3 text-center">
@@ -117,16 +119,25 @@ export default function AdminDashboard() {
     return (
         <div>
             <h2 className="mb-0 border-start border-bottom border-end border-dark p-3 text-center text-decoration-underline bg-color-search  inner-shadow">Tableau de bord d'administration</h2>
-            <div className="p-3 text-center border border-dark">
-                {viewMode === 'users' ? (
-                    <button className="btn btn-primary" onClick={switchToReportsView}>
-                        Voir les signalements de comptes
-                    </button>
-                ) : (
-                    <button className="btn btn-primary" onClick={switchToUsersView}>
-                        Voir la liste des utilisateurs
-                    </button>
-                )}
+            <div className="p-3 text-center border border-dark d-flex justify-content-around">
+                <button 
+                    className={`btn ${viewMode === 'users' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`} 
+                    onClick={switchToUsersView}
+                >
+                    Voir la liste des utilisateurs
+                </button>
+                <button 
+                    className={`btn ${viewMode === 'reports' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`} 
+                    onClick={switchToReportsView}
+                >
+                    Voir les signalements de comptes
+                </button>
+                <button 
+                    className={`btn ${viewMode === 'post_reports' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`} 
+                    onClick={switchToPostReportsView}
+                >
+                    Voir les signalements de posts
+                </button>
             </div>
 
             {viewMode === 'users' ? (
@@ -177,9 +188,11 @@ export default function AdminDashboard() {
                         </tbody>
                     </table>
                 </div>
-            ) : (
+            ) : viewMode === 'reports' ? (
                 <AccountReportsView />
-            )}
+            ) : viewMode === 'post_reports' ? (
+                <PostReportsView />
+            ) : null}
         </div>
     );
 }

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "../../../styles/Notifications.css";
 
 export default function NotifsList() {
   const [notifs, setNotifs] = useState([]);
@@ -6,9 +7,7 @@ export default function NotifsList() {
 
   useEffect(() => {
     fetch("/notifications/list", {
-      headers: {
-        "Accept": "application/json"
-      }
+      headers: { "Accept": "application/json" }
     })
       .then(res => res.json())
       .then(data => {
@@ -18,25 +17,23 @@ export default function NotifsList() {
   }, []);
 
   if (loading) return <div>Chargement des notifications...</div>;
-
   if (!notifs.length) return <div>Aucune notification.</div>;
 
   return (
     <div>
-      <h4>Vos notifications</h4>
-      <ul className="list-group">
+      <h4 className="text-center text-decoration-underline mb-3">Vos notifications</h4>
+      <div>
         {notifs.map(notif => (
-          <li
+          <div
             key={notif.id}
-            className={`list-group-item d-flex justify-content-between align-items-center ${notif.is_read ? '' : 'fw-bold'}`}
+            className={`notif-bar${notif.is_read ? "" : " unread"}`}
           >
-            <span>{notif.content}</span>
-            <span className="text-muted" style={{ fontSize: "0.8em" }}>
-              {notif.created_at}
-            </span>
-          </li>
+            
+            <div className="notif-content">{notif.content}</div>
+            <div className="notif-date">{notif.created_at}</div>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }

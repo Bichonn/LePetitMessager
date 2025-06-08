@@ -1,0 +1,34 @@
+.notif-bar {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-bottom: 1px solid #d3c7b2;
+  cursor: pointer;
+  background: #f9f6f1;
+  transition: background 0.2s;
+}
+
+.notif-bar.unread {
+  background: #ffe9b3;
+  font-weight: bold;
+}
+
+.notif-bar:hover {
+  background: #f0e6d2;
+}
+
+.notif-icon {
+  width: 36px;
+  height: 36px;
+  margin-right: 12px;
+}
+
+.notif-content {
+  flex: 1;
+}
+
+.notif-date {
+  color: #8a7b6d;
+  font-size: 0.85em;
+  margin-left: 10px;
+}

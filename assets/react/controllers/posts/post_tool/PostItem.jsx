@@ -110,6 +110,15 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                         <h5 className="mb-0">
                             <a href={userProfileUrl} className="text-decoration-none text-dark fw-bold">
                                 {author.username}
+                                {author.user_premium && (
+                                    <img
+                                        src="/icons/badge.svg"
+                                        alt="Premium"
+                                        title="Utilisateur Premium"
+                                        className="ms-2"
+                                        style={{ width: 20, height: 20, verticalAlign: 'middle' }}
+                                    />
+                                )}
                             </a>
                         </h5>
                         <small className="text-muted">

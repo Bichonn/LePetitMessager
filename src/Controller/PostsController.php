@@ -57,6 +57,14 @@ class PostsController extends AbstractController
             );
         }
 
+        $maxLength = $user->isUserPremium() ? 180 : 140;
+        if (!empty($content) && mb_strlen($content) > $maxLength) {
+            return $this->json(
+                ['message' => "Le texte du post ne doit pas dépasser $maxLength caractères."],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
         $post = new Posts();
         $post->setFkUser($user);
         if(!empty($content)) {

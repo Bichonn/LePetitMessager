@@ -6,8 +6,16 @@ export default function CreatePost() {
   const [preview, setPreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
+  const [isUserPremium, setIsUserPremium] = useState(false);
 
-  // Handle file selection and preview
+  useEffect(() => {
+    fetch('/user')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data && data.user_premium) setIsUserPremium(true);
+      });
+  }, []);
+
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -105,12 +113,12 @@ export default function CreatePost() {
             className="form-control border-0 border-bottom border-dark bg-color-search"
             placeholder="Quoi de neuf ?"
             rows={3}
+            maxLength={isUserPremium ? 180 : 140}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
-            maxLength={180}
+            onChange={e => setContent(e.target.value)}
           />
           <div className="text-start text-muted small ms-1">
-            {content.length}/180
+            {content.length}/{isUserPremium ? 180 : 140}
           </div>
         </div>
 
@@ -146,11 +154,11 @@ export default function CreatePost() {
               onChange={handleFileChange}
             />
             <label htmlFor="media-upload" className="btn p-0 ml-5">
-              <img 
-                src="/icons/image.png" 
-                alt="Ajouter média" 
-                className="img-fluid media-upload-icon" 
-                style={{ width: '30px' }} 
+              <img
+                src="/icons/image.png"
+                alt="Ajouter média"
+                className="img-fluid media-upload-icon"
+                style={{ width: '30px' }}
               />
             </label>
           </div>

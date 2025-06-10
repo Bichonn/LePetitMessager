@@ -202,10 +202,10 @@ php bin/console doctrine:migrations:migrate --env=prod
 
 ## Équipe
 
-Lucas Oliveira : https://github.com/Bichonn
-Nada Shaala : https://github.com/ahmedokchi
-Marc Aschieri : https://github.com/Zenkai92
-Tanguy Puechoultres : https://github.com/Puechamp
+Lucas Oliveira : https://github.com/Bichonn | 
+Nada Shaala : https://github.com/ahmedokchi | 
+Marc Aschieri : https://github.com/Zenkai92 | 
+Tanguy Puechoultres : https://github.com/Puechamp | 
 Siwar Ben Haj Youssef : https://github.com/siwar66
 
 

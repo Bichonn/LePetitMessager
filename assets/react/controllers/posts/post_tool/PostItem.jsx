@@ -3,6 +3,7 @@ import IsImageFile from './IsImageFile';
 import IsVideoFile from './IsVideoFile';
 import LikeBtn from '../btn_post/LikeBtn';
 import CommentBtn from '../btn_post/CommentBtn';
+import SaveBtn from '../btn_post/SaveBtn';
 import RepostBtn from '../btn_post/RepostBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
@@ -156,6 +157,10 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                                 postId={post.id}
                                 initialReposted={post.reposted_by_user}
                                 repostsCount={post.reposts_count}
+                            />
+                            <SaveBtn
+                                postId={post.id}
+                                initialFavoris={post.favoris_by_user}
                             />
                         </div>
                         <div className="d-flex justify-content-end">

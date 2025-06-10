@@ -46,7 +46,6 @@
   fill: var(--border-color, #A58D5E);
 }
 
-/* ------ On check event ------ */
 .save-wrapper .container input:checked ~ .save-regular {
   display: none;
 }
@@ -55,7 +54,6 @@
   display: block;
 }
 
-/* ------ Hide the default checkbox ------ */
 .save-wrapper .container input {
   position: absolute;
   opacity: 0;
@@ -64,12 +62,10 @@
   width: 0;
 }
 
-/* Animation lorsqu'on clique */
 .save-wrapper .container:active > svg {
   animation: pulse 0.15s linear;
 }
 
-/* ------ Animation ------ */
 @keyframes keyframes-fill {
   0% {
     transform: scale(0.8);

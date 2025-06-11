@@ -121,6 +121,7 @@ export default function CreatePost() {
             value={content}
             onChange={e => setContent(e.target.value)}
           />
+          <HashtagInput hashtags={hashtags} setHashtags={setHashtags} />
           <div className="text-start text-muted small ms-1">
             {content.length}/{isUserPremium ? 180 : 140}
           </div>
@@ -148,7 +149,6 @@ export default function CreatePost() {
           </div>
         )}
 
-        <HashtagInput hashtags={hashtags} setHashtags={setHashtags} />
 
         <div className="d-flex justify-content-between align-items-center">
           <div>

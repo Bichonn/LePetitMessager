@@ -135,7 +135,7 @@ php bin/console doctrine:fixtures:load       # Charger les données de test
 
 ```
 LePetitMessager/
-├── assets/                 # Assets frontend
+├── assets/                # Assets frontend
 │   ├── react/             # Composants React
 │   │   └── controllers/   # Contrôleurs React organisés par fonctionnalité
 │   └── styles/            # Fichiers CSS
@@ -144,10 +144,10 @@ LePetitMessager/
 ├── public/                # Fichiers publics
 ├── src/                   # Code source PHP
 │   ├── Controller/        # Contrôleurs Symfony
-│   ├── Entity/           # Entités Doctrine
-│   └── Service/          # Services métier
+│   ├── Entity/            # Entités Doctrine
+│   └── Service/           # Services métier
 ├── templates/             # Templates Twig
-└── tests/                # Tests
+└── tests/                 # Tests
 ```
 
 ##  Fonctionnalités clés
@@ -163,6 +163,7 @@ LePetitMessager/
 - Reposts avec [`RepostBtn.jsx`](assets/react/controllers/posts/btn_post/RepostBtn.jsx)
 - Partage avec [`ShareBtn.jsx`](assets/react/controllers/posts/btn_post/ShareBtn.jsx)
 - Sauvegarde avec [`SaveBtn.jsx`](assets/react/controllers/posts/btn_post/SaveBtn.jsx)
+- Hashtags avec [`HashtagInput.jsx`](assets/react/controllers/posts/post_tool/HashtagInput.jsx)
 
 ### Messagerie
 - Interface principale avec [`ListUsers.jsx`](assets/react/controllers/messagerie/ListUsers.jsx)

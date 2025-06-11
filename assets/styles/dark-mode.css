@@ -229,4 +229,9 @@ input, textarea {
   /* border-color is handled by the rule above */
 }
 
+/* Style pour le badge Premium en mode sombre */
+[data-bs-theme="dark"] img[alt="Premium"] {
+  filter: brightness(0) invert(1); /* Convertit le badge en blanc */
+}
+
 /* Autres styles existants... */

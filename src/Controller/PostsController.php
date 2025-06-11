@@ -324,26 +324,35 @@ class PostsController extends AbstractController
                 }
             }
 
+            $hashtagData = array_map(fn($h) => [
+                'id' => $h->getId(),
+                'content' => $h->getContent()
+            ], $post->getHashtags()->toArray());
+
+            $favorisByUser = false;
+            if ($currentUser instanceof Users) {
+                $favorisByUser = $post->getFavoris()->exists(fn($key, $favori) => $favori->getFkUser()->getId() === $currentUser->getId());
+            }
+
             $postData = [
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
-                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'user' => [
-                    'id' => $post->getFkUser()?->getId(),
-                    'username' => $post->getFkUser()?->getUsername(),
-                    'avatar_url' => $post->getFkUser()?->getProfilePicture(),
-                ],
+                'created_at' => $post->getCreatedAt()->format('c'),
+                'updated_at' => $post->getUpdatedAt() ? $post->getUpdatedAt()->format('c') : null,
                 'likes_count' => $likesCount,
                 'liked_by_user' => $likedByUser,
+                'comments_count' => $commentsCount,
                 'reposts_count' => $repostsCount,
                 'reposted_by_user' => $repostedByUser,
-                'comments_count' => $commentsCount, // Add this line
-                'reposter_info' => $reposterInfo, // Add reposter information
-                'hashtags' => array_map(fn($h) => [
-                    'id' => $h->getId(),
-                    'content' => $h->getContent()
-                ], $post->getHashtags()->toArray()),
+                'favoris_by_user' => $favorisByUser,
+                'hashtags' => $hashtagData,
+                'user' => [
+                    'id' => $post->getFkUser()->getId(),
+                    'username' => $post->getFkUser()->getUsername(),
+                    'avatar_url' => $post->getFkUser()->getProfilePicture(),
+                    'user_premium' => $post->getFkUser()->isUserPremium(), // Ajoutez cette ligne
+                ]
             ];
 
             $data[] = $postData;
@@ -385,11 +394,12 @@ class PostsController extends AbstractController
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
-                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $post->getCreatedAt()->format('c'), // Format ISO 8601
                 'user' => [
                     'id' => $user->getId(),
                     'username' => $user->getUsername(),
-                    'avatar_url' => $user->getProfilePicture()
+                    'avatar_url' => $user->getProfilePicture(),
+                    'user_premium' => $user->isUserPremium(), // Ajoutez cette ligne
                 ]
             ];
             $data[] = $postData;
@@ -448,7 +458,7 @@ class PostsController extends AbstractController
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
-                'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                'created_at' => $post->getCreatedAt()->format('c'), // Format ISO 8601
                 'likes_count' => $likesCount,
                 'liked_by_user' => $likedByUser,
                 'user' => [

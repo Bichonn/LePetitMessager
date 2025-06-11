@@ -57,13 +57,13 @@ export default function UserProfileInfo({ user, onEditClick }) {
               <h3 className="mb-1 fw-bold fst-italic">
                 {user.username}
                 {user.user_premium && (
-                  <img
-                    src="/icons/badge.svg"
-                    alt="Premium"
-                    title="Utilisateur Premium"
-                    className="ms-2"
-                    style={{ width: 28, height: 28, verticalAlign: 'middle' }}
-                  />
+                    <img
+                        src="/icons/badge.svg"
+                        alt="Premium"
+                        title="Utilisateur Premium"
+                        className="ms-2"
+                        style={{ width: 18, height: 18, verticalAlign: 'middle' }}
+                    />
                 )}
                 {user.private_account && !isOwnProfile && (
                   <img src="/icons/cadenas.png" className="lock-icon-img ms-1" alt="Profil privé"/>

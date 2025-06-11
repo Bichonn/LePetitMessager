@@ -11,6 +11,44 @@ import UpdatePost from '../UpdatePost';
 import ReportPostBtn from '../btn_post/ReportPostBtn'; // Add this import
 import '../../../../styles/PostItem.css';
 
+// Fonction pour formater la date en format relatif
+const formatRelativeTime = (dateString) => {
+    const now = new Date();
+    let postDate = new Date(dateString);
+    
+    // Vérifier si les dates sont valides
+    if (isNaN(postDate.getTime())) {
+        return "Date invalide";
+    }
+    
+    const diffInMs = now - postDate;
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+    
+    // Si la date est dans le futur ou la différence est négative
+    if (diffInSeconds < 0) {
+        return "À l'instant";
+    }
+    
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const diffInHours = Math.floor(diffInMinutes / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInSeconds < 30) {
+        return "À l'instant";
+    } else if (diffInMinutes < 1) {
+        return `il y a ${diffInSeconds}s`;
+    } else if (diffInMinutes < 60) {
+        return `il y a ${diffInMinutes} min`;
+    } else if (diffInHours < 24) {
+        return `il y a ${diffInHours}h`;
+    } else if (diffInDays < 7) {
+        return `il y a ${diffInDays}j`;
+    } else {
+        // Pour les dates plus anciennes, afficher la date complète
+        return postDate.toLocaleDateString('fr-FR');
+    }
+};
+
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
@@ -117,13 +155,13 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                                         alt="Premium"
                                         title="Utilisateur Premium"
                                         className="ms-2"
-                                        style={{ width: 20, height: 20, verticalAlign: 'middle' }}
+                                        style={{ width: 16, height: 16, verticalAlign: 'middle' }}
                                     />
                                 )}
                             </a>
                         </h5>
                         <small className="text-muted">
-                            {new Date(post.created_at).toLocaleString()}
+                            {formatRelativeTime(post.created_at)}
                         </small>
                     </div>
                     {showReportButton && (

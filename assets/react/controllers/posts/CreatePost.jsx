@@ -98,6 +98,11 @@ export default function CreatePost() {
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
 
         document.dispatchEvent(new CustomEvent('postCreated'));
+        
+        // Faire disparaître le message de succès après 2 secondes
+        setTimeout(() => {
+          setFeedback({ type: '', message: '' });
+        }, 2000);
       } else {
         const error = await response.json();
         setFeedback({ type: 'error', message: error.message || 'Erreur lors de la publication' });
@@ -108,7 +113,7 @@ export default function CreatePost() {
       setIsSubmitting(false);
     }
   };
-
+  
   return (
     <div className="post-creation-card border border-dark">
       <form onSubmit={handleSubmit}>

@@ -118,12 +118,13 @@ final class CommentsController extends AbstractController
         $commentData = [
             'id' => $comment->getId(),
             'content_text' => $comment->getContentText(),
-            'content_multimedia' => $comment->getContentMultimedia(), // Cloudinary URL
+            'content_multimedia' => $comment->getContentMultimedia(),
             'created_at' => $comment->getCreatedAt()?->format('Y-m-d H:i:s'),
             'user' => [
                 'id' => $comment->getFkUser()?->getId(),
                 'username' => $comment->getFkUser()?->getUsername(),
-                'avatar_url' => $comment->getFkUser()?->getProfilePicture(), // Assuming this is already a Cloudinary URL
+                'avatar_url' => $comment->getFkUser()?->getProfilePicture(),
+                'user_premium' => $comment->getFkUser()?->isUserPremium(), // Ajoutez cette ligne
             ]
         ];
 
@@ -157,6 +158,7 @@ final class CommentsController extends AbstractController
                     'id' => $comment->getFkUser()?->getId(),
                     'username' => $comment->getFkUser()?->getUsername(),
                     'avatar_url' => $comment->getFkUser()?->getProfilePicture(),
+                    'user_premium' => $comment->getFkUser()?->isUserPremium(), // Ajoutez cette ligne
                 ]
             ];
         }

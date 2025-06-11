@@ -1,5 +1,31 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
+// Fonction pour formater les timestamps relatifs
+const formatRelativeTime = (dateString) => {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diffInSeconds = Math.floor((now - date) / 1000);
+
+  if (diffInSeconds < 60) {
+    return "à l'instant";
+  } else if (diffInSeconds < 3600) {
+    const minutes = Math.floor(diffInSeconds / 60);
+    return `il y a ${minutes} min`;
+  } else if (diffInSeconds < 86400) {
+    const hours = Math.floor(diffInSeconds / 3600);
+    return `il y a ${hours}h`;
+  } else if (diffInSeconds < 604800) {
+    const days = Math.floor(diffInSeconds / 86400);
+    return `il y a ${days}j`;
+  } else {
+    return date.toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  }
+};
+
 export default function CommentsList({ postId }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -10,9 +36,8 @@ export default function CommentsList({ postId }) {
     try {
       const res = await fetch(`/comments/post/${currentPostId}`);
       if (!res.ok) {
-        // Handle HTTP errors, e.g., by throwing an error or setting an error state
         console.error("Failed to fetch comments:", res.status);
-        setComments([]); // Clear comments on error or set an error message
+        setComments([]);
         setLoading(false);
         return;
       }
@@ -20,11 +45,11 @@ export default function CommentsList({ postId }) {
       setComments(data);
     } catch (error) {
       console.error("Error fetching comments:", error);
-      setComments([]); // Clear comments on error
+      setComments([]);
     } finally {
       setLoading(false);
     }
-  }, []); // useCallback dependencies are empty as fetch URL is constructed inside
+  }, []);
 
   useEffect(() => {
     fetchComments(postId);
@@ -42,7 +67,7 @@ export default function CommentsList({ postId }) {
     return () => {
       document.removeEventListener('commentCreated', handleCommentCreated);
     };
-  }, [postId, fetchComments]); // Add postId and fetchComments to dependencies
+  }, [postId, fetchComments]);
 
   if (loading) return <div>Chargement des commentaires...</div>;
 
@@ -63,8 +88,17 @@ export default function CommentsList({ postId }) {
               style={{ objectFit: 'cover' }}
             />
             <strong>{comment.user.username}</strong>
+            {comment.user.user_premium && (
+              <img
+                src="/icons/badge.svg"
+                alt="Premium"
+                title="Utilisateur Premium"
+                className="ms-2"
+                style={{ width: 16, height: 16, verticalAlign: 'middle' }}
+              />
+            )}
             <span className="text-muted ms-2" style={{ fontSize: '0.85em' }}>
-              {new Date(comment.created_at).toLocaleString()}
+              {formatRelativeTime(comment.created_at)}
             </span>
           </div>
           {comment.content_text && <div className='ms-4'>{comment.content_text}</div>}

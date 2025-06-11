@@ -58,7 +58,7 @@ final class UsersController extends AbstractController
         // Utiliser DQL pour sélectionner uniquement les champs nécessaires
         // Cela peut améliorer les performances si l'entité User est volumineuse ou a des relations EAGER non nécessaires ici.
         $query = $entityManager->createQuery(
-            'SELECT u.id, u.email, u.username, u.first_name, u.last_name, u.bio, u.profile_picture, u.banner, u.created_at, u.private_account
+            'SELECT u.id, u.email, u.username, u.first_name, u.last_name, u.bio, u.profile_picture, u.banner, u.created_at, u.private_account, u.user_premium
              FROM App\Entity\Users u
              WHERE u.id = :userId'
         )->setParameter('userId', $securityUser->getId());

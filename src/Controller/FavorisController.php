@@ -53,12 +53,10 @@ final class FavorisController extends AbstractController
         ]);
 
         if ($existingFavoris) {
-            // Si déjà liké, on unlike (supprime le like)
             $entityManager->remove($existingFavoris);
             $entityManager->flush();
             return $this->json( Response::HTTP_OK);
         } else {
-            // Sinon, on ajoute le like
             $favori = new Favoris();
             $favori->setFkUser($user);
             $favori->setFkPost($post);
@@ -68,5 +66,41 @@ final class FavorisController extends AbstractController
 
             return $this->json( Response::HTTP_CREATED);
         }
+    }
+
+    #[Route('/users/{userId}/favoris-posts', name: 'app_user_favoris_posts', methods: ['GET'])]
+    public function userFavorisPosts(
+        int $userId,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        $user = $entityManager->getRepository(Users::class)->find($userId);
+        if (!$user) {
+            return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
+        }
+    
+        $favoris = $entityManager->getRepository(\App\Entity\Favoris::class)->findBy(['fk_user' => $user]);
+        $posts = [];
+        foreach ($favoris as $fav) {
+            $post = $fav->getFkPost();
+            if ($post) {
+                $posts[] = [
+                    'id' => $post->getId(),
+                    'content_text' => $post->getContentText(),
+                    'content_multimedia' => $post->getContentMultimedia(),
+                    'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'user' => [
+                        'id' => $post->getFkUser()?->getId(),
+                        'username' => $post->getFkUser()?->getUsername(),
+                        'avatar_url' => $post->getFkUser()?->getProfilePicture(),
+                    ],
+                    'hashtags' => array_map(fn($h) => [
+                        'id' => $h->getId(),
+                        'content' => $h->getContent()
+                    ], $post->getHashtags()->toArray()),
+                ];
+            }
+        }
+    
+        return $this->json($posts);
     }
 }

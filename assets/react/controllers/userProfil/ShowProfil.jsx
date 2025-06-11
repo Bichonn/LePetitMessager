@@ -3,8 +3,10 @@ import '../../../styles/ShowProfil.css';
 import UserProfileInfo from './UserProfileInfo';
 import UserPostsList from './UserPostsList';
 import EditProfileForm from './EditProfileForm';
-import UserLikedPostsList from './UserLikedPostsList'; // Importer le nouveau composant
-import UserRepostedPostsList from './UserRepostedPostsList'; // Import the new component
+import UserLikedPostsList from './UserLikedPostsList';
+import UserRepostedPostsList from './UserRepostedPostsList';
+import UserFavorisPostsList from './UserFavorisPostsList';
+
 
 export default function ShowProfil({ targetId }) {
   const [user, setUser] = useState(null);
@@ -48,7 +50,7 @@ export default function ShowProfil({ targetId }) {
   }, [targetId]);
 
   const handleProfileUpdated = (updatedUserData) => {
-    fetchUser(); 
+    fetchUser();
     setShowEditModal(false);
   };
 
@@ -57,16 +59,16 @@ export default function ShowProfil({ targetId }) {
   if (error && (!user || !user.is_private || (user.is_private && !user.is_own_profile && !user.username))) {
     return <div className="alert alert-danger m-3">Erreur du profil: {error}</div>;
   }
-  
+
   if (!user && !isLoading) {
     return <div className="alert alert-warning m-3">{error || "Utilisateur non trouvé ou profil inaccessible."}</div>;
   }
-  
+
   return (
     <>
-      <UserProfileInfo 
-        user={user} 
-        onEditClick={user && user.is_own_profile ? () => setShowEditModal(true) : null} 
+      <UserProfileInfo
+        user={user}
+        onEditClick={user && user.is_own_profile ? () => setShowEditModal(true) : null}
       />
 
       {showEditModal && user && user.is_own_profile && (
@@ -96,17 +98,26 @@ export default function ShowProfil({ targetId }) {
               Publications Aimées
             </button>
             <button
-              className={`btn ${activeTab === 'reposted' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
+              className={`btn me-2 ${activeTab === 'reposted' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
               onClick={() => setActiveTab('reposted')}
               style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
             >
               Publications Republiées
+            </button>
+            <button
+              className={`btn ${activeTab === 'favoris' ? 'btn-primary' : 'btn-outline-secondary rounded-0'}`}
+              onClick={() => setActiveTab('favoris')}
+              style={{ minWidth: '180px' }} // Assurer une largeur minimale pour les boutons
+            >
+              Publications Enregistrées
             </button>
           </div>
 
           {activeTab === 'recent' && <UserPostsList user={user} />}
           {activeTab === 'liked' && <UserLikedPostsList user={user} />}
           {activeTab === 'reposted' && <UserRepostedPostsList user={user} />}
+          {activeTab === 'favoris' && <UserFavorisPostsList user={user} />}
+
         </div>
       )}
     </>

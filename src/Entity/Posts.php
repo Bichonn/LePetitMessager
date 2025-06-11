@@ -72,6 +72,12 @@ class Posts
     #[ORM\OneToMany(targetEntity: Notifications::class, mappedBy: 'fk_post')]
     private Collection $notifications;
 
+    /**
+     * @var Collection<int, Hashtags>
+     */
+    #[ORM\ManyToMany(targetEntity: Hashtags::class, cascade: ['persist'])]
+    private Collection $hashtags;
+
     public function __construct()
     {
         $this->likes = new ArrayCollection();
@@ -81,6 +87,7 @@ class Posts
         $this->favoris = new ArrayCollection();
         $this->notifications = new ArrayCollection();
         $this->created_at = new \DateTimeImmutable();
+        $this->hashtags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -337,6 +344,28 @@ class Posts
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Hashtags>
+     */
+    public function getHashtags(): Collection
+    {
+        return $this->hashtags;
+    }
+    
+    public function addHashtag(Hashtags $hashtag): static
+    {
+        if (!$this->hashtags->contains($hashtag)) {
+            $this->hashtags->add($hashtag);
+        }
+        return $this;
+    }
+    
+    public function removeHashtag(Hashtags $hashtag): static
+    {
+        $this->hashtags->removeElement($hashtag);
         return $this;
     }
 }

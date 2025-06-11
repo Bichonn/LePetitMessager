@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import HashtagInput from "./post_tool/HashtagInput";
 
 export default function CreatePost() {
   const [content, setContent] = useState('');
@@ -7,6 +8,7 @@ export default function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [isUserPremium, setIsUserPremium] = useState(false);
+  const [hashtags, setHashtags] = useState([]);
 
   useEffect(() => {
     fetch('/user')
@@ -74,6 +76,7 @@ export default function CreatePost() {
     if (file) {
       formData.append('media', file);
     }
+    formData.append('hashtags', hashtags.map(t => `#${t}`).join(' '));
 
     // Get CSRF token from meta tag
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -91,6 +94,7 @@ export default function CreatePost() {
         setContent('');
         setFile(null);
         setPreview(null);
+        setHashtags([]);
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
 
         document.dispatchEvent(new CustomEvent('postCreated'));
@@ -143,6 +147,8 @@ export default function CreatePost() {
             </button>
           </div>
         )}
+
+        <HashtagInput hashtags={hashtags} setHashtags={setHashtags} />
 
         <div className="d-flex justify-content-between align-items-center">
           <div>

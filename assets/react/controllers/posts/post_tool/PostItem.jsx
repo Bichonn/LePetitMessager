@@ -93,8 +93,8 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     <div className="reposter-info mb-1 ms-2" style={{ fontSize: '0.85em', color: 'var(--bs-secondary-color)' }}>
                         <small>
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" className="bi bi-arrow-repeat me-1" viewBox="0 0 16 16">
-                                <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z"/>
-                                <path fillRule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5A5.002 5.002 0 0 0 8 3zM3.5 9A5.002 5.002 0 0 0 8 13c1.552 0 2.94-.707 3.857-1.818a.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.5z"/>
+                                <path d="M11.534 7h3.932a.25.25 0 0 1 .192.41l-1.966 2.36a.25.25 0 0 1-.384 0l-1.966-2.36a.25.25 0 0 1 .192-.41zm-11 2h3.932a.25.25 0 0 0 .192-.41L2.692 6.23a.25.25 0 0 0-.384 0L.342 8.59A.25.25 0 0 0 .534 9z" />
+                                <path fillRule="evenodd" d="M8 3c-1.552 0-2.94.707-3.857 1.818a.5.5 0 1 1-.771-.636A6.002 6.002 0 0 1 13.917 7H12.5A5.002 5.002 0 0 0 8 3zM3.5 9A5.002 5.002 0 0 0 8 13c1.552 0 2.94-.707 3.857-1.818a.5.5 0 1 1 .771.636A6.002 6.002 0 0 1 2.083 9H3.5z" />
                             </svg>
                             Republié par <a href={`/profil/view/${reposter_info.id}`} className="text-decoration-none fw-bold" style={{ color: 'inherit' }}>{reposter_info.username}</a>
                         </small>
@@ -142,6 +142,13 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             </div>
                         )}
                     </div>
+                    {post.hashtags && post.hashtags.length > 0 && (
+                        <div className="mt-2">
+                            {post.hashtags.map(tag => (
+                                <span key={tag.id} className="badge bg-warning text-dark me-1">#{tag.content}</span>
+                            ))}
+                        </div>
+                    )}
                     <div className="d-flex justify-content-between mt-2">
                         <div className="d-flex justify-content-start align-items-center">
                             <LikeBtn

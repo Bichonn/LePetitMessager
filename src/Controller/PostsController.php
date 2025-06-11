@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Posts;
 use App\Entity\PostsReports;
 use App\Entity\Users;
+use App\Entity\Hashtags;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -89,6 +90,23 @@ class PostsController extends AbstractController
         }
 
         $entityManager->persist($post);
+
+        $hashtagsInput = $request->request->get('hashtags', ''); // ex: "#chat #chien"
+        $hashtagsArray = array_filter(array_map('trim', explode(' ', $hashtagsInput)));
+
+        foreach ($hashtagsArray as $hashtagContent) {
+            if (empty($hashtagContent)) continue;
+            $hashtagContent = ltrim($hashtagContent, '#');
+            $hashtagRepo = $entityManager->getRepository(Hashtags::class);
+            $hashtag = $hashtagRepo->findOneBy(['content' => $hashtagContent]);
+            if (!$hashtag) {
+                $hashtag = new Hashtags();
+                $hashtag->setContent($hashtagContent);
+                $entityManager->persist($hashtag);
+            }
+            $post->addHashtag($hashtag);
+        }
+
         $entityManager->flush();
 
         return $this->json(
@@ -322,6 +340,10 @@ class PostsController extends AbstractController
                 'reposted_by_user' => $repostedByUser,
                 'comments_count' => $commentsCount, // Add this line
                 'reposter_info' => $reposterInfo, // Add reposter information
+                'hashtags' => array_map(fn($h) => [
+                    'id' => $h->getId(),
+                    'content' => $h->getContent()
+                ], $post->getHashtags()->toArray()),
             ];
 
             $data[] = $postData;

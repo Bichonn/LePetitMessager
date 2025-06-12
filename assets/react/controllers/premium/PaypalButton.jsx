@@ -35,7 +35,7 @@ export default function PaypalButton({ onPaymentSuccess }) {
                     style={{ layout: 'vertical', color: 'silver', shape: 'rect', label: 'paypal' }}
                     createOrder={(data, actions) => {
                       return actions.order.create({
-                        purchase_units: [{ amount: { value: "0.05" } }],
+                        purchase_units: [{ amount: { value: "6.99" } }],
                       });
                     }}
                     onApprove={(data, actions) => {

@@ -75,16 +75,12 @@ class AppAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        // If the request is an AJAX request (e.g., from your RegisterForm), return JSON
-        if ($request->isXmlHttpRequest() || $request->headers->get('Accept') === 'application/json') {
-            return new JsonResponse(['success' => true, 'message' => 'Logged in successfully.']);
-        }
-
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }
 
-        return new RedirectResponse($this->urlGenerator->generate('app_test'));
+        // Rediriger vers la page d'accueil après connexion réussie
+        return new RedirectResponse($this->urlGenerator->generate('app_test')); // Assurez-vous que c'est app_test
     }
 
     protected function getLoginUrl(Request $request): string

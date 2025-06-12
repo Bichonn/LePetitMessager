@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import GoogleAuthBtn from './GoogleAuthBtn';
 import '../../../styles/formStyle.css';
 import '../../../styles/app.css';
 
@@ -117,6 +118,12 @@ export default function RegisterForm() {
                                 <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body">
+                                {/* Bouton Google en haut du modal */}
+                                <div className="mb-3 text-center">
+                                    <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" />
+                                    <hr/>
+                                </div>
+
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
                                     <div className="mb-3">
                                         <label htmlFor="firstName" className="form-label text-decoration-underline mb-0">Prénom</label>

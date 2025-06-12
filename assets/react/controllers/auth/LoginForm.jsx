@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import GoogleAuthBtn from './GoogleAuthBtn';
 import '../../../styles/formStyle.css';
 import '../../../styles/app.css';
 
@@ -123,6 +124,12 @@ export default function LoginForm() {
                                 <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body">
+                                {/* Bouton Google en haut du modal */}
+                                <div className="mb-3 text-center">
+                                    <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" />
+                                    <hr />
+                                </div>
+
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
                                     {errors.general && <div className="custom-alert custom-alert-danger">{errors.general}</div>}
 

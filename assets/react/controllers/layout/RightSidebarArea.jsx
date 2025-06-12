@@ -9,6 +9,7 @@ import CommentsList from '../comments/CommentsList';
 import CommentForm from '../comments/CommentForm';
 import PaypalButton from '../premium/PaypalButton';
 import SuggestedUsers from '../SuggestedUsers';
+import GoogleAuthBtn from '../auth/GoogleAuthBtn';
 
 export default function RightSidebarArea({ isAuthenticated, username, logoutPath }) {
   const [currentView, setCurrentView] = useState('default');

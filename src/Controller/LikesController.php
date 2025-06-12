@@ -68,7 +68,7 @@ final class LikesController extends AbstractController
                 $notif = new Notifications();
                 $notif->setFkUser($post->getFkUser());
                 $notif->setFkPost($post);
-                $notif->setContent($user->getUsername() . " a aimé votre post.");
+                $notif->setContent($user->getUsername() . " a approuvé votre message.");
                 $notif->setIsRead(false);
                 $notif->setCreatedAt(new \DateTimeImmutable());
                 $entityManager->persist($notif);

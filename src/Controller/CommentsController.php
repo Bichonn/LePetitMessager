@@ -101,12 +101,11 @@ final class CommentsController extends AbstractController
 
         $entityManager->persist($comment);
 
-        // Création de la notification pour l'auteur du post (sauf si l'auteur commente son propre post)
         if ($post->getFkUser() && $post->getFkUser() !== $user) {
             $notif = new Notifications();
             $notif->setFkUser($post->getFkUser());
             $notif->setFkPost($post);
-            $notif->setContent($user->getUsername() . " a commenté votre post.");
+            $notif->setContent($user->getUsername() . " a commenté votre message.");
             $notif->setIsRead(false);
             $notif->setCreatedAt(new \DateTimeImmutable());
             $entityManager->persist($notif);

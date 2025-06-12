@@ -59,7 +59,7 @@ class RepostsController extends AbstractController
                 $notification = new Notifications();
                 $notification->setFkUser($post->getFkUser());
                 $notification->setFkPost($post);
-                $notification->setContent($user->getUsername() . " a reposté votre message.");
+                $notification->setContent($user->getUsername() . " a republié votre message.");
                 $notification->setIsRead(false);
                 $notification->setCreatedAt(new \DateTimeImmutable());
                 $entityManager->persist($notification);

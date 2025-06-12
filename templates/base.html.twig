@@ -19,8 +19,7 @@
 
 	<body>
 		<div class="container-fluid px-0">
-			<div
-				class="row g-0">
+			<div class="row g-0">
 
 				<!-- Barre de navigation (Gauche) -->
 				<div class="col-md-1">
@@ -28,17 +27,17 @@
 				</div>
 
 				<!-- Contenu principal (Centre) -->
-				<div class="col-md-7"> {% block main_content %}{% endblock %}
-					</div>
-
-					<!-- Wigets (Droite) -->
-					<div class="widget-side-container col-md-4 d-flex flex-column">
-
-						<div {{ react_component('layout/RightSidebarArea', { 'isAuthenticated': app.user is not null, 'username': app.user ? app.user.username : null, 'logoutPath': app.user ? path('app_logout') : null } ) }} class="react-component-wrapper"></div>
-
-					</div>
-
+				<div class="col-md-7">
+					{% block main_content %}{% endblock %}
+					{% block body %}{% endblock %}
 				</div>
+
+				<!-- Widgets (Droite) -->
+				<div class="widget-side-container col-md-4 d-flex flex-column">
+					<div {{ react_component('layout/RightSidebarArea', { 'isAuthenticated': app.user is not null, 'username': app.user ? app.user.username : null, 'logoutPath': app.user ? path('app_logout') : null } ) }} class="react-component-wrapper"></div>
+				</div>
+
 			</div>
-		</body>
-	</html>
+		</div>
+	</body>
+</html>

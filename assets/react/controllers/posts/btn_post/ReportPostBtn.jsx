@@ -127,7 +127,7 @@ export default function ReportPostBtn({ postId, postAuthorUsername }) {
           onClick={openModalAndHideButton}
           title="Signaler ce post"
           style={{
-            bottom: '100%', // Position above the 3-dots icon
+            bottom: '20%', // Position above the 3-dots icon
             right: '100%',  // Position to the left of the 3-dots icon
             marginBottom: '1px', // Space above the icon
             marginRight: '2px', // Space to the left of the icon

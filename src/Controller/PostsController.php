@@ -338,7 +338,7 @@ class PostsController extends AbstractController
                 'id' => $post->getId(),
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
-                'created_at' => $post->getCreatedAt()->format('c'),
+                'created_at' => $post->getCreatedAt()->format('c'), // 'c' for ISO 8601
                 'updated_at' => $post->getUpdatedAt() ? $post->getUpdatedAt()->format('c') : null,
                 'likes_count' => $likesCount,
                 'liked_by_user' => $likedByUser,
@@ -347,12 +347,13 @@ class PostsController extends AbstractController
                 'reposted_by_user' => $repostedByUser,
                 'favoris_by_user' => $favorisByUser,
                 'hashtags' => $hashtagData,
-                'user' => [
+                'user' => [ // This is the original post author
                     'id' => $post->getFkUser()->getId(),
                     'username' => $post->getFkUser()->getUsername(),
                     'avatar_url' => $post->getFkUser()->getProfilePicture(),
-                    'user_premium' => $post->getFkUser()->isUserPremium(), // Ajoutez cette ligne
-                ]
+                    'user_premium' => $post->getFkUser()->isUserPremium(),
+                ],
+                'reposter_info' => $reposterInfo, // Ajoutez cette ligne
             ];
 
             $data[] = $postData;

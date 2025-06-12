@@ -55,6 +55,7 @@ export default function PostList() {
     // Gestion du repost de post
     useEffect(() => {
         const handlePostReposted = () => {
+            // Supprimer le délai pour un rechargement plus rapide
             fetchPosts(1, false); // Recharger la première page pour voir le post reposté en haut
         };
         document.addEventListener('postReposted', handlePostReposted);

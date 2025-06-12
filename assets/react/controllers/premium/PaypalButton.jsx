@@ -13,7 +13,6 @@ export default function PaypalButton({ onPaymentSuccess }) {
           <ul className="list-unstyled">
             <li>• <span className="premium-benefit-text">Un badge spécial sur votre profil</span></li>
             <li>• <span className="premium-benefit-text">Plus de caractères pour vos posts</span></li>
-            <li>• <span className="premium-benefit-text">La possibilité d'uploader plusieurs médias par post</span></li>
           </ul>
         </div>
         <button className="btn btn-primary" onClick={() => setShowModal(true)}>

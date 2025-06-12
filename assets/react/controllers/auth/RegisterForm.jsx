@@ -120,7 +120,7 @@ export default function RegisterForm() {
                             <div className="modal-body">
                                 {/* Bouton Google en haut du modal */}
                                 <div className="mb-3 text-center">
-                                    <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" />
+                                    <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" text="Inscription avec Google" />
                                     <hr/>
                                 </div>
 

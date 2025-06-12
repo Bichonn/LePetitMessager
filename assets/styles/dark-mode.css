@@ -234,4 +234,7 @@ input, textarea {
   filter: brightness(0) invert(1); /* Convertit le badge en blanc */
 }
 
-/* Autres styles existants... */
+/* Convertit l'icône Google en blanc dans les boutons en mode sombre */
+[data-bs-theme="dark"] .btn-primary img[alt="Google"] {
+  filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
+}

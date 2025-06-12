@@ -1,17 +1,17 @@
 import React from 'react';
 import '../../../styles/app.css';
 
-export default function GoogleAuthBtn({ className = "btn btn-outline-primary" }) {
+export default function GoogleAuthBtn({ className = "btn-primary", text = "Connexion avec Google" }) {
   return (
-    <a href="/auth/google" className={className} style={{ textDecoration: 'none' }}>
+    <a href="/auth/google" className="btn btn-primary" style={{ textDecoration: 'none' }}>
       <img 
         src="/icons/google.png" 
         alt="Google" 
-        width="20" 
-        height="20" 
-        className="me-2" 
+        width="15" 
+        height="15" 
+        className="me-2 " 
       />
-      Connexion avec Google
+      {text}
     </a>
   );
 }

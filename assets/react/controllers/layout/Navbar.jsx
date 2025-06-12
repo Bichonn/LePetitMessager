@@ -19,12 +19,14 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
           <a href="/" className="nav-link">
             <NavIcons iconPath={"/icons/home.png"} iconName={"Accueil"} />
           </a>
-          <a href="/messages" className="nav-link">
-            <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
-          </a>
           <a href="/posts/top" className="nav-link">
             <NavIcons iconPath={"/icons/top.png"} iconName={"Gros titre"} />
           </a>
+          {isAuthenticated && (
+          <a href="/messages" className="nav-link">
+            <NavIcons iconPath={"/icons/message.png"} iconName={"Messages"} />
+          </a>
+          )}
         </div>
 
         {isAuthenticated && isAdmin && (
@@ -33,9 +35,11 @@ export default function Navbar({ isAuthenticated, isAdmin }) {
           </a>
         )}
         <div className="navbar-bottom">
+          {isAuthenticated && (
           <a href="/notifications" className="nav-link">
             <NotifIcon />
           </a>
+          )}
           {isAuthenticated && (
             <a href="/profil" className="nav-link">
               <NavIcons iconPath={"/icons/profil.png"} iconName={"Profil"} />

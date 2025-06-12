@@ -85,7 +85,7 @@ export default function PostList() {
         setPosts(prevPosts => prevPosts.map(post => post.id === updatedPost.id ? { ...post, ...updatedPost } : post));
     };
 
-    if (posts.length === 0 && isLoading) return <div className="text-center p-3">Chargement des postes...</div>;
+    if (posts.length === 0 && isLoading) return <div className="text-center p-3">Chargement des messages...</div>;
     if (error && posts.length === 0) return <div className="alert alert-danger">Erreur: {error}</div>;
     if (posts.length === 0 && !isLoading) return <div className="text-center p-3">Aucun message à afficher pour le moment.</div>;
 
@@ -116,7 +116,7 @@ export default function PostList() {
                     );
                 }
             })}
-            {isLoading && posts.length > 0 && <div className="text-center p-3">Chargement de plus de postes...</div>}
+            {isLoading && posts.length > 0 && <div className="text-center p-3">Chargement de plus de messages...</div>}
             {!isLoading && posts.length > 0 && posts.length >= totalPosts && <div className="text-center text-muted p-3">Vous avez vu tous les messages.</div>}
             {error && <div className="alert alert-warning mt-2">Erreur lors du chargement de messages supplémentaires: {error}</div>}
         </div>

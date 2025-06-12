@@ -13,8 +13,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
-use App\Service\CloudinaryService; // Ajoutez cette ligne
+use App\Service\CloudinaryService; 
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
+#[IsGranted('IS_AUTHENTICATED_FULLY')]
 class MessagesController extends AbstractController
 {
     #[Route('/messages', name: 'app_messages_index', methods: ['GET'])]

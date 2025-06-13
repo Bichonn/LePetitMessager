@@ -19,16 +19,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class FavorisController extends AbstractController
 {
-    /**
-     * Render favorites index page
-     */
-    #[Route('/favoris', name: 'app_favoris')]
-    public function index(): Response
-    {
-        return $this->render('favoris/index.html.twig', [
-            'controller_name' => 'FavorisController',
-        ]);
-    }
+    
 
     /**
      * Toggle favorite status for a post (add/remove from favorites)

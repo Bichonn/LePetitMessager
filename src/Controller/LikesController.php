@@ -19,17 +19,7 @@ use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\Filesystem\Filesystem;
 
 final class LikesController extends AbstractController
-{
-    /**
-     * Render likes index page
-     */
-    #[Route('/likes', name: 'app_likes')]
-    public function index(): Response
-    {
-        return $this->render('likes/index.html.twig', [
-            'controller_name' => 'LikesController',
-        ]);
-    }
+{ 
 
     /**
      * Toggle like status for a post (like/unlike)

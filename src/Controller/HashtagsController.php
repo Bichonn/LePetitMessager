@@ -18,16 +18,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class HashtagsController extends AbstractController
 {
-    /**
-     * Render hashtags index page
-     */
-    #[Route('/hashtags', name: 'app_hashtags')]
-    public function index(): Response
-    {
-        return $this->render('hashtags/index.html.twig', [
-            'controller_name' => 'HashtagsController',
-        ]);
-    }
+    
 
     /**
      * Search hashtags by content with partial matching

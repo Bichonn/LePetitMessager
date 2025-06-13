@@ -18,16 +18,7 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class FollowsController extends AbstractController
 {
-    /**
-     * Render follows index page
-     */
-    #[Route('/follows', name: 'app_follows')]
-    public function index(): Response
-    {
-        return $this->render('follows/index.html.twig', [
-            'controller_name' => 'FollowsController',
-        ]);
-    }
+    
 
     /**
      * Toggle follow status for a user (follow/unfollow)

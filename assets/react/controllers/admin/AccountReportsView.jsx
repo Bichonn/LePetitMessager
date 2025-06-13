@@ -1,21 +1,27 @@
 // filepath: assets/react/controllers/admin/AccountReportsView.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 
+/**
+ * AccountReportsView component fetches and displays account reports, allowing administrators to delete them.
+ */
 export default function AccountReportsView() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    /**
+     * Fetches account reports from the API.
+     * Updates the state with the reports data or an error message.
+     */
     const fetchAccountReports = useCallback(async () => {
         setLoading(true);
         try {
-            // Remplacez par votre véritable endpoint API pour les signalements de comptes
             const response = await fetch('/admin/api/account-reports');
             if (!response.ok) {
                 throw new Error(`Erreur HTTP: ${response.status}`);
             }
             const data = await response.json();
-            setReports(data.reports || data); // Adaptez selon la structure de votre réponse API
+            setReports(data.reports || data); // Adapts to different API response structures
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -29,13 +35,15 @@ export default function AccountReportsView() {
         fetchAccountReports();
     }, [fetchAccountReports]);
 
+    /**
+     * Handles the deletion of a report.
+     * @param {number} reportId - The ID of the report to delete.
+     */
     const handleDeleteReport = async (reportId) => {
         if (window.confirm(`Êtes-vous sûr de vouloir supprimer le signalement ID ${reportId} ?`)) {
             try {
-                // Assurez-vous que cet endpoint existe et est configuré pour DELETE
                 const response = await fetch(`/admin/api/account-reports/${reportId}`, {
                     method: 'DELETE',
-                    // Ajoutez les headers nécessaires, par exemple pour l'authentification ou CSRF si besoin
                 });
 
                 if (!response.ok) {
@@ -43,7 +51,6 @@ export default function AccountReportsView() {
                     throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
                 }
 
-                // Mettre à jour la liste des signalements après suppression
                 setReports(prevReports => prevReports.filter(report => report.id !== reportId));
                 alert('Signalement supprimé avec succès.');
             } catch (err) {

@@ -14,23 +14,27 @@ use App\Security\AppAuthenticator;
 
 class RegisterController extends AbstractController
 {
+    /**
+     * Register new user account and automatically authenticate
+     */
     #[Route('/register', name: 'app_register', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $hasher, EntityManagerInterface $em, UserAuthenticatorInterface $userAuthenticator, AppAuthenticator $authenticator): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
 
-        // Vérifie d'abord si l'email existe déjà
+        // Check if email already exists
         $existingEmail = $em->getRepository(Users::class)->findOneBy(['email' => $data['email']]);
         if ($existingEmail) {
             return new JsonResponse(['error' => 'Cet email est déjà utilisé.'], 400);
         }
 
-        // Vérifie si le username existe déjà
+        // Check if username already exists
         $existingUsername = $em->getRepository(Users::class)->findOneBy(['username' => $data['username']]);
         if ($existingUsername) {
             return new JsonResponse(['error' => 'Ce nom d\'utilisateur est déjà utilisé.'], 400);
         }
 
+        // Create new user entity with default values
         $user = new Users();
         $user->setEmail($data['email']);
         $user->setUsername($data['username']);
@@ -43,6 +47,7 @@ class RegisterController extends AbstractController
         $user->setBio('');
         $user->setRoles(['ROLE_USER']);
 
+        // Hash password before storing
         $hashedPassword = $hasher->hashPassword($user, $data['password']);
         $user->setPassword($hashedPassword);
 
@@ -50,10 +55,10 @@ class RegisterController extends AbstractController
             $em->persist($user);
             $em->flush();
 
-            // Set a flag for programmatic login
+            // Set flag for programmatic login
             $request->attributes->set('_programmatic_login', true);
 
-            // Authenticate the user programmatically after registration
+            // Authenticate user immediately after registration
             return $userAuthenticator->authenticateUser(
                 $user,
                 $authenticator,

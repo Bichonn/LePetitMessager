@@ -18,6 +18,9 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class FollowsController extends AbstractController
 {
+    /**
+     * Render follows index page
+     */
     #[Route('/follows', name: 'app_follows')]
     public function index(): Response
     {
@@ -26,6 +29,9 @@ final class FollowsController extends AbstractController
         ]);
     }
 
+    /**
+     * Toggle follow status for a user (follow/unfollow)
+     */
     #[Route('/follows/add', name: 'app_follows_add', methods: ['POST'])]
     public function create(
         Request $request,
@@ -33,6 +39,7 @@ final class FollowsController extends AbstractController
         SluggerInterface $slugger
     ): JsonResponse {
 
+        // Check user authentication
         $user = $this->getUser();
         if (!$user) {
             return $this->json(
@@ -41,32 +48,38 @@ final class FollowsController extends AbstractController
             );
         }
 
+        // Validate required parameter
         $followingId = $request->request->get('following_id');
         if (!$followingId) {
             return $this->json(['message' => 'ID du messager à suivre manquant'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Verify target user exists
         $following = $entityManager->getRepository(Users::class)->find($followingId);
         if (!$following) {
             return $this->json(['message' => 'Messager à suivre introuvable'], Response::HTTP_NOT_FOUND);
         }
 
+        // Prevent users from following themselves
         if ($user === $following) {
             return $this->json(['message' => 'Vous ne pouvez pas vous suivre vous-même'], Response::HTTP_BAD_REQUEST);
         }
 
+        // Check if follow relationship already exists
         $existingFollow = $entityManager->getRepository(Follows::class)->findOneBy([
             'fk_follower' => $user,
             'fk_following' => $following
         ]);
 
         if ($existingFollow) {
+            // Unfollow: remove existing relationship
             $entityManager->remove($existingFollow);
             $entityManager->flush();
             return $this->json([
                 'followed' => false
             ], Response::HTTP_OK);
         } else {
+            // Follow: create new relationship
             $follow = new Follows();
             $follow->setFkFollower($user);
             $follow->setFkFollowing($following);
@@ -74,12 +87,13 @@ final class FollowsController extends AbstractController
 
             $entityManager->persist($follow);
 
+            // Create notification for followed user
             $notif = new Notifications();
             $notif->setFkUser($following);
             $notif->setContent($user->getUsername() . " vous suit désormais.");
             $notif->setIsRead(false);
             $notif->setCreatedAt(new \DateTimeImmutable());
-            $notif->setFkPost(null);
+            $notif->setFkPost(null); // Not related to a specific post
             $entityManager->persist($notif);
 
             $entityManager->flush();
@@ -90,17 +104,23 @@ final class FollowsController extends AbstractController
         }
     }
 
+    /**
+     * Get list of users that current user is following
+     */
     #[Route('/following', name: 'app_following', methods: ['GET'])]
     public function getFollowingList(EntityManagerInterface $entityManager): JsonResponse
     {
+        // Check user authentication
         $user = $this->getUser();
         if (!$user) {
             return $this->json(['message' => 'Non authentifié'], Response::HTTP_UNAUTHORIZED);
         }
 
+        // Get all follow relationships where current user is the follower
         $follows = $entityManager->getRepository(Follows::class)
             ->findBy(['fk_follower' => $user]);
 
+        // Format following users data
         $data = [];
         foreach ($follows as $follow) {
             $followed = $follow->getFkFollowing();

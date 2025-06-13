@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
-// Fonction utilitaire pour le debouncing
+/**
+ * Utility function for debouncing
+ */
 function debounce(func, delay) {
   let timeout;
   return function(...args) {
@@ -10,11 +12,15 @@ function debounce(func, delay) {
   };
 }
 
+/**
+ * Component for searching users with suggestions dropdown
+ */
 export default function SearchBar({ onSearch }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
 
+  // Fetch user suggestions from API
   const fetchUserSuggestions = async (term) => {
     if (term.trim() === '' || term.length < 2) {
       setSuggestions([]);
@@ -24,7 +30,7 @@ export default function SearchBar({ onSearch }) {
     try {
       const response = await fetch(`/users/search/${encodeURIComponent(term)}`);
       if (!response.ok) {
-        // Gérer les erreurs de réponse (ex: log, ou message utilisateur)
+        // Handle response errors
         console.error('Search API response not OK:', response.status);
         setSuggestions([]);
         return;
@@ -33,25 +39,28 @@ export default function SearchBar({ onSearch }) {
       setSuggestions(data);
     } catch (error) {
       console.error("Failed to fetch user suggestions:", error);
-      setSuggestions([]); // Effacer les suggestions en cas d'erreur
+      setSuggestions([]); // Clear suggestions on error
     } finally {
       setLoadingSuggestions(false);
     }
   };
 
-  // Version débattue (debounced) de fetchUserSuggestions
+  // Debounced version of fetchUserSuggestions
   const debouncedFetchSuggestions = useCallback(debounce(fetchUserSuggestions, 300), []);
 
+  // Handle search input changes
   const handleChange = (event) => {
     const newSearchTerm = event.target.value;
     setSearchTerm(newSearchTerm);
     debouncedFetchSuggestions(newSearchTerm);
 
+    // Maintain existing onSearch functionality if used
     if (onSearch) {
-      onSearch(newSearchTerm); // Conserver la fonctionnalité onSearch existante si elle est utilisée
+      onSearch(newSearchTerm);
     }
   };
 
+  // Handle form submission
   const handleSubmit = (event) => {
     event.preventDefault();
     setSuggestions([]);
@@ -60,16 +69,16 @@ export default function SearchBar({ onSearch }) {
     }
   };
 
-  const handleSuggestionClick = (userId) => { // Parameter changed to userId
+  // Handle suggestion click to navigate to user profile
+  const handleSuggestionClick = (userId) => {
     setSearchTerm('');
     setSuggestions([]);
-    window.location.href = `/profil/view/${userId}`; // Use userId for navigation
+    window.location.href = `/profil/view/${userId}`; // Navigate using userId
   };
 
   return (
     <div className="bg-color-search border-bottom border-dark position-relative">
       <form onSubmit={handleSubmit}>
-        
         <div className="input-group">
           <input
             type="text"
@@ -80,10 +89,11 @@ export default function SearchBar({ onSearch }) {
             aria-label="Rechercher des utilisateurs"
             autoComplete="off"
           />
-          
         </div>
       </form>
+      {/* Loading indicator */}
       {loadingSuggestions && <div className="text-muted p-2">Chargement...</div>}
+      {/* Suggestions dropdown */}
       {suggestions.length > 0 && (
         <ul 
           className="list-group position-absolute w-100 search-suggestions-list rounded-0" 
@@ -92,7 +102,7 @@ export default function SearchBar({ onSearch }) {
             <li
               key={user.id}
               className="list-group-item d-flex align-items-center border-dark search-suggestion-item rounded-0 bg-color-search"
-              onClick={() => handleSuggestionClick(user.id)} // MODIFIED: Pass user.id instead of user.username
+              onClick={() => handleSuggestionClick(user.id)} // Navigate using user ID
             >
               <img
                 src={user.avatar_url || '/default-avatar.png'}

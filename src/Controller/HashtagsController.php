@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +18,9 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class HashtagsController extends AbstractController
 {
+    /**
+     * Render hashtags index page
+     */
     #[Route('/hashtags', name: 'app_hashtags')]
     public function index(): Response
     {
@@ -27,18 +29,24 @@ final class HashtagsController extends AbstractController
         ]);
     }
 
+    /**
+     * Search hashtags by content with partial matching
+     */
     #[Route('/hashtags/search', name: 'app_hashtags_search', methods: ['GET'])]
     public function search(Request $request, EntityManagerInterface $em): JsonResponse
     {
         $q = $request->query->get('q', '');
+        
+        // Search hashtags with partial content matching
         $hashtags = $em->getRepository(Hashtags::class)
             ->createQueryBuilder('h')
             ->where('h.content LIKE :q')
             ->setParameter('q', '%' . $q . '%')
-            ->setMaxResults(10)
+            ->setMaxResults(10) // Limit results for performance
             ->getQuery()
             ->getResult();
     
+        // Format hashtag data for response
         $data = array_map(fn($h) => ['id' => $h->getId(), 'content' => $h->getContent()], $hashtags);
     
         return $this->json($data);

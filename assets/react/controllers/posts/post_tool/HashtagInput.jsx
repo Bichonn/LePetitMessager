@@ -4,6 +4,7 @@ export default function HashtagInput({ hashtags, setHashtags }) {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState([]);
 
+  // Fetch hashtag suggestions from API
   const fetchSuggestions = async (q) => {
     if (!q) return setSuggestions([]);
     const res = await fetch(`/hashtags/search?q=${encodeURIComponent(q)}`);
@@ -13,9 +14,11 @@ export default function HashtagInput({ hashtags, setHashtags }) {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
+    // Remove # prefix for search
     fetchSuggestions(e.target.value.replace(/^#/, ""));
   };
 
+  // Add hashtag to list if not already present
   const handleAdd = (tag) => {
     if (!hashtags.includes(tag)) setHashtags([...hashtags, tag]);
     setInput("");
@@ -36,6 +39,7 @@ export default function HashtagInput({ hashtags, setHashtags }) {
           }
         }}
       />
+      {/* Suggestion dropdown */}
       {suggestions.length > 0 && (
         <ul className="list-group position-absolute z-3">
           {suggestions.map(s => (
@@ -50,6 +54,7 @@ export default function HashtagInput({ hashtags, setHashtags }) {
           ))}
         </ul>
       )}
+      {/* Display selected hashtags */}
       <div className="mt-2">
         {hashtags.map(tag => (
           <span key={tag} className="badge bg-warning text-dark me-1">#{tag}</span>

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import '../../../styles/app.css';
 import '../../../styles/UpdatePost.css';
 
+/**
+ * Modal component for updating an existing post with text and media
+ */
 export default function UpdatePost({ postId, initialContent, initialMediaUrl, initialMediaFilename, onClose, onUpdated }) {
   const [content, setContent] = useState(initialContent || '');
   const [file, setFile] = useState(null);
@@ -10,8 +13,8 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
   const [feedback, setFeedback] = useState({ type: '', message: '' });
   const [currentMediaFilename, setCurrentMediaFilename] = useState(initialMediaFilename);
 
+  // Initialize preview with existing media on component mount
   useEffect(() => {
-    // Initialize preview if initialMediaUrl exists
     if (initialMediaUrl) {
       const isVideo = ['mp4', 'webm', 'ogg'].some(ext => initialMediaUrl.toLowerCase().endsWith(ext));
       setPreview({ type: isVideo ? 'video' : 'image', url: initialMediaUrl });
@@ -20,7 +23,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     }
   }, [initialMediaUrl]);
 
-
+  // Handle new file selection and preview generation
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -50,6 +53,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     }
   };
 
+  // Remove media and clean up preview
   const removeMedia = () => {
     if (preview && preview.url && preview.url.startsWith('blob:')) {
       URL.revokeObjectURL(preview.url);
@@ -59,6 +63,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     setCurrentMediaFilename(null); // Mark media for removal
   };
 
+  // Cleanup blob URLs to prevent memory leaks
   useEffect(() => {
     return () => {
       if (preview && preview.url && preview.url.startsWith('blob:')) {
@@ -67,6 +72,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     };
   }, [preview]);
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content && !file && !currentMediaFilename) {
@@ -76,15 +82,17 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     setIsSubmitting(true);
     setFeedback({ type: '', message: '' });
 
+    // Prepare form data for submission
     const formData = new FormData();
     formData.append('content_text', content);
     if (file) {
       formData.append('media', file);
     } else if (!currentMediaFilename && initialMediaFilename) {
-      // If currentMediaFilename is null (due to removeMedia) and there was an initialMediaFilename
+      // Mark for media removal if existing media was removed
       formData.append('remove_media', '1');
     }
 
+    // Get CSRF token from meta tag
     const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     try {
@@ -118,12 +126,14 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
     <div className="modal fade show d-block update-post-modal-backdrop" tabIndex="-1">
       <div className="modal-dialog">
         <div className="modal-content">
+          {/* Modal header with title and close button */}
           <div className="modal-header rounded-0">
             <h5 className="modal-title">Modifier le Post</h5>
             <button type="button" className="btn-close" onClick={onClose} disabled={isSubmitting}></button>
           </div>
           <div className="modal-body">
             <form onSubmit={handleSubmit}>
+              {/* Text content input */}
               <div className="mb-3">
                 <textarea
                   className="form-control"
@@ -135,6 +145,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
                 />
               </div>
 
+              {/* Media preview section */}
               {preview && (
                 <div className="mb-3 text-center">
                   {preview.type === 'image' ? (
@@ -148,6 +159,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
                 </div>
               )}
 
+              {/* Media upload input */}
               <div className="mb-3">
                 <label htmlFor={`media-update-upload-${postId}`} className="form-label">
                   {initialMediaFilename || file ? 'Changer le média' : 'Ajouter un média'}
@@ -161,6 +173,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
                 />
               </div>
 
+              {/* Feedback message display */}
               {feedback.message && (
                 <div className={`custom-alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
                   {feedback.message}
@@ -168,6 +181,7 @@ export default function UpdatePost({ postId, initialContent, initialMediaUrl, in
               )}
 
               <hr />
+              {/* Action buttons */}
               <div className="d-flex justify-content-end">
                 <button type="button" className="btn custom-cancel-button me-2" onClick={onClose} disabled={isSubmitting}>
                   Annuler

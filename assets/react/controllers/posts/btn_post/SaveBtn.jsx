@@ -5,14 +5,19 @@ const SaveBtn = ({ postId, initialFavoris = false }) => {
   const [favoris, setFavoris] = useState(initialFavoris);
   const [feedback, setFeedback] = useState('');
 
+  // Update state when props change
   useEffect(() => {
     setFavoris(initialFavoris);
   }, [initialFavoris]);
 
   const handleSaveClick = async () => {
+    // Store previous state for rollback if needed
     const previousFavoris = favoris;
+    
+    // Optimistic UI update
     setFavoris(!favoris);
     setFeedback('');
+    
     try {
       const formData = new FormData();
       formData.append('post_id', postId);
@@ -25,11 +30,13 @@ const SaveBtn = ({ postId, initialFavoris = false }) => {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        setFavoris(previousFavoris); // revert
+        // Rollback on error
+        setFavoris(previousFavoris);
         setFeedback(data.message || 'Erreur lors de l\'ajout aux favoris');
       }
     } catch (err) {
-      setFavoris(previousFavoris); // revert
+      // Rollback on network error
+      setFavoris(previousFavoris);
       setFeedback('Erreur de connexion');
     }
   };

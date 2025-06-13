@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import PostItem from '../posts/post_tool/PostItem'; // Assurez-vous que le chemin est correct
+import PostItem from '../posts/post_tool/PostItem';
 
-export default function UserLikedPostsList({ user }) { // Attend l'objet 'user' du profil
+/**
+ * Component that displays a user's liked posts
+ */
+export default function UserLikedPostsList({ user }) {
   const [likedPosts, setLikedPosts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fetch user's liked posts from API
   const fetchLikedPosts = async (userId) => {
     if (!userId) {
       setLikedPosts([]);
@@ -15,7 +19,7 @@ export default function UserLikedPostsList({ user }) { // Attend l'objet 'user' 
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/users/${userId}/liked-posts`); // Nouvel endpoint API
+      const response = await fetch(`/users/${userId}/liked-posts`);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.message || `Erreur HTTP ${response.status} lors de la récupération des posts aimés`);
@@ -31,49 +35,50 @@ export default function UserLikedPostsList({ user }) { // Attend l'objet 'user' 
     }
   };
 
+  // Load liked posts when user changes
   useEffect(() => {
     if (user && user.id) {
       fetchLikedPosts(user.id);
     } else {
+      // Reset state when no user provided
       setLikedPosts([]);
       setIsLoading(false);
       setError(null);
     }
-  }, [user]); // Se réexécute si l'objet 'user' change
+  }, [user]);
 
+  // Handle post deletion by removing from local state
   const handlePostDeletedInLikedList = (postId) => {
-    // Si un post affiché dans cette liste est supprimé globalement
     setLikedPosts(prevPosts => prevPosts.filter(post => post.id !== postId));
   };
   
+  // Handle post updates by updating local state
   const handlePostUpdatedInLikedList = (updatedPost) => {
-    // Si un post affiché dans cette liste est mis à jour
     setLikedPosts(prevPosts => prevPosts.map(post =>
       post.id === updatedPost.id ? { ...post, ...updatedPost } : post
     ));
   };
 
+  // Loading state
   if (isLoading) return <div className="text-center my-3">Chargement des posts aimés...</div>;
+  
+  // Error state
   if (error && user) return <div className="alert alert-danger my-3 mx-2">Erreur lors du chargement des posts aimés: {error}</div>;
 
   return (
     <>
-      {/* Le titre "Message(s) Aimé(s)" sera géré par le bouton dans ShowProfil.jsx */}
-      {/* Ou vous pouvez ajouter un titre spécifique ici si le design le requiert */}
-      {/* <div className="container p-2 mt-3 shadow border border-dark"> */}
-      {/*   <h3 className="fw-bold">Message(s) Aimé(s) par {user.username} :</h3> */}
-      {/* </div> */}
-
+      {/* Empty state when no liked posts */}
       {likedPosts.length === 0 && !isLoading && !error && (
         <p className="text-muted my-3 ms-2">Cet utilisateur n'a aimé aucun message pour le moment.</p>
       )}
+      {/* Render liked posts list */}
       {likedPosts.map(post => (
         <PostItem
           key={post.id}
           post={post}
-          author={post.user} // L'auteur du post liké
-          onPostDeleted={handlePostDeletedInLikedList} // Gérer la suppression
-          onPostActuallyUpdated={handlePostUpdatedInLikedList} // Gérer la mise à jour
+          author={post.user} // Original post author
+          onPostDeleted={handlePostDeletedInLikedList}
+          onPostActuallyUpdated={handlePostUpdatedInLikedList}
         />
       ))}
     </>

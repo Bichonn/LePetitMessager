@@ -16,38 +16,39 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use App\Service\CloudinaryService; // Add this line
+use App\Service\CloudinaryService;
 use App\Repository\UsersRepository;
-use App\Repository\PostsRepository; // Add this if not already present
+use App\Repository\PostsRepository;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Entity\Posts;
-use App\Entity\Reposts; // Add this use statement
+use App\Entity\Reposts;
 
 final class UsersController extends AbstractController
 {
     #[Route('/profil', name: 'app_profil')]
     public function index(): Response
     {
-        // This renders the current logged-in user's profile page
+        // Render current logged-in user's profile page
         return $this->render('users/index.html.twig');
     }
 
     #[Route('/profil/view/{id}', name: 'app_view_user_profile', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function viewUserProfilePage(int $id): Response
     {
-        // This action renders the Twig template for viewing a specific user's profile.
-        // The ShowProfil React component will handle fetching the user data via an API call.
+        // Render template for viewing specific user's profile
+        // ShowProfil React component will handle fetching user data via API
         return $this->render('users/view_profile.html.twig', [
-            'id' => $id, // Pass 'id' instead of 'username'
+            'id' => $id,
         ]);
     }
 
-    #[Route('/user', name: 'app_user', methods: ['GET'])] // Existing endpoint for current user
+    #[Route('/user', name: 'app_user', methods: ['GET'])]
     public function profil(EntityManagerInterface $entityManager): Response 
     {
-        $securityUser = $this->getUser(); // Récupère l'utilisateur authentifié
+        // Get authenticated user
+        $securityUser = $this->getUser();
 
-        // Vérifie si l'utilisateur est bien une instance de votre entité Users
+        // Check if user is instance of Users entity
         if (!$securityUser instanceof Users) {
             return $this->json(
                 ['message' => 'Vous devez être connecté pour voir votre profil.'],
@@ -55,8 +56,7 @@ final class UsersController extends AbstractController
             );
         }
 
-        // Utiliser DQL pour sélectionner uniquement les champs nécessaires
-        // Cela peut améliorer les performances si l'entité User est volumineuse ou a des relations EAGER non nécessaires ici.
+        // Use DQL to select only necessary fields for performance
         $query = $entityManager->createQuery(
             'SELECT u.id, u.email, u.username, u.first_name, u.last_name, u.bio, u.profile_picture, u.banner, u.created_at, u.private_account, u.user_premium
              FROM App\Entity\Users u
@@ -70,12 +70,10 @@ final class UsersController extends AbstractController
             return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
         }
 
-        // Mapper profile_picture vers avatar_url pour correspondre au frontend
+        // Map profile_picture to avatar_url for frontend consistency
         $userDataArray['avatar_url'] = $userDataArray['profile_picture'];
-        // Vous pouvez optionnellement supprimer la clé 'profile_picture' si elle n'est plus nécessaire
-        // unset($userDataArray['profile_picture']);
 
-        // Ajouter explicitement is_own_profile car c'est le profil de l'utilisateur connecté
+        // Add is_own_profile flag since this is current user's profile
         $userDataArray['is_own_profile'] = true;
 
         return $this->json($userDataArray, Response::HTTP_OK);
@@ -93,14 +91,14 @@ final class UsersController extends AbstractController
         $currentUser = $this->getUser();
         $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
 
+        // Handle private account access
         if ($userToView->isPrivateAccount() && !$isOwnProfile) {
             return $this->json([
-                // 'message' => 'Ce profil est privé.', // Supprimez ou commentez cette ligne
                 'username' => $userToView->getUsername(),
-                'avatar_url' => $userToView->getProfilePicture(), // Assurez-vous que cela correspond à profile_picture
+                'avatar_url' => $userToView->getProfilePicture(),
                 'is_private' => true,
                 'is_own_profile' => false,
-                'private_account' => true, // Assurez la cohérence avec UserProfileInfo
+                'private_account' => true,
             ], Response::HTTP_FORBIDDEN);
         }
 
@@ -119,7 +117,7 @@ final class UsersController extends AbstractController
             'is_own_profile' => $isOwnProfile,
         ];
 
-        // Ajout du champ followed_by_user
+        // Check if current user follows this user
         $followedByUser = false;
         if ($currentUser && !$isOwnProfile) {
             $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
@@ -136,7 +134,8 @@ final class UsersController extends AbstractController
     #[Route('/user/id/{id}', name: 'app_get_user_by_id', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function getUserById(int $id, UsersRepository $usersRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        $userToView = $usersRepository->find($id); // Find by ID
+        // Find user by ID
+        $userToView = $usersRepository->find($id);
     
         if (!$userToView) {
             return $this->json(['message' => 'Utilisateur non trouvé.'], Response::HTTP_NOT_FOUND);
@@ -145,8 +144,7 @@ final class UsersController extends AbstractController
         $currentUser = $this->getUser();
         $isOwnProfile = ($currentUser && $currentUser instanceof Users && $currentUser->getId() === $userToView->getId());
     
-        // Déterminer si l'utilisateur actuel suit l'utilisateur consulté
-        // Cette logique est nécessaire avant la vérification du profil privé pour inclure 'followed_by_user'
+        // Check if current user follows the viewed user
         $followedByUser = false;
         if ($currentUser instanceof Users && !$isOwnProfile) {
             $existingFollow = $entityManager->getRepository(\App\Entity\Follows::class)->findOneBy([
@@ -156,20 +154,18 @@ final class UsersController extends AbstractController
             $followedByUser = $existingFollow !== null;
         }
     
+        // Handle private account access
         if ($userToView->isPrivateAccount() && !$isOwnProfile) {
             return $this->json([
-                'id' => $userToView->getId(), // Ajouter l'ID de l'utilisateur consulté
+                'id' => $userToView->getId(),
                 'username' => $userToView->getUsername(),
                 'avatar_url' => $userToView->getProfilePicture(),
                 'is_private' => true,
-                'is_own_profile' => false, // $isOwnProfile sera false ici
+                'is_own_profile' => false,
                 'private_account' => true,
-                'message' => "Ce compte est privé.", // Message spécifique pour les profils privés
-                'followed_by_user' => $followedByUser // Ajouter le statut de suivi
-            ], Response::HTTP_OK); // Changer en HTTP_OK pour que le front reçoive les données et gère l'affichage privé
-                                     // Ou garder HTTP_FORBIDDEN si le front gère déjà bien ce statut mais a besoin des données.
-                                     // Pour la simplicité de l'affichage des boutons, HTTP_OK avec les données est plus direct.
-                                     // Si vous gardez HTTP_FORBIDDEN, assurez-vous que ShowProfil.jsx traite bien la réponse.
+                'message' => "Ce compte est privé.",
+                'followed_by_user' => $followedByUser
+            ], Response::HTTP_OK);
         }
     
         $userDataArray = [
@@ -179,13 +175,13 @@ final class UsersController extends AbstractController
             'username' => $userToView->getUsername(),
             'banner' => $userToView->getBanner(),
             'profile_picture' => $userToView->getProfilePicture(),
-            'avatar_url' => $userToView->getProfilePicture(), // Assurez la cohérence
+            'avatar_url' => $userToView->getProfilePicture(),
             'bio' => $userToView->getBio(),
             'user_premium' => $userToView->isUserPremium(),
             'created_at' => $userToView->getCreatedAt() ? $userToView->getCreatedAt()->format('Y-m-d H:i:s') : null,
             'private_account' => $userToView->isPrivateAccount(),
             'is_own_profile' => $isOwnProfile,
-            'followed_by_user' => $followedByUser // Assurez-vous que cela est inclus
+            'followed_by_user' => $followedByUser
         ];
     
         return $this->json($userDataArray, Response::HTTP_OK);
@@ -198,15 +194,15 @@ final class UsersController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         ValidatorInterface $validator,
         CloudinaryService $cloudinaryService,
-        ParameterBagInterface $params // Assuming this was intended to be used or is part of a broader context
+        ParameterBagInterface $params
     ): JsonResponse {
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\Users) {
             return $this->json(['message' => 'Utilisateur non authentifié.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        // Initialize Cloudinary if needed for other operations, or remove if not used in this specific method block
-        $cloudinary = $cloudinaryService->getCloudinary(); // Ensure this line is uncommented
+        // Initialize Cloudinary service
+        $cloudinary = $cloudinaryService->getCloudinary();
 
         $formErrors = [];
 
@@ -233,8 +229,6 @@ final class UsersController extends AbstractController
         }
 
         // Handle private account status
-        // Use getBoolean to correctly interpret 'true', '1', 'on', 'yes' as true, and others as false.
-        // Provide current user's setting as default if not present, though form should always send it.
         $user->setPrivateAccount($request->request->getBoolean('privateAccount', $user->isPrivateAccount()));
 
         // Handle Profile Picture Upload
@@ -245,12 +239,11 @@ final class UsersController extends AbstractController
                 $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [
                     'folder' => 'user_avatars',
                     'public_id' => 'avatar_' . $user->getId() . '_' . uniqid(),
-                    'overwrite' => true, // Consider if you want to overwrite or create new versions
+                    'overwrite' => true,
                     'resource_type' => 'image'
                 ]);
                 $user->setProfilePicture($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                // Log error $e->getMessage()
                 $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar: ' . $e->getMessage();
             }
         }
@@ -268,11 +261,11 @@ final class UsersController extends AbstractController
                 ]);
                 $user->setBanner($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                // Log error $e->getMessage()
                 $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière: ' . $e->getMessage();
             }
         }
 
+        // Validate user entity
         $violations = $validator->validate($user);
         if (count($violations) > 0) {
             foreach ($violations as $violation) {
@@ -280,6 +273,7 @@ final class UsersController extends AbstractController
             }
         }
 
+        // Return errors if any
         if (!empty($formErrors)) {
             return $this->json(['errors' => $formErrors], Response::HTTP_BAD_REQUEST);
         }
@@ -295,17 +289,15 @@ final class UsersController extends AbstractController
                     'last_name' => $user->getLastName(),
                     'username' => $user->getUsername(),
                     'bio' => $user->getBio(),
-                    'profile_picture' => $user->getProfilePicture(), // This is likely the Cloudinary URL
-                    'banner' => $user->getBanner(), // This is likely the Cloudinary URL
-                    'avatar_url' => $user->getProfilePicture(), // Ensure consistency for frontend
-                    'private_account' => $user->isPrivateAccount(), // Ensure this is returned
-                    'is_own_profile' => true, // Since this is the user updating leur own profile
+                    'profile_picture' => $user->getProfilePicture(),
+                    'banner' => $user->getBanner(),
+                    'avatar_url' => $user->getProfilePicture(),
+                    'private_account' => $user->isPrivateAccount(),
+                    'is_own_profile' => true,
                     'created_at' => $user->getCreatedAt() ? $user->getCreatedAt()->format('Y-m-d H:i:s') : null,
-                    // Add other fields the frontend might need after update
                 ]
             ], Response::HTTP_OK);
         } catch (\Exception $e) {
-            // Log the exception
             return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
@@ -313,25 +305,28 @@ final class UsersController extends AbstractController
     #[Route('/users/search/{term}', name: 'app_users_search_by_username_term', methods: ['GET'])]
     public function searchUsersByUsername(string $term, EntityManagerInterface $entityManager): JsonResponse
     {
-        if (empty(trim($term)) || strlen($term) < 2) { // Longueur minimale de 2 caractères pour la recherche
+        // Minimum length check for search term
+        if (empty(trim($term)) || strlen($term) < 2) {
             return $this->json([], Response::HTTP_OK);
         }
 
         $usersRepository = $entityManager->getRepository(Users::class);
         
+        // Build search query
         $queryBuilder = $usersRepository->createQueryBuilder('u')
             ->select('u.id, u.username, u.profile_picture')
-            ->where('LOWER(u.username) LIKE LOWER(:term)') // Recherche insensible à la casse
+            ->where('LOWER(u.username) LIKE LOWER(:term)')
             ->setParameter('term', '%' . $term . '%')
-            ->setMaxResults(10); // Limiter le nombre de suggestions
+            ->setMaxResults(10);
 
         $results = $queryBuilder->getQuery()->getResult();
 
+        // Format results for frontend
         $formattedUsers = array_map(function ($user) {
             return [
                 'id' => $user['id'],
                 'username' => $user['username'],
-                'avatar_url' => $user['profile_picture'] // Assurez-vous que profile_picture contient l'URL de l'avatar
+                'avatar_url' => $user['profile_picture']
             ];
         }, $results);
 
@@ -345,22 +340,24 @@ final class UsersController extends AbstractController
         SluggerInterface $slugger,
         ValidatorInterface $validator,
         ParameterBagInterface $params, 
-        CloudinaryService $cloudinaryService // Inject your CloudinaryService
+        CloudinaryService $cloudinaryService
     ): JsonResponse {
         $user = $this->getUser();
         if (!$user instanceof \App\Entity\Users) {
             return $this->json(['message' => 'Utilisateur non authentifié.'], Response::HTTP_UNAUTHORIZED);
         }
 
-        $cloudinary = $cloudinaryService->getCloudinary(); // Get the Cloudinary client from your service
+        // Get Cloudinary client from service
+        $cloudinary = $cloudinaryService->getCloudinary();
 
         $formErrors = [];
 
+        // Update basic user fields
         $user->setFirstName($request->request->get('firstName', $user->getFirstName()));
         $user->setLastName($request->request->get('lastName', $user->getLastName()));
         $user->setBio($request->request->get('bio', $user->getBio()));
 
-        // Username validation (example, ensure it's unique if changed)
+        // Username validation and uniqueness check
         $newUsername = $request->request->get('username');
         if ($newUsername && $newUsername !== $user->getUsername()) {
             $existingUser = $entityManager->getRepository(\App\Entity\Users::class)->findOneBy(['username' => $newUsername]);
@@ -376,7 +373,7 @@ final class UsersController extends AbstractController
         $profilePictureFile = $request->files->get('profilePicture');
         if ($profilePictureFile) {
             try {
-                $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [ // Use $cloudinary instance
+                $uploadResult = $cloudinary->uploadApi()->upload($profilePictureFile->getRealPath(), [
                     'folder' => 'user_avatars', 
                     'public_id' => 'avatar_' . $user->getId() . '_' . uniqid(), 
                     'overwrite' => true,
@@ -384,7 +381,6 @@ final class UsersController extends AbstractController
                 ]);
                 $user->setProfilePicture($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                // Log error $e->getMessage()
                 $formErrors['profilePicture'] = 'Erreur lors de l\'upload de l\'avatar.';
             }
         }
@@ -394,7 +390,7 @@ final class UsersController extends AbstractController
         $bannerFile = $request->files->get('banner');
         if ($bannerFile) {
             try {
-                $uploadResult = $cloudinary->uploadApi()->upload($bannerFile->getRealPath(), [ // Use $cloudinary instance
+                $uploadResult = $cloudinary->uploadApi()->upload($bannerFile->getRealPath(), [
                     'folder' => 'user_banners', 
                     'public_id' => 'banner_' . $user->getId() . '_' . uniqid(), 
                     'overwrite' => true,
@@ -402,11 +398,11 @@ final class UsersController extends AbstractController
                 ]);
                 $user->setBanner($uploadResult['secure_url']);
             } catch (\Exception $e) {
-                // Log error $e->getMessage()
                 $formErrors['banner'] = 'Erreur lors de l\'upload de la bannière.';
             }
         }
 
+        // Validate user entity
         $violations = $validator->validate($user);
         if (count($violations) > 0) {
             foreach ($violations as $violation) {
@@ -415,6 +411,7 @@ final class UsersController extends AbstractController
             }
         }
 
+        // Return errors if any
         if (!empty($formErrors)) {
             return $this->json(['errors' => $formErrors], Response::HTTP_BAD_REQUEST);
         }
@@ -424,31 +421,31 @@ final class UsersController extends AbstractController
             $entityManager->flush();
             return $this->json(['message' => 'Profil mis à jour avec succès.']);
         } catch (\Exception $e) {
-            // Log the exception
             return $this->json(['error' => 'Une erreur est survenue lors de la mise à jour du profil.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
     #[Route('/user/{id}/report', name: 'app_report_user', methods: ['POST'])]
-    public function reportUser(Request $request, Users $userToReport, EntityManagerInterface $entityManager): JsonResponse // Removed CsrfTokenManagerInterface as it's not used
+    public function reportUser(Request $request, Users $userToReport, EntityManagerInterface $entityManager): JsonResponse
     {
         $currentUser = $this->getUser();
         if (!$currentUser) {
             return new JsonResponse(['message' => 'Authentification requise.'], Response::HTTP_UNAUTHORIZED);
         }
 
+        // Prevent self-reporting
         if ($currentUser === $userToReport) {
             return new JsonResponse(['message' => 'Vous ne pouvez pas vous signaler vous-même.'], Response::HTTP_BAD_REQUEST);
         }
 
         $data = json_decode($request->getContent(), true);
-        $reason = $data['reason'] ?? null; // This will be mapped to 'content'
+        $reason = $data['reason'] ?? null;
 
         if (empty($reason)) {
             return new JsonResponse(['message' => 'La raison du signalement est requise.'], Response::HTTP_BAD_REQUEST);
         }
 
-        // Check if a report already exists from this user for the same reported user and reason to avoid duplicates
+        // Check for existing report to avoid duplicates
         $existingReport = $entityManager->getRepository(AccountsReports::class)->findOneBy([
             'fk_reporter' => $currentUser,
             'fk_reported' => $userToReport, 
@@ -459,6 +456,7 @@ final class UsersController extends AbstractController
             return new JsonResponse(['message' => 'Vous avez déjà signalé cet utilisateur pour cette raison.'], Response::HTTP_CONFLICT);
         }
         
+        // Create new report
         $report = new AccountsReports();
         $report->setFkReporter($currentUser);
         $report->setFkReported($userToReport);
@@ -475,42 +473,39 @@ final class UsersController extends AbstractController
     public function listUserLikedPosts(
         int $userId,
         EntityManagerInterface $entityManager,
-        PostsRepository $postsRepository // Utilisé pour la cohérence des comptes de likes et du statut liked_by_user
+        PostsRepository $postsRepository
     ): JsonResponse {
         $userRepository = $entityManager->getRepository(Users::class);
-        $profileUser = $userRepository->find($userId); // L'utilisateur dont on consulte le profil
+        $profileUser = $userRepository->find($userId);
 
         if (!$profileUser) {
             return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        // Logique de confidentialité : si on peut voir le profil, on peut voir ses likes publics.
-        // Des règles plus complexes pourraient être ajoutées ici si les posts aimés des profils privés ont une visibilité différente.
-        // Par exemple, vérifier si l'utilisateur actuel suit le profil privé.
-
+        // Get liked posts and remove duplicates
         $likedPostsEntities = [];
-        foreach ($profileUser->getLikes() as $like) { // $profileUser->getLikes() retourne Collection<Likes>
+        foreach ($profileUser->getLikes() as $like) {
             $post = $like->getFkPost();
             if ($post) {
-                // Utiliser l'ID du post comme clé pour éviter les doublons, puis réindexer.
                 $likedPostsEntities[$post->getId()] = $post;
             }
         }
-        $likedPostsEntities = array_values($likedPostsEntities); // Réindexer le tableau
+        $likedPostsEntities = array_values($likedPostsEntities);
         
-        // Trier les posts aimés par date de création du post, décroissant.
-        // Alternativement, trier par date du like si $like->getCreatedAt() est disponible et préféré.
+        // Sort posts by creation date (descending)
         usort($likedPostsEntities, function (Posts $a, Posts $b) {
             return $b->getCreatedAt() <=> $a->getCreatedAt();
         });
 
         $data = [];
-        $currentUser = $this->getUser(); // Pour le statut 'liked_by_user' sur les posts affichés
+        $currentUser = $this->getUser();
 
         foreach ($likedPostsEntities as $post) {
             $likesCollection = $post->getLikes();
             $likesCount = count($likesCollection);
-            $likedByCurrentUser = false; // Si l'utilisateur *actuel* (celui qui navigue) a aimé ce post
+            
+            // Check if current user liked this post
+            $likedByCurrentUser = false;
             if ($currentUser instanceof Users) {
                 foreach ($likesCollection as $likeRelation) {
                     if ($likeRelation->getFkUser() instanceof Users && $likeRelation->getFkUser()->getId() === $currentUser->getId()) {
@@ -525,12 +520,13 @@ final class UsersController extends AbstractController
                 'content_text' => $post->getContentText(),
                 'content_multimedia' => $post->getContentMultimedia(),
                 'created_at' => $post->getCreatedAt()->format('Y-m-d H:i:s'),
-                'user' => null, // Auteur du post
+                'user' => null,
                 'likes_count' => $likesCount,
                 'liked_by_user' => $likedByCurrentUser 
             ];
 
-            if ($post->getFkUser()) { // Auteur du post (et non celui qui a liké)
+            // Add post author info
+            if ($post->getFkUser()) {
                 $postData['user'] = [
                     'id' => $post->getFkUser()->getId(),
                     'username' => $post->getFkUser()->getUsername(),
@@ -547,7 +543,6 @@ final class UsersController extends AbstractController
     public function listUserRepostedPosts(
         int $userId,
         EntityManagerInterface $entityManager
-        // PostsRepository $postsRepository // Not directly needed here for main query, but for helper logic
     ): JsonResponse {
         $userRepository = $entityManager->getRepository(Users::class);
         $profileUser = $userRepository->find($userId);
@@ -556,11 +551,10 @@ final class UsersController extends AbstractController
             return $this->json(['message' => 'Utilisateur non trouvé'], Response::HTTP_NOT_FOUND);
         }
 
-        // Similar privacy check as for liked posts can be added here if needed
-
+        // Get user's reposts ordered by creation date
         $userReposts = $entityManager->getRepository(Reposts::class)->findBy(
             ['fk_user' => $profileUser],
-            ['created_at' => 'DESC'] // Order by when the repost was made
+            ['created_at' => 'DESC']
         );
 
         $data = [];
@@ -569,6 +563,7 @@ final class UsersController extends AbstractController
         foreach ($userReposts as $repost) {
             $originalPost = $repost->getFkPost();
             if ($originalPost) {
+                // Get likes count and check if current user liked
                 $likes = $originalPost->getLikes();
                 $likesCount = count($likes);
                 $likedByUser = false;
@@ -581,9 +576,10 @@ final class UsersController extends AbstractController
                     }
                 }
 
+                // Get reposts count and check if current user reposted
                 $repostsCollection = $originalPost->getReposts();
                 $repostsCount = count($repostsCollection);
-                $repostedByCurrentUser = false; // Specifically, if the current logged-in user also reposted this *original* post
+                $repostedByCurrentUser = false;
                 if ($currentUser instanceof Users) {
                     foreach ($repostsCollection as $rp) {
                         if ($rp->getFkUser() && $rp->getFkUser()->getId() === $currentUser->getId()) {
@@ -593,6 +589,7 @@ final class UsersController extends AbstractController
                     }
                 }
                 
+                // Get comments count
                 $commentsCollection = $originalPost->getComments();
                 $commentsCount = count($commentsCollection);
 
@@ -600,23 +597,22 @@ final class UsersController extends AbstractController
                     'id' => $originalPost->getId(),
                     'content_text' => $originalPost->getContentText(),
                     'content_multimedia' => $originalPost->getContentMultimedia(),
-                    'created_at' => $originalPost->getCreatedAt()->format('Y-m-d H:i:s'), // Original post's creation date
-                    'user' => [ // Original author of the post
+                    'created_at' => $originalPost->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'user' => [ // Original author
                         'id' => $originalPost->getFkUser()?->getId(),
                         'username' => $originalPost->getFkUser()?->getUsername(),
                         'avatar_url' => $originalPost->getFkUser()?->getProfilePicture(),
                     ],
                     'likes_count' => $likesCount,
                     'liked_by_user' => $likedByUser,
-                    'reposts_count' => $repostsCount, // Total reposts of the original post
+                    'reposts_count' => $repostsCount,
                     'reposted_by_user' => $repostedByCurrentUser, 
                     'comments_count' => $commentsCount,
-                    'reposter_info' => [ // Info about the user who made THIS repost (whose profile we are viewing)
+                    'reposter_info' => [ // User who made this repost
                         'id' => $profileUser->getId(),
                         'username' => $profileUser->getUsername(),
                         'avatar_url' => $profileUser->getProfilePicture(),
                     ],
-                    // We can also add the date of this specific repost if needed by the frontend
                     'repost_created_at' => $repost->getCreatedAt()->format('Y-m-d H:i:s'),
                 ];
                 $data[] = $postData;
@@ -630,10 +626,11 @@ final class UsersController extends AbstractController
     public function getUserSuggestions(Request $request, EntityManagerInterface $entityManager): JsonResponse
     {
         $currentUser = $this->getUser();
-        $limit = $request->query->getInt('limit', 6); // Default to 6 if not provided
+        $limit = $request->query->getInt('limit', 6);
 
         $usersRepository = $entityManager->getRepository(Users::class);
         
+        // Build query excluding current user
         $qb = $usersRepository->createQueryBuilder('u');
         if ($currentUser instanceof Users) {
             $qb->where('u.id != :currentUserId')
@@ -642,20 +639,22 @@ final class UsersController extends AbstractController
 
         $allUsers = $qb->getQuery()->getResult();
         
+        // Filter out private accounts
         $allUsers = array_filter($allUsers, function(Users $user) {
             return !$user->isPrivateAccount();
         });
 
-        shuffle($allUsers); // Shuffle the array of users
-        $suggestedUsers = array_slice($allUsers, 0, $limit); // Take the limited number
+        // Randomize and limit results
+        shuffle($allUsers);
+        $suggestedUsers = array_slice($allUsers, 0, $limit);
 
         $data = [];
         foreach ($suggestedUsers as $user) {
-            if ($user instanceof Users) { // Ensure it's a Users entity
+            if ($user instanceof Users) {
                 $data[] = [
                     'id' => $user->getId(),
                     'username' => $user->getUsername(),
-                    'avatar_url' => $user->getProfilePicture(), // Assuming getProfilePicture() returns the URL
+                    'avatar_url' => $user->getProfilePicture(),
                 ];
             }
         }

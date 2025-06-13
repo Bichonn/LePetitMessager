@@ -2,36 +2,40 @@ import React, { useState, useEffect } from 'react';
 import '../../../../styles/ShowProfil.css';
 import '../../../../styles/app.css';
 
+/**
+ * Component for reporting users with a collapsible options menu
+ */
 export default function ReportBtn({ userId, username }) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState('');
   const [reportFeedback, setReportFeedback] = useState({ message: '', type: '' });
   const [isSubmittingReport, setIsSubmittingReport] = useState(false);
   const [showActualReportButton, setShowActualReportButton] = useState(false);
-  const [displayOptionsButton, setDisplayOptionsButton] = useState(false); // Added state for the 3-dots icon
+  const [displayOptionsButton, setDisplayOptionsButton] = useState(false); // Show 3-dots icon for options
 
-  // Check if the current user is the one being viewed to hide the report button for self
+  // Check if current user can report this profile (not own profile)
   useEffect(() => {
-    fetch('/user') // Assuming this endpoint returns current user's ID or details
+    fetch('/user') // Fetch current authenticated user
       .then(response => {
         if (response.ok) return response.json();
         throw new Error('Not authenticated or error fetching current user');
       })
       .then(currentUser => {
         if (currentUser && currentUser.id !== userId) {
-          setDisplayOptionsButton(true); // Show the 3-dots options icon
-          setShowActualReportButton(false); // Ensure "Signaler" button is hidden by default
+          setDisplayOptionsButton(true); // Show options icon for other users
+          setShowActualReportButton(false); // Hide report button by default
         } else {
-          setDisplayOptionsButton(false); // Hide 3-dots icon
-          setShowActualReportButton(false); // Hide button if own profile or not logged in
+          setDisplayOptionsButton(false); // Hide options for own profile
+          setShowActualReportButton(false); // Hide report button
         }
       })
       .catch(() => {
-        setDisplayOptionsButton(false); // Hide 3-dots icon on error
-        setShowActualReportButton(false); // Hide on error or if not authenticated
+        setDisplayOptionsButton(false); // Hide on authentication error
+        setShowActualReportButton(false); // Hide on error
       });
   }, [userId]);
 
+  // Handle user report submission
   const handleReportUser = async () => {
     if (!reportReason.trim()) {
       setReportFeedback({ message: 'Veuillez fournir une raison pour le signalement.', type: 'error' });
@@ -54,6 +58,7 @@ export default function ReportBtn({ userId, username }) {
       const data = await response.json();
       if (response.ok) {
         setReportFeedback({ message: 'Utilisateur signalé avec succès.', type: 'success' });
+        // Auto-close modal after successful report
         setTimeout(() => {
           setShowReportModal(false);
           setReportReason('');
@@ -73,23 +78,27 @@ export default function ReportBtn({ userId, username }) {
     }
   };
 
+  // Toggle visibility of report button
   const toggleReportButtonVisibility = () => {
     setShowActualReportButton(prev => !prev);
   };
 
+  // Open report modal and hide options
   const openModalAndHideButton = () => {
     setReportFeedback({ message: '', type: '' });
-    setShowReportModal(true); // Directly show modal
-    setShowActualReportButton(false); // Hide the "Signaler" button
+    setShowReportModal(true); // Show report modal
+    setShowActualReportButton(false); // Hide report button
   };
 
+  // Close report modal
   const closeModal = () => {
     setShowReportModal(false);
   };
 
   return (
     <div className="report-options-container mt-2">
-      {displayOptionsButton && ( // Conditionally render the 3-dots button
+      {/* Options button (3 dots) for accessing report functionality */}
+      {displayOptionsButton && (
         <button
           type="button"
           className="btn btn-sm p-0"
@@ -105,6 +114,7 @@ export default function ReportBtn({ userId, username }) {
         </button>
       )}
 
+      {/* Report button that appears when options are clicked */}
       {showActualReportButton && (
         <div className="position-relative">
           <button
@@ -118,6 +128,7 @@ export default function ReportBtn({ userId, username }) {
         </div>
       )}
 
+      {/* Report modal */}
       {showReportModal && (
         <div 
           className="modal fade show d-block report-modal-custom" 
@@ -125,11 +136,13 @@ export default function ReportBtn({ userId, username }) {
         >
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
+              {/* Modal header */}
               <div className="modal-header">
                 <h5 className="modal-title">Signaler {username}</h5>
                 <button type="button" className="btn-close" onClick={closeModal} disabled={isSubmittingReport}></button>
               </div>
               <div className="modal-body">
+                {/* Report reason input */}
                 <div className="mb-3">
                   <label htmlFor={`reportReason-${userId}`} className="form-label">Raison du signalement:</label>
                   <textarea
@@ -142,12 +155,14 @@ export default function ReportBtn({ userId, username }) {
                     placeholder="Expliquez pourquoi vous signalez cet utilisateur..."
                   ></textarea>
                 </div>
+                {/* Feedback message display */}
                 {reportFeedback.message && (
                   <div className={`custom-alert${reportFeedback.type === 'success' ? 'alert-success' : 'alert-danger'}`}>
                     {reportFeedback.message}
                   </div>
                 )}
               </div>
+              {/* Modal action buttons */}
               <div className="modal-footer">
                 <button type="button" className="btn custom-cancel-button" onClick={closeModal} disabled={isSubmittingReport}>
                   Annuler
@@ -156,7 +171,7 @@ export default function ReportBtn({ userId, username }) {
                     type="button" 
                     className="btn btn-primary" 
                     onClick={handleReportUser} 
-                    disabled={isSubmittingReport || !reportReason.trim()} // REMOVED || !csrfToken
+                    disabled={isSubmittingReport || !reportReason.trim()}
                 >
                   {isSubmittingReport ? 'Envoi...' : 'Signaler'}
                 </button>

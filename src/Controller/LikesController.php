@@ -20,6 +20,9 @@ use Symfony\Component\Filesystem\Filesystem;
 
 final class LikesController extends AbstractController
 {
+    /**
+     * Render likes index page
+     */
     #[Route('/likes', name: 'app_likes')]
     public function index(): Response
     {
@@ -28,6 +31,9 @@ final class LikesController extends AbstractController
         ]);
     }
 
+    /**
+     * Toggle like status for a post (like/unlike)
+     */
     #[Route('/likes/add', name: 'app_likes_add', methods: ['POST'])]
     public function create(
         Request $request,
@@ -35,6 +41,7 @@ final class LikesController extends AbstractController
         SluggerInterface $slugger
     ): JsonResponse {
 
+        // Check user authentication
         $user = $this->getUser();
         if (!$user) {
             return $this->json(
@@ -43,27 +50,32 @@ final class LikesController extends AbstractController
             );
         }
 
+        // Verify post exists
         $post = $entityManager->getRepository(Posts::class)->find($request->request->get('post_id'));
         if (!$post) {
             return $this->json(['message' => 'Post introuvable'], Response::HTTP_NOT_FOUND);
         }
 
+        // Check if user already liked this post
         $existingLike = $entityManager->getRepository(Likes::class)->findOneBy([
             'fk_user' => $user,
             'fk_post' => $post
         ]);
 
         if ($existingLike) {
+            // Unlike: remove existing like
             $entityManager->remove($existingLike);
             $entityManager->flush();
             return $this->json(Response::HTTP_OK);
         } else {
+            // Like: create new like
             $like = new Likes();
             $like->setFkUser($user);
             $like->setFkPost($post);
 
             $entityManager->persist($like);
 
+            // Create notification for post author (if not liking own post)
             if ($post->getFkUser() && $post->getFkUser() !== $user) { 
                 $notif = new Notifications();
                 $notif->setFkUser($post->getFkUser());

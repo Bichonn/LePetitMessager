@@ -11,11 +11,13 @@ import PaypalButton from '../premium/PaypalButton';
 import SuggestedUsers from '../SuggestedUsers';
 import GoogleAuthBtn from '../auth/GoogleAuthBtn';
 
+// Component for managing the right sidebar area
 export default function RightSidebarArea({ isAuthenticated, username, logoutPath }) {
   const [currentView, setCurrentView] = useState('default');
   const [postIdForComments, setPostIdForComments] = useState(null);
 
   useEffect(() => {
+    // Event listener to handle showing comments for a specific post
     const handleShowComments = (event) => {
       const { postId } = event.detail;
       if (postId) {
@@ -29,11 +31,13 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
     };
   }, []);
 
+  // Switch back to the default sidebar view
   const switchToDefaultView = () => {
     setCurrentView('default');
     setPostIdForComments(null);
   };
 
+  // Render the default sidebar view
   const renderDefaultSidebar = () => (
     <>
       <SearchBar />
@@ -51,12 +55,13 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
         <>
           <LogOut username={username} logoutPath={logoutPath} />
           <PaypalButton onPaymentSuccess={() => window.location.reload()} />
-          <SuggestedUsers /> {/* Add the new component here */}
+          <SuggestedUsers />
         </>
       )}
     </>
   );
 
+  // Render the comments view
   const renderCommentsView = () => (
     <div className="comments-view border-bottom border-dark">
       <button onClick={switchToDefaultView} className="btn btn-primary flex-shrink-0">
@@ -76,6 +81,7 @@ export default function RightSidebarArea({ isAuthenticated, username, logoutPath
   );
 
   return (
+    // Main container for the sidebar area
     <div className="sidebar-area-container border-start border-dark">
       {currentView === 'comments' && postIdForComments ? renderCommentsView() : renderDefaultSidebar()}
       {currentView !== 'comments' && <Footer />}

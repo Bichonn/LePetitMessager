@@ -4,18 +4,20 @@ import '../../../styles/formStyle.css';
 import '../../../styles/app.css';
 
 export default function RegisterForm() {
+    // State for form fields
     const [form, setForm] = useState({
         email: '',
         firstName: '',
         lastName: '',
         username: ''
     });
-    const [status, setStatus] = useState('');
-    const [showModal, setShowModal] = useState(false);
+    const [status, setStatus] = useState(''); // For displaying success/status messages
+    const [showModal, setShowModal] = useState(false); // Controls modal visibility
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); // Toggles password visibility
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false); // Toggles confirm password visibility
+    // State for form validation errors
     const [errors, setErrors] = useState({
         email: null,
         username: null,
@@ -23,25 +25,28 @@ export default function RegisterForm() {
         general: null
     });
 
+    // Handles changes in form input fields
     const handleChange = (e) => {
         setForm({ ...form, [e.target.name]: e.target.value });
-        // Effacer l'erreur spécifique lorsque l'utilisateur modifie le champ
+        // Clear the specific error when the user modifies the field
         if (errors[e.target.name]) {
             setErrors({...errors, [e.target.name]: null});
         }
     };
 
+    // Handles changes in the password field
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
-        // Effacer l'erreur de mot de passe lorsque l'utilisateur le modifie
+        // Clear password error when the user modifies it
         if (errors.password) {
             setErrors({...errors, password: null});
         }
     };
 
+    // Handles form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
-        // Réinitialiser toutes les erreurs
+        // Reset all errors on new submission
         setErrors({
             email: null,
             username: null,
@@ -49,6 +54,7 @@ export default function RegisterForm() {
             general: null
         });
 
+        // Check if passwords match
         if (password !== confirmPassword) {
             setErrors({...errors, password: "Les mots de passe ne correspondent pas."});
             return;
@@ -68,21 +74,22 @@ export default function RegisterForm() {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Accept': 'application/json', // Add this line
-                    'X-Requested-With': 'XMLHttpRequest' // Add this for isXmlHttpRequest()
+                    'Accept': 'application/json', // Important for server to know we expect JSON
+                    'X-Requested-With': 'XMLHttpRequest' // Important for Symfony to recognize AJAX request
                 },
                 body: JSON.stringify(dataToSend)
             });
 
-            const data = await res.json(); // This line expects a JSON response
+            const data = await res.json(); // Expect a JSON response from the server
 
             if (res.ok) {
                 setStatus('Compte créé avec succès !');
+                // Redirect after a short delay
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 2000);
             } else {
-                // Gérer les différents types d'erreurs
+                // Handle different types of errors from server
                 if (data.error && data.error.includes("email")) {
                     setErrors({...errors, email: "Cet email est déjà utilisé."});
                 } else if (data.error && data.error.includes("utilisateur")) {
@@ -92,8 +99,9 @@ export default function RegisterForm() {
                 }
             }
         } catch (error) {
-            console.error("Registration fetch error:", error); // Log the full error object
+            console.error("Registration fetch error:", error); // Log the full error object for debugging
             let errorMessage = "Erreur de connexion au serveur";
+            // Provide more specific error messages for common network issues
             if (error instanceof TypeError && error.message === "Failed to fetch") {
                 errorMessage = "Impossible de joindre le serveur. Vérifiez votre connexion internet ou que le serveur est bien démarré.";
             } else if (error.message) {
@@ -118,13 +126,14 @@ export default function RegisterForm() {
                                 <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body">
-                                {/* Bouton Google en haut du modal */}
+                                {/* Google Auth Button at the top of the modal */}
                                 <div className="mb-3 text-center">
                                     <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" text="Inscription avec Google" />
                                     <hr/>
                                 </div>
 
                                 <form onSubmit={handleSubmit} className="d-flex flex-column">
+                                    {/* First Name Input */}
                                     <div className="mb-3">
                                         <label htmlFor="firstName" className="form-label text-decoration-underline mb-0">Prénom</label>
                                         <input
@@ -136,6 +145,7 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
+                                    {/* Last Name Input */}
                                     <div className="mb-3">
                                         <label htmlFor="lastName" className="form-label text-decoration-underline mb-0">Nom</label>
                                         <input
@@ -147,6 +157,7 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
+                                    {/* Username Input */}
                                     <div className="mb-3">
                                         <label htmlFor="username" className="form-label text-decoration-underline mb-0">Pseudo</label>
                                         {errors.username && <div className="text-danger small mb-1">{errors.username}</div>}
@@ -159,6 +170,7 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
+                                    {/* Email Input */}
                                     <div className="mb-3">
                                         <label htmlFor="email" className="form-label text-decoration-underline mb-0">Email</label>
                                         {errors.email && <div className="text-danger small mb-1">{errors.email}</div>}
@@ -171,6 +183,7 @@ export default function RegisterForm() {
                                             required
                                         />
                                     </div>
+                                    {/* Password Input */}
                                     <div className="mb-3 position-relative">
                                         <label htmlFor="password" className="form-label text-decoration-underline mb-0">Mot de passe</label>
                                         <input
@@ -181,6 +194,7 @@ export default function RegisterForm() {
                                             onChange={handlePasswordChange}
                                             required
                                         />
+                                        {/* Toggle password visibility button */}
                                         {!errors.password && (
                                             <button
                                                 type="button"
@@ -195,6 +209,7 @@ export default function RegisterForm() {
                                             </button>
                                         )}
                                     </div>
+                                    {/* Confirm Password Input */}
                                     <div className="mb-3 position-relative">
                                         <label htmlFor="confirmPassword" className="form-label text-decoration-underline mb-0">Confirmer le mot de passe</label>
                                         {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
@@ -206,6 +221,7 @@ export default function RegisterForm() {
                                             onChange={e => setConfirmPassword(e.target.value)}
                                             required
                                         />
+                                        {/* Toggle confirm password visibility button */}
                                         {!errors.password && (
                                             <button
                                                 type="button"
@@ -221,9 +237,11 @@ export default function RegisterForm() {
                                         )}
                                     </div>
 
+                                    {/* Display general form errors */}
                                     {errors.general && <div className="alert alert-danger">{errors.general}</div>}
 
                                     <button type="submit" className="btn btn-primary mt-3">S'inscrire</button>
+                                    {/* Display status messages (e.g., success message) */}
                                     {status && (
                                         <div className="custom-alert mt-3">
                                             {status}

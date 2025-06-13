@@ -7,22 +7,22 @@ export default function LoginForm() {
     const [showModal, setShowModal] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+    const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const [csrfToken, setCsrfToken] = useState('');
-    const [status, setStatus] = useState('');
-    const [errors, setErrors] = useState({
+    const [status, setStatus] = useState(''); // For displaying messages like "Connecting..."
+    const [errors, setErrors] = useState({ // For form validation errors
         email: null,
         password: null,
         general: null
     });
 
-    const [tokenError, setTokenError] = useState(false);
+    const [tokenError, setTokenError] = useState(false); // State for CSRF token fetch error
 
-    // Récupérer le token CSRF au chargement du modal
+    // Fetch CSRF token when the modal is shown
     useEffect(() => {
         if (showModal) {
             setTokenError(false);
-            setErrors({ email: null, password: null, general: null });
+            setErrors({ email: null, password: null, general: null }); // Reset errors
             fetch('/get-csrf-token')
                 .then(response => {
                     if (!response.ok) throw new Error('Failed to fetch CSRF token');
@@ -45,7 +45,7 @@ export default function LoginForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setErrors({ email: null, password: null, general: null });
+        setErrors({ email: null, password: null, general: null }); // Reset errors on new submission
         setStatus('Connexion en cours...');
 
         const formData = new FormData();
@@ -58,7 +58,7 @@ export default function LoginForm() {
                 method: 'POST',
                 body: formData,
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest' // Important for Symfony to recognize AJAX request
                 }
             });
 
@@ -67,13 +67,14 @@ export default function LoginForm() {
             if (response.ok) {
                 setStatus('Connexion réussie!');
                 setTimeout(() => {
-                    window.location.reload();
+                    window.location.reload(); // Reload the page on successful login
                 }, 1000);
             } else {
                 try {
-                    const data = await response.json();
+                    const data = await response.json(); // Try to parse error response
                     setStatus('');
                     if (data.message) {
+                        // Set specific error messages based on server response
                         if (data.message.toLowerCase().includes('utilisateur non trouvé')) {
                             setErrors(prevErrors => ({ ...prevErrors, email: data.message }));
                         } else if (data.message.toLowerCase().includes('mot de passe incorrect')) {
@@ -85,16 +86,19 @@ export default function LoginForm() {
                         setErrors(prevErrors => ({ ...prevErrors, general: 'Échec de la connexion' }));
                     }
                 } catch (err) {
+                    // Handle cases where error response is not JSON or other parsing errors
                     setStatus('');
                     setErrors(prevErrors => ({ ...prevErrors, general: 'Identifiants invalides' }));
                 }
             }
         } catch (error) {
+            // Handle network errors or other issues with the fetch request
             setStatus('');
             setErrors(prevErrors => ({ ...prevErrors, general: 'Erreur de connexion au serveur' }));
         }
     };
 
+    // Clear email error when user types
     const handleEmailChange = (e) => {
         setEmail(e.target.value);
         if (errors.email) {
@@ -102,6 +106,7 @@ export default function LoginForm() {
         }
     };
 
+    // Clear password error when user types
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
         if (errors.password) {
@@ -124,7 +129,7 @@ export default function LoginForm() {
                                 <button type="button" className="btn-close position-absolute end-0 me-3" onClick={() => setShowModal(false)}></button>
                             </div>
                             <div className="modal-body">
-                                {/* Bouton Google en haut du modal */}
+                                {/* Google Auth Button at the top of the modal */}
                                 <div className="mb-3 text-center">
                                     <GoogleAuthBtn className="btn btn-outline-dark w-100 mb-3" />
                                     <hr />
@@ -149,18 +154,18 @@ export default function LoginForm() {
                                         <label htmlFor="password" className="form-label text-decoration-underline">Mot de passe</label>
                                         {errors.password && <div className="text-danger small mb-1">{errors.password}</div>}
                                         <input
-                                            type={showPassword ? "text" : "password"} // Changed type based on showPassword state
+                                            type={showPassword ? "text" : "password"} // Toggle input type for password visibility
                                             id="password"
                                             className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                                             value={password}
                                             onChange={handlePasswordChange}
                                             required
                                         />
-                                        {!errors.password && (
+                                        {!errors.password && ( // Show toggle button only if there's no password error
                                             <button
                                                 type="button"
-                                                className="btn btn-outline-secondary password-toggle-btn login-password-toggle-btn" 
-                                                onClick={() => setShowPassword(!showPassword)} 
+                                                className="btn btn-outline-secondary password-toggle-btn login-password-toggle-btn"
+                                                onClick={() => setShowPassword(!showPassword)}
                                                 title={showPassword ? 'Masquer le mot de passe' : 'Voir le mot de passe'}
                                             >
                                                 <img
@@ -176,10 +181,12 @@ export default function LoginForm() {
                                         Se connecter
                                     </button>
 
+                                    {/* Display connection status messages */}
                                     {status && (
                                         <div className="custom-alert custom-alert-info mt-3">{status}</div>
                                     )}
 
+                                    {/* Display CSRF token error message */}
                                     {tokenError && (
                                         <div className="custom-alert mb-3">
                                             Impossible de récupérer le token de sécurité. Veuillez rafraîchir la page.

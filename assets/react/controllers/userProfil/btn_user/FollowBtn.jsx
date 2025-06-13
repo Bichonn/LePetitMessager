@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import '../../../../styles/app.css';
 
+/**
+ * Button component for following/unfollowing users
+ */
 const FollowBtn = ({ userId, initialFollowed = false }) => {
     const [followed, setFollowed] = useState(initialFollowed);
     const [feedback, setFeedback] = useState('');
 
+    // Handle follow/unfollow action
     const handleFollowClick = async () => {
         try {
+            // Prepare form data with user ID to follow/unfollow
             const formData = new FormData();
             formData.append('following_id', userId);
 
@@ -18,6 +23,7 @@ const FollowBtn = ({ userId, initialFollowed = false }) => {
 
             const data = await response.json();
             if (response.ok) {
+                // Update follow state based on server response
                 if (typeof data.followed !== "undefined") {
                     setFollowed(data.followed);
                 }

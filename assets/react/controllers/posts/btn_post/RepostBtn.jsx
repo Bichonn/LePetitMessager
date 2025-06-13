@@ -7,6 +7,7 @@ const RepostBtn = ({ postId, initialReposted = false, repostsCount = 0 }) => {
     const [feedback, setFeedback] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    // Update state when props change
     useEffect(() => {
         setReposted(initialReposted);
         setCount(repostsCount);
@@ -16,10 +17,11 @@ const RepostBtn = ({ postId, initialReposted = false, repostsCount = 0 }) => {
         if (isSubmitting) return;
         setIsSubmitting(true);
 
+        // Store previous state for rollback if needed
         const previousReposted = reposted;
         const previousCount = count;
 
-        // Optimistic update
+        // Optimistic UI update
         setReposted(!reposted);
         setCount(reposted ? count - 1 : count + 1);
         setFeedback('');
@@ -37,19 +39,20 @@ const RepostBtn = ({ postId, initialReposted = false, repostsCount = 0 }) => {
             const data = await response.json();
 
             if (response.ok) {
+                // Update with server response
                 setReposted(data.reposted);
                 setCount(data.repostCount);
-                // Dispatch a custom event instead of reloading
+                // Notify other components of repost action
                 const event = new CustomEvent('postReposted');
                 document.dispatchEvent(event);
             } else {
-                // Revert optimistic update
+                // Rollback optimistic update on error
                 setReposted(previousReposted);
                 setCount(previousCount);
                 setFeedback(data.message || 'Erreur lors du repost');
             }
         } catch (err) {
-            // Revert optimistic update
+            // Rollback on network error
             setReposted(previousReposted);
             setCount(previousCount);
             setFeedback('Erreur de connexion');
@@ -70,7 +73,7 @@ const RepostBtn = ({ postId, initialReposted = false, repostsCount = 0 }) => {
                     src="/icons/repost.png"
                     alt="Repost"
                     className="icon"
-                    style={{ width: '22px', height: '22px' }} // Changed from 25px
+                    style={{ width: '22px', height: '22px' }}
                 />
             </button>
             <span className="repost-count-closer">{count}</span>

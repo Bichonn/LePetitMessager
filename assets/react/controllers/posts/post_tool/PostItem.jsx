@@ -8,15 +8,17 @@ import RepostBtn from '../btn_post/RepostBtn';
 import UpdateBtn from '../btn_post/UpdateBtn';
 import DeleteBtn from '../btn_post/DeleteBtn';
 import UpdatePost from '../UpdatePost';
-import ReportPostBtn from '../btn_post/ReportPostBtn'; // Add this import
+import ReportPostBtn from '../btn_post/ReportPostBtn';
 import '../../../../styles/PostItem.css';
 
-// Fonction pour formater la date en format relatif
+/**
+ * Formats a date string into relative time (e.g., "2h ago", "3 days ago")
+ */
 const formatRelativeTime = (dateString) => {
     const now = new Date();
     let postDate = new Date(dateString);
     
-    // Vérifier si les dates sont valides
+    // Check if dates are valid
     if (isNaN(postDate.getTime())) {
         return "Date invalide";
     }
@@ -24,7 +26,7 @@ const formatRelativeTime = (dateString) => {
     const diffInMs = now - postDate;
     const diffInSeconds = Math.floor(diffInMs / 1000);
     
-    // Si la date est dans le futur ou la différence est négative
+    // Handle future dates or negative differences
     if (diffInSeconds < 0) {
         return "À l'instant";
     }
@@ -33,6 +35,7 @@ const formatRelativeTime = (dateString) => {
     const diffInHours = Math.floor(diffInMinutes / 60);
     const diffInDays = Math.floor(diffInHours / 24);
 
+    // Return appropriate time format based on age
     if (diffInSeconds < 30) {
         return "À l'instant";
     } else if (diffInMinutes < 1) {
@@ -44,16 +47,19 @@ const formatRelativeTime = (dateString) => {
     } else if (diffInDays < 7) {
         return `il y a ${diffInDays}j`;
     } else {
-        // Pour les dates plus anciennes, afficher la date complète
+        // For older dates, display full date
         return postDate.toLocaleDateString('fr-FR');
     }
 };
 
+/**
+ * Component that renders a single post item with author info, content, and interaction buttons
+ */
 export default function PostItem({ post, author, onPostDeleted, onPostActuallyUpdated }) {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [currentUserId, setCurrentUserId] = useState(null);
-    // const [showCommentForm, setShowCommentForm] = useState(false); // Supprimé - géré par RightSidebarArea
 
+    // Fetch current user data on component mount
     useEffect(() => {
         fetch('/user')
             .then(res => {
@@ -68,18 +74,22 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
             .catch(err => console.error("Failed to fetch current user for PostItem:", err));
     }, []);
 
+    // Return null if required data is missing
     if (!post || !author) {
         return null;
     }
 
+    // Handle opening update modal
     const handleUpdateClick = () => {
         setIsUpdateModalOpen(true);
     };
 
+    // Handle closing update modal
     const handleCloseUpdateModal = () => {
         setIsUpdateModalOpen(false);
     };
 
+    // Handle successful post update
     const handlePostUpdated = (updatedPostData) => {
         setIsUpdateModalOpen(false);
         if (onPostActuallyUpdated) {
@@ -87,6 +97,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
         }
     };
 
+    // Handle post deletion with confirmation
     const handleDeleteClick = async () => {
         if (window.confirm('Êtes-vous sûr de vouloir supprimer ce post ? Cette action est irréversible.')) {
             const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
@@ -110,23 +121,25 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
         }
     };
 
+    // Handle comment button click - dispatches custom event for sidebar
     const handleCommentButtonClick = (postId) => {
         const event = new CustomEvent('showPostCommentsInSidebar', { detail: { postId: postId } });
         document.dispatchEvent(event);
     };
 
+    // Check user permissions for post actions
     const canUpdate = author && currentUserId && author.id === currentUserId;
     const canDelete = author && currentUserId && author.id === currentUserId;
     const userProfileUrl = `/profil/view/${author.id}`;
-    const { reposter_info } = post; // Destructure reposter_info from post
+    const { reposter_info } = post;
 
-    // Determine if the report button should be shown (not own post and user is logged in)
+    // Show report button only for other users' posts when logged in
     const showReportButton = currentUserId && author && author.id !== currentUserId;
 
     return (
         <>
             <div className="post-item-container border border-dark bg-color-search p-1">
-                {/* Display Reposter Info if available */}
+                {/* Display repost information if post was reposted */}
                 {reposter_info && (
                     <div className="reposter-info mb-1 ms-2" style={{ fontSize: '0.85em', color: 'var(--bs-secondary-color)' }}>
                         <small>
@@ -139,6 +152,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                     </div>
                 )}
 
+                {/* Post header with author info and report button */}
                 <div className="d-flex align-items-center ms-7">
                     <img
                         src={author.avatar_url || 'icons/default-avatar.png'}
@@ -149,6 +163,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                         <h5 className="mb-0">
                             <a href={userProfileUrl} className="text-decoration-none text-dark fw-bold">
                                 {author.username}
+                                {/* Premium badge for premium users */}
                                 {author.user_premium && (
                                     <img
                                         src="/icons/badge.svg"
@@ -164,15 +179,20 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             {formatRelativeTime(post.created_at)}
                         </small>
                     </div>
+                    {/* Report button for other users' posts */}
                     {showReportButton && (
                         <ReportPostBtn postId={post.id} postAuthorUsername={author.username} />
                     )}
                 </div>
+
+                {/* Post content area */}
                 <div className="ms-6">
                     <div>
+                        {/* Text content */}
                         <div className="flex-grow-1 text-content-area">
                             <p>{post.content_text}</p>
                         </div>
+                        {/* Media content (images/videos) */}
                         {post.content_multimedia && (
                             <div className="media-preview mt-2">
                                 <IsImageFile filename={post.content_multimedia} />
@@ -180,6 +200,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             </div>
                         )}
                     </div>
+                    {/* Hashtags display */}
                     {post.hashtags && post.hashtags.length > 0 && (
                         <div className="mt-2">
                             {post.hashtags.map(tag => (
@@ -187,7 +208,9 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             ))}
                         </div>
                     )}
+                    {/* Action buttons section */}
                     <div className="d-flex justify-content-between mt-2">
+                        {/* Left side: interaction buttons */}
                         <div className="d-flex justify-content-start align-items-center">
                             <LikeBtn
                                 postId={post.id}
@@ -196,7 +219,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                             <CommentBtn
                                 postId={post.id}
                                 onClick={() => handleCommentButtonClick(post.id)}
-                                commentsCount={post.comments_count} // Add this prop
+                                commentsCount={post.comments_count}
                             />
                             <RepostBtn
                                 postId={post.id}
@@ -208,6 +231,7 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                                 initialFavoris={post.favoris_by_user}
                             />
                         </div>
+                        {/* Right side: edit/delete buttons for post owner */}
                         <div className="d-flex justify-content-end">
                             {canUpdate && (
                                 <UpdateBtn onClick={handleUpdateClick} />
@@ -220,12 +244,13 @@ export default function PostItem({ post, author, onPostDeleted, onPostActuallyUp
                 </div>
             </div>
 
+            {/* Update modal */}
             {isUpdateModalOpen && canUpdate && (
                 <UpdatePost
                     postId={post.id}
                     initialContent={post.content_text}
-                    initialMediaUrl={post.content_multimedia} // Directly use the Cloudinary URL
-                    initialMediaFilename={post.content_multimedia ? post.content_multimedia.split('/').pop() : null} // Filename part for display, if needed
+                    initialMediaUrl={post.content_multimedia}
+                    initialMediaFilename={post.content_multimedia ? post.content_multimedia.split('/').pop() : null}
                     onClose={handleCloseUpdateModal}
                     onUpdated={handlePostUpdated}
                 />

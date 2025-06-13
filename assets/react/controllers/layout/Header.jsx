@@ -2,21 +2,20 @@ import React from "react";
 
 export default function Header() {
     return (
+        // Main container for the header
         <div className="container-fluid">
             <div className="row border-start border-bottom border-end border-dark">
-                <div className="col-5 d-flex justify-content-center align-items-center pb-1">
-                    <h3>For You</h3>
+
+                {/* Center section with the logo */}
+                <div className="col-2 text-center border-end border-dark border-2">
+                    <img src="/icons/logo-LPM.png" alt="logo" className="img-fluid w-75" />
                 </div>
 
-                
-                <div className="col-2 text-center border-start border-end border-dark border-2 pb-1">
-                    <img src="/icons/logo-LPM.png" alt="logo" className="img-fluid w-50" />
+                {/* Title section */}
+                <div className="col-10 text-center my-3">
+                    <h3 className="text-decoration-underline">Partagez vos pensées avec les autres Messagers</h3>
                 </div>
 
-
-                <div className="col-5 d-flex justify-content-center align-items-center pb-1">
-                    <h3>Following</h3>
-                </div>
             </div>
         </div>
     );

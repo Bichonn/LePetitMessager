@@ -1,21 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
+/**
+ * Component for viewing and managing post reports in admin dashboard
+ */
 export default function PostReportsView() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    // Fetch post reports from API
     const fetchPostReports = useCallback(async () => {
         setLoading(true);
         try {
-            // Replace with your actual API endpoint for post reports
             const response = await fetch('/admin/api/post-reports'); 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({ message: `Erreur HTTP: ${response.status}` }));
                 throw new Error(errorData.message);
             }
             const data = await response.json();
-            setReports(data.reports || data); // Adjust based on your API response structure
+            setReports(data.reports || data); // Handle different API response structures
             setError(null);
         } catch (err) {
             setError(err.message);
@@ -26,17 +29,18 @@ export default function PostReportsView() {
         }
     }, []);
 
+    // Load reports on component mount
     useEffect(() => {
         fetchPostReports();
     }, [fetchPostReports]);
 
+    // Handle report deletion with confirmation
     const handleDeleteReport = async (reportId) => {
         if (window.confirm(`Êtes-vous sûr de vouloir supprimer le signalement de post ID ${reportId} ?`)) {
             try {
-                // Replace with your actual API endpoint for deleting a post report
                 const response = await fetch(`/admin/api/post-reports/${reportId}`, { 
                     method: 'DELETE',
-                    // Add necessary headers, e.g., for authentication or CSRF token
+                    // Add necessary headers for authentication or CSRF token
                 });
 
                 if (!response.ok) {
@@ -45,7 +49,7 @@ export default function PostReportsView() {
                 }
                 
                 alert('Signalement de post supprimé avec succès.');
-                fetchPostReports(); // Refresh the list
+                fetchPostReports(); // Refresh the list after deletion
             } catch (err) {
                 alert(`Erreur: ${err.message}`);
                 console.error("Error deleting post report:", err);
@@ -53,18 +57,21 @@ export default function PostReportsView() {
         }
     };
 
+    // Loading state
     if (loading) return (
         <div className="p-3 text-center">
             Chargement des signalements de posts...
         </div>
     );
 
+    // Error state
     if (error) return (
         <div className="p-3">
             <div className="alert alert-danger">Erreur lors du chargement des signalements de posts: {error}</div>
         </div>
     );
 
+    // Empty state when no reports found
     if (reports.length === 0) return (
         <div className="p-3 text-center">
             Aucun signalement de post à afficher.
@@ -95,13 +102,14 @@ export default function PostReportsView() {
                             <td>{report.reason}</td>
                             <td>{new Date(report.created_at).toLocaleDateString()}</td>
                             <td>
+                                {/* Delete report button */}
                                 <button 
                                     className="btn btn-sm btn-danger"
                                     onClick={() => handleDeleteReport(report.id)}
                                 >
                                     Supprimer
                                 </button>
-                                {/* You can add more actions here, e.g., view post, ban user */}
+                                {/* Additional actions can be added here */}
                             </td>
                         </tr>
                     ))}

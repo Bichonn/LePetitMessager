@@ -238,3 +238,8 @@ input, textarea {
 [data-bs-theme="dark"] .btn-primary img[alt="Google"] {
   filter: brightness(0) invert(1); /* Convertit l'icône en blanc */
 }
+
+/* Style pour le logo LPM dans le header en mode sombre */
+[data-bs-theme="dark"] img[alt="logo"] {
+  filter: brightness(0) invert(1); /* Convertit le logo en blanc */
+}

@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import HashtagInput from "./post_tool/HashtagInput";
 
+/**
+ * Component for creating new posts with text, media, and hashtags
+ */
 export default function CreatePost() {
   const [content, setContent] = useState('');
   const [file, setFile] = useState(null);
@@ -10,6 +13,7 @@ export default function CreatePost() {
   const [isUserPremium, setIsUserPremium] = useState(false);
   const [hashtags, setHashtags] = useState([]);
 
+  // Fetch user premium status on component mount
   useEffect(() => {
     fetch('/user')
       .then(res => res.ok ? res.json() : null)
@@ -18,6 +22,7 @@ export default function CreatePost() {
       });
   }, []);
 
+  // Handle file selection and preview generation
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -42,7 +47,7 @@ export default function CreatePost() {
         setPreview(null);
       }
     } else {
-      // If no file is selected, reset the preview
+      // Reset preview when no file selected
       if (preview && preview.url.startsWith('blob:')) {
         URL.revokeObjectURL(preview.url);
       }
@@ -51,7 +56,7 @@ export default function CreatePost() {
     }
   };
 
-  // Clean up effect for preview URLs
+  // Cleanup preview URLs to prevent memory leaks
   useEffect(() => {
     return () => {
       if (preview && preview.url && preview.url.startsWith('blob:')) {
@@ -64,6 +69,7 @@ export default function CreatePost() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate that user has entered content or file
     if (!content && !file) {
       setFeedback({ type: 'error', message: 'Veuillez ajouter du texte ou une image' });
       return;
@@ -71,6 +77,7 @@ export default function CreatePost() {
 
     setIsSubmitting(true);
 
+    // Prepare form data for submission
     const formData = new FormData();
     formData.append('content', content);
     if (file) {
@@ -91,15 +98,17 @@ export default function CreatePost() {
       });
 
       if (response.ok) {
+        // Reset form on successful submission
         setContent('');
         setFile(null);
         setPreview(null);
         setHashtags([]);
         setFeedback({ type: 'success', message: 'Message posté avec succès!' });
 
+        // Dispatch event to notify other components
         document.dispatchEvent(new CustomEvent('postCreated'));
         
-        // Faire disparaître le message de succès après 2 secondes
+        // Auto-hide success message after 2 seconds
         setTimeout(() => {
           setFeedback({ type: '', message: '' });
         }, 2000);
@@ -117,6 +126,7 @@ export default function CreatePost() {
   return (
     <div className="post-creation-card border border-dark">
       <form onSubmit={handleSubmit}>
+        {/* Text input area */}
         <div className="">
           <textarea
             className="form-control border-0 border-bottom border-dark bg-color-search"
@@ -127,11 +137,13 @@ export default function CreatePost() {
             onChange={e => setContent(e.target.value)}
           />
           <HashtagInput hashtags={hashtags} setHashtags={setHashtags} />
+          {/* Character counter */}
           <div className="text-start text-muted small ms-1">
             {content.length}/{isUserPremium ? 180 : 140}
           </div>
         </div>
 
+        {/* Media preview section */}
         {preview && (
           <div className="text-center">
             {preview.type === 'image' ? (
@@ -144,6 +156,7 @@ export default function CreatePost() {
                 controls
               />
             ) : null}
+            {/* Remove media button */}
             <button
               type="button"
               className="btn btn-sm btn-outline-danger d-block mx-auto"
@@ -154,8 +167,9 @@ export default function CreatePost() {
           </div>
         )}
 
-
+        {/* Action buttons */}
         <div className="d-flex justify-content-between align-items-center">
+          {/* Media upload button */}
           <div>
             <input
               type="file"
@@ -174,6 +188,7 @@ export default function CreatePost() {
             </label>
           </div>
 
+          {/* Submit button */}
           <button
             type="submit"
             className="custom-publish-button"
@@ -183,6 +198,7 @@ export default function CreatePost() {
           </button>
         </div>
 
+        {/* Feedback message */}
         {feedback.message && (
           <div className={`custom-alert alert-${feedback.type === 'error' ? 'danger' : 'success'} mt-3`}>
             {feedback.message}

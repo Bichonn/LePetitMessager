@@ -18,20 +18,27 @@ use App\Entity\PostsReports;
 use App\Repository\PostsReportsRepository;
 
 #[Route('/admin')]
-#[IsGranted('ROLE_ADMIN')]
+#[IsGranted('ROLE_ADMIN')] // Restrict entire controller to admin users
 class AdminController extends AbstractController
 {
+    /**
+     * Render admin dashboard page
+     */
     #[Route('', name: 'app_admin_dashboard', methods: ['GET'])]
     public function index(): Response
     {
         return $this->render('admin/index.html.twig');
     }
 
+    /**
+     * Get all users for admin management
+     */
     #[Route('/api/users', name: 'app_admin_api_users', methods: ['GET'])]
     public function getUsers(UsersRepository $usersRepository, SerializerInterface $serializer): JsonResponse
     {
         $users = $usersRepository->findAll();
-        // Serialize carefully to avoid circular references and expose only necessary data
+        
+        // Serialize only necessary user data to avoid circular references
         $data = array_map(function (Users $user) {
             return [
                 'id' => $user->getId(),
@@ -46,15 +53,21 @@ class AdminController extends AbstractController
         return $this->json($data);
     }
 
+    /**
+     * Toggle user ban status
+     */
     #[Route('/api/users/{id}/toggle-ban', name: 'app_admin_api_toggle_ban', methods: ['POST'])]
     public function toggleBanUser(Users $user, EntityManagerInterface $em): JsonResponse
     {
         /** @var Users $currentUser */
         $currentUser = $this->getUser();
+        
+        // Prevent admin from banning themselves
         if ($user->getId() === $currentUser->getId()) {
             return $this->json(['message' => 'Vous ne pouvez pas bannir votre propre compte.'], Response::HTTP_FORBIDDEN);
         }
 
+        // Toggle ban status
         $user->setAccountBan(!$user->isAccountBan());
         $em->flush();
 
@@ -64,15 +77,21 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Toggle user admin role
+     */
     #[Route('/api/users/{id}/toggle-admin', name: 'app_admin_api_toggle_admin', methods: ['POST'])]
     public function toggleAdminRole(Users $user, EntityManagerInterface $em): JsonResponse
     {
         /** @var Users $currentUser */
         $currentUser = $this->getUser();
+        
+        // Prevent admin from modifying their own admin status
         if ($user->getId() === $currentUser->getId()) {
             return $this->json(['message' => 'Vous ne pouvez pas modifier vos propres droits admin.'], Response::HTTP_FORBIDDEN);
         }
 
+        // Toggle admin role
         $user->setAdmin(!$user->isAdmin());
         $em->flush();
 
@@ -82,11 +101,16 @@ class AdminController extends AbstractController
         ]);
     }
 
+    /**
+     * Delete a user account
+     */
     #[Route('/api/users/{id}/delete', name: 'app_admin_api_delete_user', methods: ['DELETE'])]
     public function deleteUser(Users $user, EntityManagerInterface $em): JsonResponse
     {
         /** @var Users $currentUser */
         $currentUser = $this->getUser();
+        
+        // Prevent admin from deleting their own account
         if ($user->getId() === $currentUser->getId()) {
             return $this->json(['message' => 'Vous ne pouvez pas supprimer votre propre compte.'], Response::HTTP_FORBIDDEN);
         }
@@ -96,16 +120,22 @@ class AdminController extends AbstractController
             $em->flush();
             return $this->json(['message' => 'Utilisateur supprimé avec succès.']);
         } catch (\Exception $e) {
-            // Log the error
+            // Return error message on deletion failure
             return $this->json(['message' => 'Erreur lors de la suppression de l\'utilisateur: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Get all account reports for admin review
+     */
     #[Route('/api/account-reports', name: 'app_admin_api_account_reports', methods: ['GET'])]
     public function getAccountReports(AccountsReportsRepository $reportsRepository): JsonResponse
     {
+        // Get reports ordered by creation date (newest first)
         $reportsEntities = $reportsRepository->findBy([], ['created_at' => 'DESC']);
         $data = [];
+        
+        // Format report data for frontend consumption
         foreach ($reportsEntities as $report) {
             $data[] = [
                 'id' => $report->getId(),
@@ -116,15 +146,15 @@ class AdminController extends AbstractController
             ];
         }
         return $this->json($data);
-
     }
 
+    /**
+     * Delete an account report
+     */
     #[Route('/api/account-reports/{id}', name: 'app_admin_api_delete_account_report', methods: ['DELETE'])]
     public function deleteAccountReport(AccountsReports $report, EntityManagerInterface $em): JsonResponse
     {
-        // Optional: Add security check to ensure only admins can delete
-        // $this->denyAccessUnlessGranted('ROLE_ADMIN');
-
+        // Check if report exists
         if (!$report) {
             return $this->json(['message' => 'Signalement introuvable.'], Response::HTTP_NOT_FOUND);
         }
@@ -134,28 +164,30 @@ class AdminController extends AbstractController
             $em->flush();
             return $this->json(['message' => 'Signalement supprimé avec succès.'], Response::HTTP_OK);
         } catch (\Exception $e) {
-            // Log the error: $this->logger->error('Failed to delete account report: ' . $e->getMessage());
+            // Return error message on deletion failure
             return $this->json(['message' => 'Erreur lors de la suppression du signalement: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
 
+    /**
+     * Get all post reports for admin review
+     */
     #[Route('/api/post-reports', name: 'admin_api_post_reports_list', methods: ['GET'])]
     public function getPostReports(PostsReportsRepository $postsReportsRepository, EntityManagerInterface $entityManager): JsonResponse
     {
-        // $this->denyAccessUnlessGranted('ROLE_ADMIN'); // Uncomment if you want to restrict access
-
+        // Build query to get report data with related user and post information
         $reports = $postsReportsRepository->createQueryBuilder('pr')
             ->select(
                 'pr.id',
-                'pr.content AS reason', // 'content' is the reason for the report
+                'pr.content AS reason', // Report reason
                 'pr.created_at',
                 'p.id AS post_id',
-                'reporter.username AS reporter_username',
-                'post_author.username AS post_author_username'
+                'reporter.username AS reporter_username', // User who reported
+                'post_author.username AS post_author_username' // Author of reported post
             )
             ->join('pr.fk_post', 'p')
-            ->join('pr.fk_user', 'reporter') // User who reported
-            ->join('p.fk_user', 'post_author') // Author of the post
+            ->join('pr.fk_user', 'reporter')
+            ->join('p.fk_user', 'post_author')
             ->orderBy('pr.created_at', 'DESC')
             ->getQuery()
             ->getResult();
@@ -163,11 +195,13 @@ class AdminController extends AbstractController
         return $this->json(['reports' => $reports]);
     }
 
+    /**
+     * Delete a post report
+     */
     #[Route('/api/post-reports/{id}', name: 'admin_api_post_report_delete', methods: ['DELETE'])]
     public function deletePostReport(PostsReports $report, EntityManagerInterface $em): JsonResponse
     {
-        // $this->denyAccessUnlessGranted('ROLE_ADMIN'); // Uncomment if you want to restrict access
-
+        // Check if report exists
         if (!$report) {
             return $this->json(['message' => 'Signalement de post introuvable.'], Response::HTTP_NOT_FOUND);
         }
@@ -177,7 +211,7 @@ class AdminController extends AbstractController
             $em->flush();
             return $this->json(['message' => 'Signalement de post supprimé avec succès.'], Response::HTTP_OK);
         } catch (\Exception $e) {
-            // Log the error
+            // Return error message on deletion failure
             return $this->json(['message' => 'Erreur lors de la suppression du signalement de post: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
